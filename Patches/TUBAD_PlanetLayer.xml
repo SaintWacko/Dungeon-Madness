@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Patch>
+  <!-- Draw dungeon icons on the planet surface. Inserted before the world object layers so it renders as part of
+       the surface set; draw order between layers comes from material render queues, not list order. -->
+  <Operation Class="PatchOperationInsert">
+    <xpath>Defs/PlanetLayerDef[defName="Surface"]/worldDrawLayers/li[text()="WorldDrawLayer_WorldObjects_Expandable"]</xpath>
+    <order>Prepend</order>
+    <value>
+      <li>ThisUsedToBeAboutDungeons.WorldDrawLayer_Dungeons</li>
+    </value>
+  </Operation>
+</Patch>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <TUBAD_ModName>This Used to Be About Dungeons</TUBAD_ModName>
+
+  <!-- World map -->
+  <TUBAD_ToggleIcons>Show dungeon icons.</TUBAD_ToggleIcons>
+  <TUBAD_TileDungeon>Dungeon: level {0}</TUBAD_TileDungeon>
+
+  <!-- Settings -->
+  <TUBAD_Tab_World>World</TUBAD_Tab_World>
+  <TUBAD_Settings_Reset>Reset to defaults</TUBAD_Settings_Reset>
+  <TUBAD_Settings_Display>Display</TUBAD_Settings_Display>
+  <TUBAD_Settings_ShowIcons>Show dungeon icons on the world map</TUBAD_Settings_ShowIcons>
+  <TUBAD_Settings_ShowIcons_Tip>Also toggled by the dungeon button with the other world map toggles in the bottom right.</TUBAD_Settings_ShowIcons_Tip>
+  <TUBAD_Settings_IconOpacity>Icon opacity: {0}</TUBAD_Settings_IconOpacity>
+  <TUBAD_Settings_TintByLevel>Tint icons by level</TUBAD_Settings_TintByLevel>
+  <TUBAD_Settings_TintByLevel_Tip>Colours dungeon icons from green at level 1, through yellow and red, to purple at the maximum level.</TUBAD_Settings_TintByLevel_Tip>
+  <TUBAD_Settings_Generation>Generation</TUBAD_Settings_Generation>
+  <TUBAD_Settings_Generation_Desc>These settings apply when a world's dungeons are generated: new worlds, and existing saves that have never had dungeons. Worlds that already have dungeons keep them.</TUBAD_Settings_Generation_Desc>
+  <TUBAD_Settings_Spacing>Dungeon spacing: {0} tiles</TUBAD_Settings_Spacing>
+  <TUBAD_Settings_Spacing_Desc>Minimum distance between two dungeons. Each step up roughly halves to thirds how many dungeons a world gets.</TUBAD_Settings_Spacing_Desc>
+  <TUBAD_Settings_MaxLevel>Maximum dungeon level: {0}</TUBAD_Settings_MaxLevel>
+  <TUBAD_Settings_Skew>Low level bias: {0}</TUBAD_Settings_Skew>
+  <TUBAD_Settings_Skew_Desc>At 1 every level is equally common; higher values make low levels more common. Now about {1} of dungeons are level {0} or lower, and {3} are level {2}.</TUBAD_Settings_Skew_Desc>
+  <TUBAD_Settings_Roughness>Level landscape roughness: {0}</TUBAD_Settings_Roughness>
+  <TUBAD_Settings_Roughness_Desc>Levels rise and fall across the world like terrain. Higher values give more, smaller peaks and valleys; lower values give a few broad regions.</TUBAD_Settings_Roughness_Desc>
+  <TUBAD_Settings_Ocean>Ocean dungeons with Vehicle Framework</TUBAD_Settings_Ocean>
+  <TUBAD_Settings_Ocean_Tip>When Vehicle Framework is active, dungeons are also placed on water tiles, reachable by boat.</TUBAD_Settings_Ocean_Tip>
+</LanguageData>
