@@ -45,11 +45,12 @@ namespace ThisUsedToBeAboutDungeons
             {
                 var settings = DungeonsMod.Settings;
                 float size = planetLayer.AverageTileSize * IconScale;
+                var blocked = comp.BlockedSurfaceTiles();
                 for (int i = 0; i < comp.Count; i++)
                 {
                     var tile = new PlanetTile(comp.GetTile(i), planetLayer);
-                    if (comp.IsBlocked(tile)) continue;
-                    Material mat = settings.tintByLevel ? TintMat(comp.GetLevel(i), settings.maxLevel) : PlainMat;
+                    if (blocked.Contains(tile.tileId)) continue;
+                    Material mat = settings.tintByLevel ? TintMat(comp.GetLevel(i), comp.MaxLevel) : PlainMat;
                     LayerSubMesh subMesh = GetSubMesh(mat);
                     WorldRendererUtility.PrintQuadTangentialToPlanet(planetLayer.GetTileCenter(tile), size, 0.008f, subMesh);
                 }

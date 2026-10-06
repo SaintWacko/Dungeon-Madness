@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "buildId": 2,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-06T22:23:26.361Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "World generation in DungeonWorldComponent (placement BFS, save format, FinalizeInit on load) and the world draw layer + patch XML",
+  "diffSource": "since the oldest restore point still kept (2026-10-06T21:55:19Z); older ones were pruned, so the chat's first changes may be missing",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 4,
+    "note": 1
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "Icon-layer dirty check on total world-object count misses same-frame swaps",
+      "detail": "WorldComponentUpdate (Source/DungeonWorldComponent.cs:87-95) only redraws when the total number of world objects changes. Settlement.Abandon (Settlement.cs:445-455) removes the Settlement and adds an AbandonedSettlement, which is a plain WorldObject, not a MapParent. The count stays the same, so the unblocked tile's icon stays hidden. Settling with a caravan adds a Settlement and removes the caravan during long events, so an icon can probably stay drawn under the new colony. The check also rebuilds the whole mesh whenever a caravan forms or a pod launches. Compare world.worldObjects.MapParents.Count (WorldObjectsHolder.cs:59) instead: it is the same test IsBlocked uses, it changes in both cases above, and it ignores caravans.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonWorldComponent.cs:87"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Eligible scans every world object for every candidate tile",
+      "detail": "Eligible calls world.worldObjects.AnyWorldObjectAt for each candidate tile, and that method walks the whole object list each time (WorldObjectsHolder.cs:363). Generation cost therefore grows with tiles x objects, both at world creation and when the mod is added to an existing save. Build a HashSet<int> of surface tile ids that have an object on them once at the start of Generate and check against it.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonWorldComponent.cs:183"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Level tint is scaled by the current maxLevel setting, not the world's generated maximum",
+      "detail": "TintMat(comp.GetLevel(i), settings.maxLevel) uses whatever the slider says now, but existing worlds keep their levels when settings change (TUBAD_Settings_Generation_Desc). Lowering the setting turns every icon above the new max purple; raising it shifts the whole map toward green. Pass the max the world was generated with instead: save it in DungeonWorldComponent beside genVersion, or use the highest value in levels.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/WorldDrawLayer_Dungeons.cs:52"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Per-dungeon IsBlocked check is a linear scan, making each rebuild O(dungeons x map parents)",
+      "detail": "IsBlocked calls WorldObjectsHolder.AnyMapParentAt, and MapParentAt checks every settlement and site one by one (WorldObjectsHolder.cs:496-506). The layer rebuilds on every change in world object count (DungeonWorldComponent.WorldComponentUpdate), and there can be thousands of dungeons. Collect the occupied surface tile ids into a HashSet<int> once at the top of Regenerate and test against that in the loop.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/WorldDrawLayer_Dungeons.cs:51"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Patch XML depends on one specific vanilla list entry",
+      "detail": "The PatchOperationInsert is anchored on the li 'WorldDrawLayer_WorldObjects_Expandable'. It exists in Core's Surface PlanetLayerDef today, but if another mod removes or renames that entry the operation fails and logs a patch error. The file's own comment says list order does not matter, so a PatchOperationAdd to Defs/PlanetLayerDef[defName=\"Surface\"]/worldDrawLayers cannot fail on this. No mod in the corpus patches worldDrawLayers.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Patches/TUBAD_PlanetLayer.xml:6"
+      }
+    }
+  ],
+  "checked": [
+    "both [HarmonyPatch] targets bind (verify_patches): PlaySettings.DoWorldViewControls (parameter name 'row' matches) and the WorldInspectPane.TileInspectString getter; no corpus mod patches either; bot…",
+    "FinalizeInit(bool fromLoad) is called on new worlds (WorldGenerator.GenerateWorld:67, after StandardizeTileData) and on load (Game.cs:586); the path grid is computed first, so world.Impassable is val…",
+    "Find.World resolves to Current.CreatingWorld during world generation, so Find.WorldGrid and the null-guarded SetLayerDirty are safe there",
+    "Generate uses System.Random seeded from the world seed and does not disturb Verse.Rand state during GenerateWorld",
+    "PlanetLayer.GetTileNeighbors clears the output list (PackedListOfLists.GetList), so reusing the neighbours list in the BFS is correct",
+    "BFS radius = spacing-1 keeps every pair of dungeons at least `spacing` apart; the stamp array avoids clearing between placements",
+    "save format: DataExposeUtility.LookByteArray round-trips through Base64, with deflate when smaller; null on old saves leaves empty arrays and genVersion 0, which regenerates; length mismatch is logge…",
+    "level assignment stays within 1..maxLevel for p<1; the skew description fractions in Mod.cs match the formula",
+    "TryGetLevel checks Valid before reading Layer, so an invalid SelectedTile is safe",
+    "Core Surface PlanetLayerDef contains the anchor li the XML patch targets; WorldDrawLayer_Dungeons exists in Source/WorldDrawLayer_Dungeons.cs under the namespace the patch names",
+    "textures UI/TUBAD_ShowDungeons and World/TUBAD_Dungeon exist; every TUBAD_ key used in the reviewed C# is in Languages/English/Keyed/TUBAD.xml",
+    "the Roslyn report shows no errors or warnings on the five changed C# files",
+    "WorldDrawLayer_Dungeons overrides (Visible, VisibleWhenLayerNotSelected, VisibleInBackground, Alpha, Regenerate) match WorldDrawLayer/WorldDrawLayerBase in 1.6; Regenerate yields base first and calls…",
+    "Alpha through the base Render's property block multiplies material.color alpha, so tinted materials keep their tint at reduced opacity",
+    "GetSubMesh splits sub-meshes at 40000 verts by itself, so thousands of quads per tint are safe",
+    "Render queue 3530 sits below world objects (3550) and caravans (3600) and above pollution (3510), consistent with vanilla materials",
+    "Toggling showIcons and tintByLevel marks the layer for a redraw through DungeonsMod.WriteSettings -> DungeonWorldComponent.SetLayerDirty",
+    "Patches/TUBAD_PlanetLayer.xml xpath matches the Core Surface PlanetLayerDef's <li>WorldDrawLayer_WorldObjects_Expandable</li> exactly (no whitespace); a namespaced type name works in a List<Type> fie…",
+    "About.xml: packageId set; Harmony dependency and loadAfter present, and the mod uses Harmony (Source/Patches.cs)",
+    "Languages/English/Keyed/TUBAD.xml: every key is used in Source; placeholder counts match the Translate arguments, including Skew_Desc {0}-{3} against Mod.cs:102",
+    "Skew_Desc percentages match the level formula in DungeonWorldComponent.AssignLevels",
+    "No Harmony patches in the changed files, so verify_patches and precedents do not apply"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/DebugActions.cs",
+    "Source/DungeonSettings.cs",
+    "Source/DungeonWorldComponent.cs",
+    "Source/Mod.cs",
+    "Source/Patches.cs",
+    "Source/WorldDrawLayer_Dungeons.cs",
+    "About/About.xml",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Patches/TUBAD_PlanetLayer.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Source/ThisUsedToBeAboutDungeons.csproj",
+    "Textures/UI/TUBAD_ShowDungeons.png",
+    "Textures/World/TUBAD_Dungeon.png"
+  ],
+  "parts": 2,
+  "buildCommit": "fbd7b28d5e6ec945579846b060f1d860534e5b7f",
+  "partial": false
+}

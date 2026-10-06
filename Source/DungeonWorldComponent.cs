@@ -19,13 +19,16 @@ namespace ThisUsedToBeAboutDungeons
         private const int CurrentGenVersion = 1;
 
         private int genVersion;
+        // The max level this world was generated with: the settings slider may have moved since
+        private int generatedMaxLevel;
         // Parallel arrays, sorted by tile id
         private int[] tiles = Array.Empty<int>();
         private ushort[] levels = Array.Empty<ushort>();
         private Dictionary<int, int> indexByTile = new Dictionary<int, int>();
 
-        // World object count the layer was last drawn against; a new settlement on a dungeon tile hides its icon
-        private int drawnObjectCount = -1;
+        // Map parent count the layer was last drawn against: a settlement or site on a dungeon tile hides its icon,
+        // and an abandoned one shows it again. Caravans are not map parents, so they never trigger a rebuild.
+        private int drawnMapParentCount = -1;
 
         public DungeonWorldComponent(World world) : base(world) { }
 
@@ -34,6 +37,7 @@ namespace ThisUsedToBeAboutDungeons
         public int Count => tiles.Length;
         public int GetTile(int index) => tiles[index];
         public int GetLevel(int index) => levels[index];
+        public int MaxLevel => generatedMaxLevel;
 
         public bool TryGetLevel(PlanetTile tile, out int level)
         {
@@ -48,10 +52,21 @@ namespace ThisUsedToBeAboutDungeons
         /// colony) built on the tile after generation takes it over.</summary>
         public bool IsBlocked(PlanetTile tile) => world.worldObjects.AnyMapParentAt(tile);
 
+        /// <summary>Surface tile ids that hold a map parent, for checking many dungeons at once.</summary>
+        public HashSet<int> BlockedSurfaceTiles()
+        {
+            var set = new HashSet<int>();
+            var surface = world.grid.Surface;
+            foreach (var mp in world.worldObjects.MapParents)
+                if (mp.Tile.Valid && mp.Tile.Layer == surface) set.Add(mp.Tile.tileId);
+            return set;
+        }
+
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Values.Look(ref genVersion, "genVersion");
+            Scribe_Values.Look(ref generatedMaxLevel, "generatedMaxLevel");
 
             byte[] tileBytes = null, levelBytes = null;
             if (Scribe.mode == LoadSaveMode.Saving)
@@ -83,14 +98,15 @@ namespace ThisUsedToBeAboutDungeons
             // New worlds, and saves from before the mod was added
             if (genVersion != CurrentGenVersion) Generate();
             else RebuildIndex();
+            if (generatedMaxLevel <= 0) generatedMaxLevel = levels.Length > 0 ? levels.Max(l => (int)l) : DungeonsMod.Settings.maxLevel;
         }
 
         public override void WorldComponentUpdate()
         {
-            int count = world.worldObjects.AllWorldObjects.Count;
-            if (count != drawnObjectCount)
+            int count = world.worldObjects.MapParents.Count;
+            if (count != drawnMapParentCount)
             {
-                drawnObjectCount = count;
+                drawnMapParentCount = count;
                 SetLayerDirty();
             }
         }
@@ -136,12 +152,16 @@ namespace ThisUsedToBeAboutDungeons
             var depth = new Dictionary<int, int>();
             var neighbors = new List<PlanetTile>(8);
             var chosen = new List<int>();
+            // Built once: AnyWorldObjectAt walks every world object per call
+            var occupied = new HashSet<int>();
+            foreach (var wo in world.worldObjects.AllWorldObjects)
+                if (wo.Tile.Valid && wo.Tile.Layer == layer) occupied.Add(wo.Tile.tileId);
             int radius = Mathf.Max(1, settings.spacing - 1);
             int stamp = 0;
 
             foreach (int t in order)
             {
-                if (blocked[t] || !Eligible(layer, t, allowWater)) continue;
+                if (blocked[t] || occupied.Contains(t) || !Eligible(layer, t, allowWater)) continue;
                 chosen.Add(t);
                 stamp++;
                 blocked[t] = true;
@@ -172,6 +192,7 @@ namespace ThisUsedToBeAboutDungeons
             tiles = chosen.ToArray();
             levels = AssignLevels(layer, tiles, seed, settings);
             genVersion = CurrentGenVersion;
+            generatedMaxLevel = settings.maxLevel;
             RebuildIndex();
             SetLayerDirty();
             Log.Message($"[Dungeons] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, max level {settings.maxLevel}).");
@@ -186,7 +207,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (!allowWater) return false;
             }
             else if (world.Impassable(pt)) return false;
-            return !world.worldObjects.AnyWorldObjectAt(pt);
+            return true;
         }
 
         // Smooth noise over the globe gives connected valleys and peaks. Ranking the values turns them into an even
