@@ -5,5 +5,13 @@
     "completed": 0,
     "through": 1791303936341
   },
-  "runs": []
+  "runs": [
+    {
+      "startedAt": 1791325909772,
+      "endedAt": 1791326015051,
+      "reason": "game-closed",
+      "errorClasses": 1,
+      "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd"
+    }
+  ]
 }

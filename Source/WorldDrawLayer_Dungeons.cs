@@ -11,6 +11,9 @@ namespace ThisUsedToBeAboutDungeons
     /// Draws every dungeon icon on the surface in one batched mesh (one sub-mesh per tint), the way hills and
     /// landmarks are drawn. Added to the Surface PlanetLayerDef by Patches/TUBAD_PlanetLayer.xml.
     /// </summary>
+    // StaticConstructorOnStartup only silences vanilla's check for static Material fields: the materials themselves
+    // are made lazily in Regenerate, which always runs on the main thread.
+    [StaticConstructorOnStartup]
     public class WorldDrawLayer_Dungeons : WorldDrawLayer
     {
         public const string IconPath = "World/TUBAD_Dungeon";

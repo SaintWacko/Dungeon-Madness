@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "buildId": 3,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-06T22:25:06.979Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Fixes for the build 2 review: MapParents-count dirty check, occupied-tile HashSets, generatedMaxLevel, PatchOperationAdd; plus About.xml deps",
+  "diffSource": "since build 2 (2026-10-06T22:20:51Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 1,
+    "note": 1
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "About.xml hard-depends on Entad Framework and Titan Framework, which no file in the mod uses and which have no download link",
+      "detail": "modDependencies now lists SaintWacko.EntadFramework and saintwacko.TitanFramework (About/About.xml:17-24). A search of the whole mod finds them only in About.xml and the description; no Source, Defs or Patches file uses either. Neither entry has a steamWorkshopUrl or downloadUrl, both exist only as workspace mods here, and Titan Framework is inactive in the current modlist. Players would get a missing-dependency warning with no way to resolve it. Drop the two modDependencies entries and keep only the loadAfter lines (which cause no cycle) until the frameworks are actually used, or add their Workshop URLs once published.",
+      "evidence": {
+        "kind": "index",
+        "ref": "About/About.xml:17"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Map-parent count dirty check misses an add and a remove in the same frame",
+      "detail": "WorldComponentUpdate compares only MapParents.Count, so a site expiring on one tile while another map parent appears elsewhere in the same frame leaves the icon layer stale until the next count change. A settlement replaced by a destroyed settlement on the same tile is harmless because the blocked set does not change. A rare, cosmetic edge; the corpus offers no precedent.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Source/DungeonWorldComponent.cs:104"
+      }
+    }
+  ],
+  "checked": [
+    "WorldObjectsHolder.MapParents is a List<MapParent>, so .Count in WorldComponentUpdate is cheap and correct (WorldObjectsHolder.cs:59)",
+    "BlockedSurfaceTiles filters to surface-layer map parents, and the draw layer only runs on the Surface layer, so the HashSet lookup by tileId matches the old IsBlocked behaviour",
+    "Generate's occupied HashSet covers every world object on the layer, as the removed AnyWorldObjectAt check in Eligible did, so placement is unchanged and no longer quadratic",
+    "generatedMaxLevel: saved and loaded through Scribe_Values, set in Generate (also reached by the Regenerate dev action), and backfilled in FinalizeInit for build 2 saves from the max stored level; wit…",
+    "Patches/TUBAD_PlanetLayer.xml PatchOperationAdd xpath resolves: Core PlanetLayerDef Surface has a worldDrawLayers list",
+    "Textures/World/TUBAD_Dungeon.png matches WorldDrawLayer_Dungeons.IconPath; Textures/UI/TUBAD_ShowDungeons.png matches the ContentFinder path in Source/Patches.cs:12, which is inside a [StaticConstruc…",
+    "every [HarmonyPatch] target binds (verify_patches: 2 of 2 resolved); both are void postfixes, so prefix-returns-void and patch-success-always do not apply",
+    "loadAfter on the two frameworks creates no cycle: neither framework's About.xml lists this mod",
+    "Roslyn reports no errors or warnings in either changed C# file",
+    "pyxis_mod_errors could not run: no Pyxis token is configured (Settings → Integrations)"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/DungeonWorldComponent.cs",
+    "Source/WorldDrawLayer_Dungeons.cs",
+    "About/About.xml",
+    "Patches/TUBAD_PlanetLayer.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Textures/UI/TUBAD_ShowDungeons.png",
+    "Textures/World/TUBAD_Dungeon.png"
+  ],
+  "parts": 1,
+  "buildCommit": "1bfe9ffbd7e906e6e47095a0f7dafd9a63856336",
+  "partial": false
+}
