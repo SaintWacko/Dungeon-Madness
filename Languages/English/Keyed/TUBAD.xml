@@ -40,7 +40,7 @@
   <TUBAD_EnterButton>Enter</TUBAD_EnterButton>
   <TUBAD_Enter_RowOutside>Staying outside</TUBAD_Enter_RowOutside>
   <TUBAD_Enter_RowParty>Entering</TUBAD_Enter_RowParty>
-  <TUBAD_Enter_People>People</TUBAD_Enter_People>
+  <TUBAD_Enter_People>Party</TUBAD_Enter_People>
   <TUBAD_Enter_People_Tip>People going in, out of at most {0}. Animals and mechs do not count.</TUBAD_Enter_People_Tip>
   <TUBAD_Enter_Wealth>Party wealth</TUBAD_Enter_Wealth>
   <TUBAD_Enter_Wealth_Tip>Market value of the pawns going in and what they wear and wield. Items carried in do not count. Raises the effective level.</TUBAD_Enter_Wealth_Tip>

@@ -18,6 +18,11 @@ namespace ThisUsedToBeAboutDungeons
         public float partyWealth;
         public float effectiveLevel;
 
+        // Rolled when the party enters so each party gets a different layout from the same tile
+        public int layoutSeed;
+        // Chambers and dividers, filled in by map generation; phase 4 places creatures with it
+        public DungeonLayoutData layout;
+
         // Items left at the entrance when nobody stayed outside, and items carried out through the exit before any
         // pawn came out to take them. Handed to the caravan on the tile as soon as one exists.
         private ThingOwner<Thing> stash;
@@ -179,6 +184,8 @@ namespace ThisUsedToBeAboutDungeons
             Scribe_Values.Look(ref level, "level");
             Scribe_Values.Look(ref partyWealth, "partyWealth");
             Scribe_Values.Look(ref effectiveLevel, "effectiveLevel");
+            Scribe_Values.Look(ref layoutSeed, "layoutSeed");
+            Scribe_Deep.Look(ref layout, "layout");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
             if (stash == null) stash = new ThingOwner<Thing>(this);
@@ -191,6 +198,7 @@ namespace ThisUsedToBeAboutDungeons
         public static WorldObjectDef TUBAD_DungeonSite;
         public static MapGeneratorDef TUBAD_Dungeon;
         public static ThingDef TUBAD_DungeonWall;
+        public static ThingDef TUBAD_DungeonRubble;
         public static ThingDef TUBAD_DungeonExit;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }

@@ -2,13 +2,25 @@ using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
+using UnityEngine;
 using Verse;
 
 namespace ThisUsedToBeAboutDungeons
 {
     public static class DungeonEntry
     {
-        public static readonly IntVec3 MapSize = new IntVec3(100, 1, 100);
+        public const int MinMapSize = 60;
+        public const int MaxMapSize = 150;
+
+        /// <summary>Side length by the dungeon's own level (not the party's wealth), from MinMapSize at level 1 to
+        /// MaxMapSize at the world's top level. The same dungeon is the same size for every party.</summary>
+        public static IntVec3 MapSizeFor(int level)
+        {
+            int max = DungeonWorldComponent.Instance?.MaxLevel ?? DungeonsMod.Settings.maxLevel;
+            float t = max <= 1 ? 0f : Mathf.Clamp01((level - 1f) / (max - 1f));
+            int side = Mathf.RoundToInt(Mathf.Lerp(MinMapSize, MaxMapSize, t));
+            return new IntVec3(side, 1, side);
+        }
 
         public static DungeonSite SiteAt(PlanetTile tile) => Find.WorldObjects.WorldObjectAt<DungeonSite>(tile);
 
@@ -79,8 +91,11 @@ namespace ThisUsedToBeAboutDungeons
                 site.level = level;
                 site.partyWealth = wealth;
                 site.effectiveLevel = EffectiveLevel(level, wealth);
+                site.layoutSeed = Rand.Int | 1;
+                // Doors are made without a faction, which animals cannot open; the party's animals must follow it
+                site.doorsAlwaysOpenForPlayerPawns = true;
                 Find.WorldObjects.Add(site);
-                Map map = MapGenerator.GenerateMap(MapSize, site, site.MapGeneratorDef);
+                Map map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef);
 
                 bool everyone = !AnyoneStaysOutside(caravan, party);
                 Caravan partyCaravan;

@@ -22,15 +22,15 @@
     <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
     <disableCallAid>true</disableCallAid>
     <genSteps>
-      <li>TUBAD_DungeonPlaceholder</li>
+      <li>TUBAD_DungeonLayout</li>
       <li>Fog</li>
     </genSteps>
   </MapGeneratorDef>
 
   <GenStepDef>
-    <defName>TUBAD_DungeonPlaceholder</defName>
+    <defName>TUBAD_DungeonLayout</defName>
     <order>100</order>
-    <genStep Class="ThisUsedToBeAboutDungeons.GenStep_DungeonPlaceholder" />
+    <genStep Class="ThisUsedToBeAboutDungeons.GenStep_DungeonLayout" />
   </GenStepDef>
 
   <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted -->
@@ -78,6 +78,44 @@
       <isTargetable>false</isTargetable>
       <destroyShakeAmount>0</destroyShakeAmount>
       <supportsWallAttachments>true</supportsWallAttachments>
+    </building>
+  </ThingDef>
+
+  <!-- Fills a passage between chambers. Full fill blocks sight, so the next chamber stays fogged until it is mined out. -->
+  <ThingDef ParentName="BuildingNaturalBase">
+    <defName>TUBAD_DungeonRubble</defName>
+    <label>rubble</label>
+    <description>Fallen stone packed into a passage. It can be mined out.</description>
+    <thingClass>Mineable</thingClass>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_Rubble</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <blockWind>true</blockWind>
+    <castEdgeShadows>true</castEdgeShadows>
+    <fillPercent>1</fillPercent>
+    <coversFloor>true</coversFloor>
+    <neverMultiSelect>true</neverMultiSelect>
+    <rotatable>false</rotatable>
+    <holdsRoof>true</holdsRoof>
+    <staticSunShadowHeight>1</staticSunShadowHeight>
+    <blockLight>true</blockLight>
+    <mineable>true</mineable>
+    <useHitPoints>true</useHitPoints>
+    <canOverlapZones>false</canOverlapZones>
+    <statBases>
+      <MaxHitPoints>200</MaxHitPoints>
+      <Flammability>0</Flammability>
+      <Beauty>-2</Beauty>
+    </statBases>
+    <building>
+      <isInert>true</isInert>
+      <isAirtight>true</isAirtight>
+      <canBuildNonEdificesUnder>false</canBuildNonEdificesUnder>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
     </building>
   </ThingDef>
 
