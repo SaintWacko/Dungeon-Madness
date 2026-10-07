@@ -149,6 +149,17 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var exit in Map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit))
                 (exit as DungeonExit)?.MoveArrivedOut();
             var caravan = WaitingCaravan();
+            // A colonist carried out (downed) with nobody outside would vanish with the site: they form a caravan
+            if (caravan == null)
+            {
+                var colonist = stash.OfType<Pawn>().FirstOrDefault(p => !p.Dead && p.IsColonist);
+                if (colonist != null)
+                {
+                    stash.Remove(colonist);
+                    caravan = CaravanMaker.MakeCaravan(Gen.YieldSingle(colonist), Faction.OfPlayer, Tile, addToWorldPawnsIfNotAlready: true);
+                    everyoneLeft = true;
+                }
+            }
             FlushStash(caravan);
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("TUBAD_PartyLost_Label".Translate(), "TUBAD_PartyLost_Text".Translate(level),

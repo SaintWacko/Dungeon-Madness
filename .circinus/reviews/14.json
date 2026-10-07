@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "buildId": 14,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-07T16:53:06.291Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Dialog_EnterDungeon caravan stats (calculator signatures, source vs dest semantics, everyone mode) and the exit moved into the wall as an Impassable 3x1 MapPortal (reachability for haul/enter jobs, fog, spawn cell)",
+  "diffSource": "since build 11 (2026-10-07T03:55:55Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 1,
+    "note": 1
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "In everyone mode the party stats count only the ticked pawns, but every pawn goes in",
+      "detail": "In everyone mode DungeonEntry.Enter sends every pawn in the caravan (`party = caravan.PawnsListForReading.ToList()`), ticked or not. RecacheStats builds partyInfo from the transferables' CountToTransfer alone (MassUsageTransferables, CapacityTransferables, ApproxDaysWorthOfFood and the rest). So an unticked pack animal or downed pawn goes in but adds nothing to the mass, capacity, food or speed on screen. The item mass getter, now `partyInfo.massCapacity - partyInfo.massUsage`, then limits item picks to that lower capacity. Fix: in RecacheStats, when `everyone` is true, build partyInfo as if every pawn transferable were fully ticked, or tick every pawn when everyone mode turns on. Unticked items do correctly stay out, since they go to the stash.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Dialog_EnterDungeon.cs:107"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "A living pawn left in the stash is now lost if the party is wiped with no caravan outside",
+      "detail": "FlushStash now keeps hauled pawns instead of destroying them through GiveThing, which is better. But in everyone mode there may be no caravan waiting. A downed colonist or captive hauled into the exit then waits in the stash, and if the rest of the party dies, Notify_MyMapAboutToBeRemoved calls FlushStash(null), which does nothing. The site is then removed with the pawn still in its stash. Consider making a caravan for a colonist left in the stash at that point, the same way TryMovePawnOut does for colonists who walk out.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs:103"
+      }
+    }
+  ],
+  "checked": [
+    "Out/party calculators (MassUsageLeftAfterTransfer, CapacityLeftAfterTransfer, ApproxTilesPerDayLeftAfterTransfer, ApproxDaysWorthOfFood[LeftAfterTransfer], ApproxDaysUntilRot[LeftAfterTransfer], Fora…",
+    "Item mass getter `party capacity - party mass` matches the destination-caravan getter in vanilla split caravan; partyInfo is filled by SelectionChanged before the first draw",
+    "Stats rect (12, 35, width-24, 40) and the -9999 flash time match Dialog_SplitCaravan.cs:349; DrawCaravanInfo(partyInfo, null, ...) is how vanilla draws a single caravan",
+    "Impassable exit is reachable: JobDriver_EnterPortal, JobGiver_EnterPortal, WorkGiver_HaulToPortal and EnterPortalUtility use PathEndMode.Touch, FloatMenuOptionProvider_EnterMapPortal uses ClosestTouc…",
+    "JobDriver_EnterPortal spawns at GetDestinationLocation(); InsideCell (exit + South) is room floor at first.maxZ",
+    "Exit placement: the 3x1 rect at first.maxZ+1 stays inside the map bounds; room 0 is at least 8 wide, so center x ±1 stays in its wall; no corridor crosses room 0's north wall (the vertical leg runs a…",
+    "Fog: GenStep_Fog unfogs from PlayerStartSpot = InsideCell; FloodFillerFog unfogs fog-blocking edifices next to unfogged cells, so the exit (fillPercent 1) is revealed",
+    "CaravanEnterMapUtility spawn cells are taken around InsideCell, not on the impassable exit",
+    "FlushStash pawn path: AddPawn then PassToWorld in the same order as CaravanMaker.MakeCaravan; stash.Remove runs before AddPawn so holdingOwner is null; Dialog_LeaveDungeon uses AllSendablePawns, so n…",
+    "Transporter and shuttle float-menu overrides on DungeonSite yield nothing, which blocks pod landings into the dungeon",
+    "Defs/TUBAD_Dungeon.xml: the exit def stays on PocketMapExit (tickerType Normal is inherited, so the tickerType-missing lint is fine); Graphic_Single texPath matches the added Textures/Things/Building…",
+    "No Harmony patches in the changed C#, so verify_patches and precedents were not needed",
+    "pyxis_mod_errors: could not run because no Pyxis token is configured (add one in Settings → Integrations)"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/Dialog_EnterDungeon.cs",
+    "Source/DungeonEntry.cs",
+    "Source/DungeonExit.cs",
+    "Source/DungeonSite.cs",
+    "Source/GenStep_DungeonPlaceholder.cs",
+    "Defs/TUBAD_Dungeon.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Textures/Things/Building/TUBAD_DungeonExit.png"
+  ],
+  "parts": 1,
+  "buildCommit": "c0da5c915cbaea6209930552432e7ff122517b7d",
+  "partial": false
+}

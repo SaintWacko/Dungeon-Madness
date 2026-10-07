@@ -105,6 +105,19 @@ namespace ThisUsedToBeAboutDungeons
             float outVis = CaravanVisibilityCalculator.VisibilityLeftAfterTransfer(transferables, sb);
             outsideInfo = new CaravanUIUtility.CaravanInfo(outMass, outCap, outCapTip, outSpeed, outSpeedTip, (outFood, outRot), outForage, outForageTip, outVis, sb.ToString());
 
+            // When everyone goes in, unticked pawns go too: count them in the party's stats, then put the ticks back
+            List<(TransferableOneWay tr, int count)> restore = null;
+            if (everyone)
+            {
+                restore = new List<(TransferableOneWay, int)>();
+                foreach (var tr in transferables)
+                    if (tr.AnyThing is Pawn && tr.CountToTransfer < tr.GetMaximumToTransfer())
+                    {
+                        restore.Add((tr, tr.CountToTransfer));
+                        tr.AdjustTo(tr.GetMaximumToTransfer());
+                    }
+            }
+
             float inMass = CollectionsMassCalculator.MassUsageTransferables(transferables, IgnorePawnsInventoryMode.Ignore);
             sb.Length = 0;
             float inCap = CollectionsMassCalculator.CapacityTransferables(transferables, sb);
@@ -120,6 +133,9 @@ namespace ThisUsedToBeAboutDungeons
             sb.Length = 0;
             float inVis = CaravanVisibilityCalculator.Visibility(transferables, sb);
             partyInfo = new CaravanUIUtility.CaravanInfo(inMass, inCap, inCapTip, inSpeed, inSpeedTip, (inFood, inRot), inForage, inForageTip, inVis, sb.ToString());
+
+            if (restore != null)
+                foreach (var (tr, count) in restore) tr.AdjustTo(count);
         }
 
         public override void DoWindowContents(Rect inRect)
