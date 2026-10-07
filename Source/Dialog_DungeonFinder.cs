@@ -14,7 +14,7 @@ namespace ThisUsedToBeAboutDungeons
     [StaticConstructorOnStartup]
     public class Dialog_DungeonFinder : Window
     {
-        private static readonly Material HighlightMat = MaterialPool.MatFrom("World/SelectedTile", ShaderDatabase.WorldOverlayAdditive, new Color(1f, 1f, 1f, 0.6f), 3560);
+        private static readonly Material HighlightMat = MaterialPool.MatFrom("World/TUBAD_Highlight", ShaderDatabase.WorldOverlayTransparent, new Color(1f, 0.95f, 0.6f, 0.9f), 3560);
         private const int MaxHighlights = 400;
         private const float RowHeight = 26f;
         private const int AnyDistance = 1000;

@@ -19,6 +19,20 @@
       "reason": "game-closed",
       "errorClasses": 0,
       "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd"
+    },
+    {
+      "startedAt": 1791343080307,
+      "endedAt": 1791343301716,
+      "reason": "game-closed",
+      "errorClasses": 4,
+      "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd"
+    },
+    {
+      "startedAt": 1791344217871,
+      "endedAt": null,
+      "reason": null,
+      "errorClasses": 0,
+      "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd"
     }
   ]
 }
