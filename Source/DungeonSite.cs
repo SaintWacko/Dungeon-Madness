@@ -35,6 +35,17 @@ namespace ThisUsedToBeAboutDungeons
         // party checks. The only way in is the mod's own entry.
         protected override bool UseGenericEnterMapFloatMenuOption => false;
 
+        // Same for transport pods and shuttles landing in a running dungeon
+        public override IEnumerable<FloatMenuOption> GetTransportersFloatMenuOptions(IEnumerable<IThingHolder> pods, System.Action<PlanetTile, TransportersArrivalAction> launchAction)
+        {
+            yield break;
+        }
+
+        public override IEnumerable<FloatMenuOption> GetShuttleFloatMenuOptions(IEnumerable<IThingHolder> pods, System.Action<PlanetTile, TransportersArrivalAction> launchAction)
+        {
+            yield break;
+        }
+
         public override string Label => "TUBAD_SiteLabel".Translate(level);
 
         // MapParent's version is not virtual and returns null; re-listing IThingHolder on this class makes the
