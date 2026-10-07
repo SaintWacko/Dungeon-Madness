@@ -134,8 +134,8 @@ namespace ThisUsedToBeAboutDungeons
             var outRect = new Rect(rect.x, y, rect.width, 150f);
             Widgets.DrawMenuSection(outRect);
             var inner = outRect.ContractedBy(4f);
-            // Ticked pawns first, so a loaded caravan reads as one block at the top
-            var ordered = candidates.OrderByDescending(p => ticked.Contains(p)).ToList();
+            // Fixed order (by name), so a row never moves under the cursor as it is ticked
+            var ordered = candidates;
             var view = new Rect(0f, 0f, inner.width - 16f, ordered.Count * 24f);
             Widgets.BeginScrollView(inner, ref partyScroll, view);
             for (int i = 0; i < ordered.Count; i++)

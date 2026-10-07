@@ -17,8 +17,11 @@ namespace ThisUsedToBeAboutDungeons
         private enum Tab { Pawns, Items, Supplies }
 
         private const float TitleHeight = 35f;
-        private const float StatsHeight = 40f;
-        private const float InfoHeight = 66f;
+        private const float RowLabelWidth = 130f;
+        private const float RowHeight = 40f;
+        private const float RowGap = 8f;
+        private const float NoteHeight = 24f;
+        private const float HeaderHeight = RowHeight * 2f + RowGap + 4f + NoteHeight;
         private static readonly Vector2 ButtonSize = new Vector2(160f, 40f);
 
         private readonly Caravan caravan;
@@ -158,20 +161,13 @@ namespace ThisUsedToBeAboutDungeons
         {
             using (new TextBlock(GameFont.Medium, TextAnchor.MiddleCenter))
                 Widgets.Label(new Rect(0f, 0f, inRect.width, TitleHeight), "TUBAD_EnterDungeon_Title".Translate(level));
-            // Outside caravan on the left, party on the right, like split caravan. When everyone goes in there is no
-            // caravan left outside, so only the party is shown.
-            var statsRect = new Rect(12f, TitleHeight, inRect.width - 24f, StatsHeight);
-            if (everyone)
-                CaravanUIUtility.DrawCaravanInfo(partyInfo, null, caravan.Tile, null, -9999f, statsRect);
-            else
-                CaravanUIUtility.DrawCaravanInfo(outsideInfo, partyInfo, caravan.Tile, null, -9999f, statsRect);
-            DoInfo(new Rect(17f, TitleHeight + StatsHeight, inRect.width - 34f, InfoHeight));
+            DoHeader(new Rect(17f, TitleHeight, inRect.width - 34f, HeaderHeight));
 
             tabs.Clear();
             tabs.Add(new TabRecord("PawnsTab".Translate(), () => tab = Tab.Pawns, tab == Tab.Pawns));
             tabs.Add(new TabRecord("ItemsTab".Translate(), () => tab = Tab.Items, tab == Tab.Items));
             tabs.Add(new TabRecord("TravelSupplies".Translate(), () => tab = Tab.Supplies, tab == Tab.Supplies));
-            inRect.yMin += TitleHeight + StatsHeight + InfoHeight + TabDrawer.TabHeight + 4f;
+            inRect.yMin += TitleHeight + HeaderHeight + TabDrawer.TabHeight + 4f;
             Widgets.DrawMenuSection(inRect);
             TabDrawer.DrawTabs(inRect, tabs);
             inRect = inRect.ContractedBy(17f);
@@ -191,37 +187,69 @@ namespace ThisUsedToBeAboutDungeons
             Widgets.EndGroup();
         }
 
-        private void DoInfo(Rect rect)
-        {
-            int cap = DungeonsMod.Settings.maxPartySize;
-            var going = party;
-            int people = DungeonEntry.HumanlikeCount(going);
-            float mult = DungeonEntry.WealthMultiplier(wealth);
-            float col = rect.width / 3f;
-            using (new TextBlock(TextAnchor.MiddleLeft))
-            {
-                GUI.color = people > cap ? ColorLibrary.RedReadable : Color.white;
-                Widgets.Label(new Rect(rect.x, rect.y, col, 24f), "TUBAD_Enter_People".Translate(people, cap));
-                GUI.color = Color.white;
-                Widgets.Label(new Rect(rect.x + col, rect.y, col, 24f), "TUBAD_Enter_Wealth".Translate(wealth.ToStringMoney()));
-                var levelRect = new Rect(rect.x + col * 2f, rect.y, col, 24f);
-                Widgets.Label(levelRect, "TUBAD_Enter_Effective".Translate((level * mult).ToString("0.#"), mult.ToStringByStyle(ToStringStyle.FloatTwo)));
-                TooltipHandler.TipRegion(levelRect, "TUBAD_Enter_Effective_Tip".Translate(level, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney()));
+        private static readonly List<TransferableUIUtility.ExtraInfo> partyExtra = new List<TransferableUIUtility.ExtraInfo>();
 
-                string note = null;
-                var entered = DungeonEntry.AlreadyEntered(caravan.Tile, going).ToList();
-                if (entered.Any())
-                {
-                    GUI.color = ColorLibrary.RedReadable;
-                    note = "TUBAD_Enter_AlreadyEntered".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true));
-                }
-                else if (everyone)
+        /// <summary>
+        /// Two labelled rows on one five-column grid. "Staying outside": vanilla's full caravan strip, since that
+        /// caravan still has to travel. "Entering": only mass and days of food from vanilla (speed, forage and
+        /// visibility mean nothing underground), then people, wealth and effective level in the remaining columns.
+        /// A note line below for anything that blocks entry or needs a warning.
+        /// </summary>
+        private void DoHeader(Rect rect)
+        {
+            float col = Mathf.Floor((rect.width - RowLabelWidth) / 5f);
+            float x0 = rect.x + RowLabelWidth;
+            var outsideRow = new Rect(x0, rect.y, col * 5f, RowHeight);
+            var partyRow = new Rect(x0, rect.y + RowHeight + RowGap, col * 5f, RowHeight);
+
+            using (new TextBlock(GameFont.Small, TextAnchor.MiddleLeft))
+            {
+                GUI.color = ColoredText.SubtleGrayColor;
+                Widgets.Label(new Rect(rect.x, outsideRow.y, RowLabelWidth, RowHeight), "TUBAD_Enter_RowOutside".Translate());
+                Widgets.Label(new Rect(rect.x, partyRow.y, RowLabelWidth, RowHeight), "TUBAD_Enter_RowParty".Translate());
+                GUI.color = Color.white;
+                Widgets.DrawLineHorizontal(rect.x, partyRow.y - RowGap / 2f, rect.width, ColoredText.SubtleGrayColor.ToTransparent(0.3f));
+            }
+
+            if (everyone)
+            {
+                using (new TextBlock(GameFont.Small, TextAnchor.MiddleCenter))
                 {
                     GUI.color = ColoredText.WarningColor;
-                    note = "TUBAD_Enter_Everyone".Translate();
+                    Widgets.Label(outsideRow, "TUBAD_Enter_Everyone".Translate());
+                    GUI.color = Color.white;
                 }
-                if (note != null) Widgets.Label(new Rect(rect.x, rect.y + 26f, rect.width, 40f), note);
-                GUI.color = Color.white;
+            }
+            else CaravanUIUtility.DrawCaravanInfo(outsideInfo, null, caravan.Tile, null, -9999f, outsideRow);
+
+            CaravanUIUtility.DrawCaravanInfo(partyInfo, null, caravan.Tile, null, -9999f,
+                new Rect(partyRow.x, partyRow.y, col * 2f, RowHeight), isCaravan: false);
+
+            int cap = DungeonsMod.Settings.maxPartySize;
+            int people = DungeonEntry.HumanlikeCount(party);
+            float mult = DungeonEntry.WealthMultiplier(wealth);
+            partyExtra.Clear();
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_People".Translate(), people + " / " + cap,
+                people > cap ? ColorLibrary.RedReadable : Color.white, "TUBAD_Enter_People_Tip".Translate(cap)));
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_Wealth".Translate(), wealth.ToStringMoney(), Color.white,
+                "TUBAD_Enter_Wealth_Tip".Translate()));
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_Effective".Translate(),
+                (level * mult).ToString("0.#") + " (x" + mult.ToString("0.00") + ")", Color.white,
+                "TUBAD_Enter_Effective_Tip".Translate(level, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney())));
+            TransferableUIUtility.DrawExtraInfo(partyExtra, new Rect(partyRow.x + col * 2f, partyRow.y, col * 3f, RowHeight));
+            GenUI.ResetLabelAlign();
+            GUI.color = Color.white;
+
+            var entered = DungeonEntry.AlreadyEntered(caravan.Tile, party).ToList();
+            if (entered.Any())
+            {
+                using (new TextBlock(GameFont.Small, TextAnchor.MiddleCenter))
+                {
+                    GUI.color = ColorLibrary.RedReadable;
+                    Widgets.Label(new Rect(rect.x, partyRow.yMax + 4f, rect.width, NoteHeight),
+                        "TUBAD_Enter_AlreadyEntered".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
+                    GUI.color = Color.white;
+                }
             }
         }
 
