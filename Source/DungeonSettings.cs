@@ -7,7 +7,7 @@ namespace ThisUsedToBeAboutDungeons
     {
         // ---- World generation: read when a world's dungeons are generated, so changes only reach new worlds
         // (and the "Regenerate dungeons" dev action).
-        public const int DefaultSpacing = 3;
+        public const int DefaultSpacing = 10;
         // Minimum distance in tiles between two dungeons
         public int spacing = DefaultSpacing;
 
@@ -20,7 +20,7 @@ namespace ThisUsedToBeAboutDungeons
         public float levelSkew = DefaultLevelSkew;
 
         // Noise frequency over the unit sphere: higher = more, smaller peaks and valleys
-        public const float DefaultRoughness = 3f;
+        public const float DefaultRoughness = 7f;
         public float roughness = DefaultRoughness;
 
         // Dungeons on water tiles while Vehicle Framework is active
@@ -28,7 +28,7 @@ namespace ThisUsedToBeAboutDungeons
 
         // ---- Display: take effect immediately
         public bool showIcons = true;
-        public const float DefaultIconOpacity = 0.6f;
+        public const float DefaultIconOpacity = 0.4f;
         public float iconOpacity = DefaultIconOpacity;
         // Tint world icons from green (level 1) to purple (max level)
         public bool tintByLevel = true;

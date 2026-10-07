@@ -55,7 +55,14 @@ namespace ThisUsedToBeAboutDungeons
                     if (blocked.Contains(tile.tileId)) continue;
                     Material mat = settings.tintByLevel ? TintMat(comp.GetLevel(i), comp.MaxLevel) : PlainMat;
                     LayerSubMesh subMesh = GetSubMesh(mat);
-                    WorldRendererUtility.PrintQuadTangentialToPlanet(planetLayer.GetTileCenter(tile), size, 0.008f, subMesh);
+                    WorldRendererUtility.PrintQuadTangentialToPlanet(planetLayer.GetTileCenter(tile), size, 0.008f, subMesh, printUVs: false);
+                    // The quad's first tangent points north and its second points west as seen from outside the
+                    // planet. Vanilla's own UVs run the texture's U along north, which draws an upright sprite
+                    // lying on its side; these put V (texture up) along north and U along east instead.
+                    subMesh.uvs.Add(new Vector2(1f, 0f));
+                    subMesh.uvs.Add(new Vector2(0f, 0f));
+                    subMesh.uvs.Add(new Vector2(0f, 1f));
+                    subMesh.uvs.Add(new Vector2(1f, 1f));
                 }
             }
             FinalizeMesh(MeshParts.All);
