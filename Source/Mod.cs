@@ -26,7 +26,7 @@ namespace ThisUsedToBeAboutDungeons
             DungeonWorldComponent.SetLayerDirty();
         }
 
-        private enum Tab { World }
+        private enum Tab { World, Parties }
         private Tab tab;
         private Vector2 scroll;
         private float viewHeight = 900f;
@@ -39,6 +39,7 @@ namespace ThisUsedToBeAboutDungeons
             var tabs = new List<TabRecord>
             {
                 new TabRecord("TUBAD_Tab_World".Translate(), () => SetTab(Tab.World), tab == Tab.World),
+                new TabRecord("TUBAD_Tab_Parties".Translate(), () => SetTab(Tab.Parties), tab == Tab.Parties),
             };
             Widgets.DrawMenuSection(body);
             TabDrawer.DrawTabs(body, tabs);
@@ -51,7 +52,8 @@ namespace ThisUsedToBeAboutDungeons
             // off to the right, CurHeight measures only that column and the view never grows back.
             var list = new Listing_Standard { maxOneColumn = true };
             list.Begin(view);
-            DoWorld(list);
+            if (tab == Tab.World) DoWorld(list);
+            else DoParties(list);
             viewHeight = list.CurHeight + 20f;
             list.End();
             Widgets.EndScrollView();
@@ -72,6 +74,19 @@ namespace ThisUsedToBeAboutDungeons
             list.Label(key.Translate());
             Text.Font = GameFont.Small;
             list.GapLine(4f);
+        }
+
+        private static void DoParties(Listing_Standard list)
+        {
+            var s = Settings;
+            list.Label("TUBAD_Settings_PartySize".Translate(s.maxPartySize));
+            s.maxPartySize = Mathf.RoundToInt(list.Slider(s.maxPartySize, 1f, 20f));
+            list.Label("TUBAD_Settings_PartySize_Desc".Translate());
+            list.Gap();
+            list.Label("TUBAD_Settings_WealthToDouble".Translate(s.wealthToDouble.ToStringMoney()));
+            s.wealthToDouble = Mathf.Round(list.Slider(s.wealthToDouble, 5000f, 300000f) / 1000f) * 1000f;
+            float example = 10f * (1f + 20000f / s.wealthToDouble);
+            list.Label("TUBAD_Settings_WealthToDouble_Desc".Translate(20000f.ToStringMoney(), example.ToString("0.#")));
         }
 
         private static void DoWorld(Listing_Standard list)

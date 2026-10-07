@@ -27,7 +27,45 @@
   <TUBAD_Finder_LevelShort>Lv {0}</TUBAD_Finder_LevelShort>
   <TUBAD_Finder_Tiles>{0} tiles</TUBAD_Finder_Tiles>
 
+  <!-- Entering -->
+  <TUBAD_SiteLabel>dungeon (level {0})</TUBAD_SiteLabel>
+  <TUBAD_EnterDungeon>Enter dungeon</TUBAD_EnterDungeon>
+  <TUBAD_EnterDungeonLevel>Enter dungeon (level {0})</TUBAD_EnterDungeonLevel>
+  <TUBAD_EnterDungeon_Desc>Choose up to {0} people, plus any animals and mechs, and the items and supplies they take in. Each person can enter a given dungeon only once. Everyone not chosen waits here with the caravan.</TUBAD_EnterDungeon_Desc>
+  <TUBAD_PartyInside>a party is inside</TUBAD_PartyInside>
+  <TUBAD_CaravanMoving>The caravan must stop on this tile first.</TUBAD_CaravanMoving>
+  <TUBAD_TravellingToDungeon>travelling to a dungeon</TUBAD_TravellingToDungeon>
+  <TUBAD_EnterDungeon_Title>Enter dungeon (level {0})</TUBAD_EnterDungeon_Title>
+  <TUBAD_EnterThingCountTip>How many to take into the dungeon.</TUBAD_EnterThingCountTip>
+  <TUBAD_EnterButton>Enter</TUBAD_EnterButton>
+  <TUBAD_Enter_People>People: {0} / {1}</TUBAD_Enter_People>
+  <TUBAD_Enter_Wealth>Party wealth: {0}</TUBAD_Enter_Wealth>
+  <TUBAD_Enter_Effective>Effective level: {0} (x{1})</TUBAD_Enter_Effective>
+  <TUBAD_Enter_Effective_Tip>The dungeon is generated for the party that enters it. Level {0}, multiplied by 1 + party wealth / {3}.\n\nParty wealth counts the pawns going in and what they wear and wield: {1}. Items carried in do not count.\n\nMultiplier: x{2}</TUBAD_Enter_Effective_Tip>
+  <TUBAD_Enter_AlreadyEntered>Already entered this dungeon, and cannot go in again: {0}.</TUBAD_Enter_AlreadyEntered>
+  <TUBAD_Enter_Everyone>Nobody able to lead the caravan stays outside, so every pawn in it goes in. Items left behind wait at the entrance and are lost if the whole party dies.</TUBAD_Enter_Everyone>
+  <TUBAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</TUBAD_Enter_NeedColonist>
+  <TUBAD_Enter_TooMany>At most {0} people can enter a dungeon. Animals and mechs do not count.</TUBAD_Enter_TooMany>
+  <TUBAD_Enter_TooManyEveryone>At most {0} people can enter a dungeon. Nobody would stay with the caravan, so everyone in it would go in: leave a colonist outside, or take fewer people.</TUBAD_Enter_TooManyEveryone>
+  <TUBAD_Entered_Label>Dungeon entered</TUBAD_Entered_Label>
+  <TUBAD_Entered_Text>The party has entered a level {0} dungeon, generated at effective level {1} for them.\n\nTo leave, select the exit at the entrance and choose who leaves and what they carry out. If everyone in the party dies, the dungeon and anything left in it are gone.</TUBAD_Entered_Text>
+
+  <!-- Leaving -->
+  <TUBAD_LeaveDungeon>Leave dungeon</TUBAD_LeaveDungeon>
+  <TUBAD_LeaveDungeon_Desc>Choose who leaves and which items they carry out. They fetch the items, bring them here and rejoin the caravan outside.</TUBAD_LeaveDungeon_Desc>
+  <TUBAD_CancelLeave>Cancel leaving</TUBAD_CancelLeave>
+  <TUBAD_Leaving>Leaving the dungeon</TUBAD_Leaving>
+  <TUBAD_LeaveThingCountTip>How many to carry out.</TUBAD_LeaveThingCountTip>
+  <TUBAD_Leave_NoPawns>Choose at least one pawn to leave.</TUBAD_Leave_NoPawns>
+  <TUBAD_PartyLost_Label>Party lost</TUBAD_PartyLost_Label>
+  <TUBAD_PartyLost_Text>Nobody from the party made it out of the level {0} dungeon. The dungeon is closed, and everything inside it is gone.</TUBAD_PartyLost_Text>
+
   <!-- Settings -->
+  <TUBAD_Tab_Parties>Parties</TUBAD_Tab_Parties>
+  <TUBAD_Settings_PartySize>Maximum party size: {0}</TUBAD_Settings_PartySize>
+  <TUBAD_Settings_PartySize_Desc>Counts people only. Animals and mechs can go in on top of this.</TUBAD_Settings_PartySize_Desc>
+  <TUBAD_Settings_WealthToDouble>Wealth that doubles the level: {0}</TUBAD_Settings_WealthToDouble>
+  <TUBAD_Settings_WealthToDouble_Desc>A dungeon is generated at its level times 1 + party wealth / this value. Party wealth is the pawns going in plus what they wear and wield. Example: a party worth {0} entering a level 10 dungeon meets effective level {1}.</TUBAD_Settings_WealthToDouble_Desc>
   <TUBAD_Tab_World>World</TUBAD_Tab_World>
   <TUBAD_Settings_Reset>Reset to defaults</TUBAD_Settings_Reset>
   <TUBAD_Settings_Display>Display</TUBAD_Settings_Display>

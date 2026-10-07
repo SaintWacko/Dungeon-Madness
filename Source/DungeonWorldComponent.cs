@@ -74,7 +74,12 @@ namespace ThisUsedToBeAboutDungeons
 
         /// <summary>Whether the dungeon on this tile can be used: something else (a settlement, a site, a player
         /// colony) built on the tile after generation takes it over.</summary>
-        public bool IsBlocked(PlanetTile tile) => world.worldObjects.AnyMapParentAt(tile);
+        public bool IsBlocked(PlanetTile tile)
+        {
+            foreach (var mp in world.worldObjects.MapParents)
+                if (mp.Tile == tile && !(mp is DungeonSite)) return true;
+            return false;
+        }
 
         /// <summary>Surface tile ids that hold a map parent, for checking many dungeons at once.</summary>
         public HashSet<int> BlockedSurfaceTiles()
@@ -82,7 +87,7 @@ namespace ThisUsedToBeAboutDungeons
             var set = new HashSet<int>();
             var surface = world.grid.Surface;
             foreach (var mp in world.worldObjects.MapParents)
-                if (mp.Tile.Valid && mp.Tile.Layer == surface) set.Add(mp.Tile.tileId);
+                if (mp.Tile.Valid && mp.Tile.Layer == surface && !(mp is DungeonSite)) set.Add(mp.Tile.tileId);
             return set;
         }
 

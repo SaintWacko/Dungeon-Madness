@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- One per party inside a dungeon; destroyed with its map -->
+  <WorldObjectDef ParentName="StaticWorldObjectBase">
+    <defName>TUBAD_DungeonSite</defName>
+    <label>dungeon</label>
+    <description>A dungeon with a party inside.</description>
+    <worldObjectClass>ThisUsedToBeAboutDungeons.DungeonSite</worldObjectClass>
+    <texture>World/TUBAD_Dungeon</texture>
+    <expandingIcon>true</expandingIcon>
+    <expandingIconTexture>World/TUBAD_Dungeon</expandingIconTexture>
+    <expandingIconPriority>70</expandingIconPriority>
+    <useDynamicDrawer>true</useDynamicDrawer>
+    <isTempIncidentMapOwner>true</isTempIncidentMapOwner>
+  </WorldObjectDef>
+
+  <MapGeneratorDef>
+    <defName>TUBAD_Dungeon</defName>
+    <label>dungeon</label>
+    <isUnderground>true</isUnderground>
+    <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
+    <disableCallAid>true</disableCallAid>
+    <genSteps>
+      <li>TUBAD_DungeonPlaceholder</li>
+      <li>Fog</li>
+    </genSteps>
+  </MapGeneratorDef>
+
+  <GenStepDef>
+    <defName>TUBAD_DungeonPlaceholder</defName>
+    <order>100</order>
+    <genStep Class="ThisUsedToBeAboutDungeons.GenStep_DungeonPlaceholder" />
+  </GenStepDef>
+
+  <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted -->
+  <ThingDef ParentName="BuildingNaturalBase">
+    <defName>TUBAD_DungeonWall</defName>
+    <label>dungeon wall</label>
+    <description>Stone that is not quite stone. Nothing scratches it: not picks, not explosives, not time.</description>
+    <thingClass>Building</thingClass>
+    <graphicData>
+      <texPath>Things/Building/Linked/Rock_Atlas</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <linkType>CornerFiller</linkType>
+      <linkFlags>
+        <li>Rock</li>
+        <li>MapEdge</li>
+      </linkFlags>
+      <color>(62,58,70)</color>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <blockWind>true</blockWind>
+    <castEdgeShadows>true</castEdgeShadows>
+    <fillPercent>1</fillPercent>
+    <coversFloor>true</coversFloor>
+    <neverMultiSelect>true</neverMultiSelect>
+    <rotatable>false</rotatable>
+    <saveCompressible>true</saveCompressible>
+    <holdsRoof>true</holdsRoof>
+    <staticSunShadowHeight>1</staticSunShadowHeight>
+    <blockLight>true</blockLight>
+    <useHitPoints>false</useHitPoints>
+    <destroyable>false</destroyable>
+    <fertility>0</fertility>
+    <canOverlapZones>false</canOverlapZones>
+    <statBases>
+      <Flammability>0</Flammability>
+      <Beauty>-1</Beauty>
+    </statBases>
+    <building>
+      <isInert>true</isInert>
+      <isAirtight>true</isAirtight>
+      <canBuildNonEdificesUnder>false</canBuildNonEdificesUnder>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
+      <isTargetable>false</isTargetable>
+      <destroyShakeAmount>0</destroyShakeAmount>
+      <supportsWallAttachments>true</supportsWallAttachments>
+    </building>
+  </ThingDef>
+
+  <ThingDef ParentName="PocketMapExit">
+    <defName>TUBAD_DungeonExit</defName>
+    <label>dungeon exit</label>
+    <description>The way back out to the world. Pawns leaving through it rejoin the caravan waiting outside, carrying whatever they bring here.</description>
+    <thingClass>ThisUsedToBeAboutDungeons.DungeonExit</thingClass>
+    <size>(3,3)</size>
+    <drawerType>MapMeshAndRealTime</drawerType>
+    <graphicData>
+      <graphicClass>Graphic_Single</graphicClass>
+      <texPath>Things/Building/Misc/CaveExit/CaveExit</texPath>
+      <drawSize>(3,3)</drawSize>
+    </graphicData>
+    <statBases>
+      <Flammability>0</Flammability>
+    </statBases>
+    <comps>
+      <li Class="CompProperties_Glower">
+        <glowRadius>10</glowRadius>
+        <glowColor>(140,160,184,0)</glowColor>
+      </li>
+    </comps>
+  </ThingDef>
+
+</Defs>

@@ -26,6 +26,15 @@ namespace ThisUsedToBeAboutDungeons
         // Dungeons on water tiles while Vehicle Framework is active
         public bool oceanDungeons = true;
 
+        // ---- Parties
+        public const int DefaultMaxPartySize = 5;
+        // Humanlikes only; animals and mechs do not count
+        public int maxPartySize = DefaultMaxPartySize;
+        // Party wealth (pawns + worn and wielded gear) at which the effective level is double the dungeon's level.
+        // Linear: effective level = level x (1 + wealth / wealthToDouble).
+        public const float DefaultWealthToDouble = 50000f;
+        public float wealthToDouble = DefaultWealthToDouble;
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -40,6 +49,8 @@ namespace ThisUsedToBeAboutDungeons
             levelSkew = DefaultLevelSkew;
             roughness = DefaultRoughness;
             oceanDungeons = true;
+            maxPartySize = DefaultMaxPartySize;
+            wealthToDouble = DefaultWealthToDouble;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -57,6 +68,10 @@ namespace ThisUsedToBeAboutDungeons
             Scribe_Values.Look(ref roughness, "roughness", DefaultRoughness);
             roughness = Mathf.Clamp(roughness, 0.5f, 15f);
             Scribe_Values.Look(ref oceanDungeons, "oceanDungeons", true);
+            Scribe_Values.Look(ref maxPartySize, "maxPartySize", DefaultMaxPartySize);
+            maxPartySize = Mathf.Clamp(maxPartySize, 1, 20);
+            Scribe_Values.Look(ref wealthToDouble, "wealthToDouble", DefaultWealthToDouble);
+            wealthToDouble = Mathf.Clamp(wealthToDouble, 1000f, 1000000f);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

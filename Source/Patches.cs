@@ -13,6 +13,7 @@ namespace ThisUsedToBeAboutDungeons
         public static readonly Texture2D ShowDungeons = ContentFinder<Texture2D>.Get("UI/TUBAD_ShowDungeons");
         public static readonly Texture2D FindDungeons = ContentFinder<Texture2D>.Get("UI/TUBAD_FindDungeons");
         public static readonly Texture2D WorldIcon = ContentFinder<Texture2D>.Get("World/TUBAD_Dungeon");
+        public static readonly Texture2D EnterDungeon = ContentFinder<Texture2D>.Get("UI/Commands/EnterCave");
     }
 
     // World map toggle, beside the vanilla ones in the bottom right
@@ -32,6 +33,55 @@ namespace ThisUsedToBeAboutDungeons
                 if (open != null) open.Close();
                 else Find.WindowStack.Add(new Dialog_DungeonFinder());
             }
+        }
+    }
+
+    // ---- Entering: right-click a dungeon tile with a caravan selected. Dungeons are not world objects, so the
+    // vanilla menu (built from world objects under the mouse) never asks them; these add the option by tile.
+
+    [HarmonyPatch(typeof(FloatMenuMakerWorld), nameof(FloatMenuMakerWorld.ChoicesAtFor), new[] { typeof(Vector2), typeof(Caravan) })]
+    public static class Patch_FloatMenuMakerWorld_ChoicesAtFor_Mouse
+    {
+        public static void Postfix(Vector2 mousePos, Caravan caravan, List<FloatMenuOption> __result)
+        {
+            if (caravan == null || !caravan.IsPlayerControlled) return;
+            // From the given position, not the live mouse: an open menu revalidates against where it was opened
+            PlanetTile tile = GenWorld.TileAt(mousePos);
+            if (tile.Valid) __result.AddRange(CaravanArrivalAction_EnterDungeon.GetFloatMenuOptions(caravan, tile));
+        }
+    }
+
+    // Used to revalidate an open menu and to run orders given while forming a caravan
+    [HarmonyPatch(typeof(FloatMenuMakerWorld), nameof(FloatMenuMakerWorld.ChoicesAtFor), new[] { typeof(PlanetTile), typeof(Caravan) })]
+    public static class Patch_FloatMenuMakerWorld_ChoicesAtFor_Tile
+    {
+        public static void Postfix(PlanetTile tile, Caravan caravan, List<FloatMenuOption> __result)
+        {
+            if (caravan == null || !caravan.IsPlayerControlled || !tile.Valid) return;
+            __result.AddRange(CaravanArrivalAction_EnterDungeon.GetFloatMenuOptions(caravan, tile));
+        }
+    }
+
+    [HarmonyPatch(typeof(Caravan), nameof(Caravan.GetGizmos))]
+    public static class Patch_Caravan_GetGizmos
+    {
+        public static IEnumerable<Gizmo> Postfix(IEnumerable<Gizmo> gizmos, Caravan __instance)
+        {
+            foreach (var g in gizmos) yield return g;
+            if (!__instance.IsPlayerControlled || Find.WorldSelector.SingleSelectedObject != __instance) yield break;
+            var comp = DungeonWorldComponent.Instance;
+            if (comp == null || !comp.TryGetLevel(__instance.Tile, out int level) || comp.IsBlocked(__instance.Tile)) yield break;
+            var report = DungeonEntry.CanEnterAt(__instance.Tile, out _);
+            var cmd = new Command_Action
+            {
+                defaultLabel = "TUBAD_EnterDungeonLevel".Translate(level),
+                defaultDesc = "TUBAD_EnterDungeon_Desc".Translate(DungeonsMod.Settings.maxPartySize),
+                icon = DungeonTextures.EnterDungeon,
+                action = () => CaravanArrivalAction_EnterDungeon.OpenDialog(__instance),
+            };
+            if (__instance.pather.Moving) cmd.Disable("TUBAD_CaravanMoving".Translate());
+            else if (!report.Accepted) cmd.Disable(report.Reason);
+            yield return cmd;
         }
     }
 

@@ -1,0 +1,148 @@
+using System.Collections.Generic;
+using System.Linq;
+using RimWorld;
+using RimWorld.Planet;
+using UnityEngine;
+using Verse;
+
+namespace ThisUsedToBeAboutDungeons
+{
+    /// <summary>
+    /// The world object for one dungeon instance: made when a party enters, destroyed with its map when the party
+    /// has left or died. The next party at this dungeon gets a fresh one. It sits on the dungeon's own tile, so the
+    /// map takes that tile's biome and temperature.
+    /// </summary>
+    public class DungeonSite : MapParent, IThingHolder
+    {
+        public int level;
+        public float partyWealth;
+        public float effectiveLevel;
+
+        // Items left at the entrance when nobody stayed outside, and items carried out through the exit before any
+        // pawn came out to take them. Handed to the caravan on the tile as soon as one exists.
+        private ThingOwner<Thing> stash;
+
+        private bool everyoneLeft;
+
+        public DungeonSite()
+        {
+            stash = new ThingOwner<Thing>(this);
+        }
+
+        public override MapGeneratorDef MapGeneratorDef => DungeonDefOf.TUBAD_Dungeon;
+
+        public override string Label => "TUBAD_SiteLabel".Translate(level);
+
+        public ThingOwner GetDirectlyHeldThings() => stash;
+        public void GetChildHolders(List<IThingHolder> outChildren) => ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, GetDirectlyHeldThings());
+
+        public void AddToStash(Thing t)
+        {
+            if (t.holdingOwner != null) t.holdingOwner.TryTransferToContainer(t, stash, t.stackCount);
+            else stash.TryAdd(t);
+        }
+
+        /// <summary>A player caravan waiting on this tile, if any.</summary>
+        public Caravan WaitingCaravan()
+        {
+            foreach (var c in Find.WorldObjects.Caravans)
+                if (c.Tile == Tile && c.IsPlayerControlled && !c.pather.Moving) return c;
+            return null;
+        }
+
+        /// <summary>Moves a pawn standing on the exit out to the caravan on this tile, making one if needed.
+        /// Returns false when the pawn cannot leave yet (an animal or prisoner with no caravan to join).</summary>
+        public bool TryMovePawnOut(Pawn pawn)
+        {
+            var caravan = WaitingCaravan();
+            if (caravan != null)
+            {
+                caravan.AddPawn(pawn, addCarriedPawnToWorldPawnsIfAny: true);
+                pawn.ExitMap(allowedToJoinOrCreateCaravan: false, Rot4.Invalid);
+            }
+            else
+            {
+                if (!pawn.IsColonist && !pawn.IsColonySubhumanPlayerControlled && !pawn.IsColonyMechPlayerControlled) return false;
+                caravan = CaravanMaker.MakeCaravan(Gen.YieldSingle(pawn), Faction.OfPlayer, Tile, addToWorldPawnsIfNotAlready: false);
+                pawn.ExitMap(allowedToJoinOrCreateCaravan: false, Rot4.Invalid);
+                if (!pawn.IsWorldPawn()) Find.WorldPawns.PassToWorld(pawn);
+            }
+            if (pawn.inventory != null) pawn.inventory.UnloadEverything = false;
+            FlushStash(caravan);
+            return true;
+        }
+
+        public void FlushStash(Caravan caravan)
+        {
+            if (caravan == null) return;
+            for (int i = stash.Count - 1; i >= 0; i--)
+            {
+                Thing t = stash[i];
+                stash.Remove(t);
+                CaravanInventoryUtility.GiveThing(caravan, t);
+            }
+        }
+
+        public override bool ShouldRemoveMapNow(out bool alsoRemoveWorldObject)
+        {
+            alsoRemoveWorldObject = true;
+            // Vanilla's AnyPawnBlockingMapRemoval also counts colonist corpses, which would keep a wiped party's
+            // dungeon open forever. Here only living player pawns that can act on their own keep it: downed ones
+            // count, since they can still be revived; animals alone do not.
+            foreach (var p in Map.mapPawns.AllPawnsSpawned)
+            {
+                if (p.Dead || p.Faction != Faction.OfPlayer) continue;
+                if (p.RaceProps.Humanlike || p.IsColonyMech) return false;
+            }
+            return true;
+        }
+
+        public override void PostMapGenerate()
+        {
+            base.PostMapGenerate();
+            everyoneLeft = false;
+        }
+
+        public void Notify_PawnLeft() => everyoneLeft = true;
+
+        public override void Notify_MyMapAboutToBeRemoved()
+        {
+            base.Notify_MyMapAboutToBeRemoved();
+            bool anyCorpse = Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse)
+                .OfType<Corpse>().Any(c => c.InnerPawn.Faction == Faction.OfPlayer && c.InnerPawn.RaceProps.Humanlike);
+            var caravan = WaitingCaravan();
+            FlushStash(caravan);
+            if (!everyoneLeft || (anyCorpse && caravan == null))
+                Find.LetterStack.ReceiveLetter("TUBAD_PartyLost_Label".Translate(), "TUBAD_PartyLost_Text".Translate(level),
+                    LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
+        }
+
+        public override IEnumerable<FloatMenuOption> GetFloatMenuOptions(Caravan caravan)
+        {
+            foreach (var o in base.GetFloatMenuOptions(caravan)) yield return o;
+            // A party is inside: other caravans can travel here and wait, but not enter
+            yield return new FloatMenuOption("TUBAD_EnterDungeon".Translate() + " (" + "TUBAD_PartyInside".Translate() + ")", null);
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Values.Look(ref level, "level");
+            Scribe_Values.Look(ref partyWealth, "partyWealth");
+            Scribe_Values.Look(ref effectiveLevel, "effectiveLevel");
+            Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
+            Scribe_Deep.Look(ref stash, "stash", this);
+            if (stash == null) stash = new ThingOwner<Thing>(this);
+        }
+    }
+
+    [DefOf]
+    public static class DungeonDefOf
+    {
+        public static WorldObjectDef TUBAD_DungeonSite;
+        public static MapGeneratorDef TUBAD_Dungeon;
+        public static ThingDef TUBAD_DungeonWall;
+        public static ThingDef TUBAD_DungeonExit;
+        static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
+    }
+}
