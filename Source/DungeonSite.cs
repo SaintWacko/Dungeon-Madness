@@ -106,7 +106,15 @@ namespace ThisUsedToBeAboutDungeons
             {
                 Thing t = stash[i];
                 stash.Remove(t);
-                CaravanInventoryUtility.GiveThing(caravan, t);
+                // A downed or roped animal (or a downed person) carried to the exit arrives as a hauled thing;
+                // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
+                if (t is Pawn p)
+                {
+                    caravan.AddPawn(p, addCarriedPawnToWorldPawnsIfAny: true);
+                    if (!p.Dead && !p.IsWorldPawn()) Find.WorldPawns.PassToWorld(p);
+                    if (p.inventory != null) p.inventory.UnloadEverything = false;
+                }
+                else CaravanInventoryUtility.GiveThing(caravan, t);
             }
         }
 
