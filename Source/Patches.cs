@@ -100,7 +100,7 @@ namespace ThisUsedToBeAboutDungeons
             {
                 // Vanilla draws the pawn checkbox at the left of a 90px box centred in the count area
                 rect = rect.Rounded();
-                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 80f, 25f);
+                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 110f, 25f).Rounded();
                 using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
                 {
                     GUI.color = ColorLibrary.RedReadable;
