@@ -18,9 +18,9 @@ namespace ThisUsedToBeAboutDungeons
 
         private const float TitleHeight = 35f;
         private const float RowLabelWidth = 130f;
-        private const float RowHeight = 40f;
+        private const float RowHeight = 44f; // room for the everyone warning on two lines
         private const float RowGap = 8f;
-        private const float NoteHeight = 24f;
+        private const float NoteHeight = 40f; // a long already-entered list wraps to two lines
         private const float HeaderHeight = RowHeight * 2f + RowGap + 4f + NoteHeight;
         private static readonly Vector2 ButtonSize = new Vector2(160f, 40f);
 

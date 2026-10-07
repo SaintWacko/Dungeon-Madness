@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "buildId": 18,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-07T18:22:02.588Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Dialog_EnterDungeon header rewrite (DoHeader layout, DrawCaravanInfo isCaravan:false, DrawExtraInfo text state leaks) and finder fixed ordering",
+  "diffSource": "since build 16 (2026-10-07T17:23:55Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 1,
+    "note": 2
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "Already-entered note shrank from 40px to 24px and will wrap into the tab strip",
+      "detail": "The old DoInfo gave TUBAD_Enter_AlreadyEntered a 40f-tall rect; the new one is NoteHeight = 24f (one Small line) at partyRow.yMax + 4f, and HeaderHeight reserves nothing below it before the tabs. A comma list of several LabelShortCap names wraps to a second line that draws over the tab strip. Raise NoteHeight to ~40f (HeaderHeight already derives from it) or measure the text with Text.CalcHeight.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Dialog_EnterDungeon.cs:248"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Rescue caravan now uses IsOwner: secure slaves, guests and ghouls no longer form one",
+      "detail": "IsOwner rejects IsSlave, HostFaction != null and mutants whose def has canOwnCaravan false, while IsColonist accepted secure slaves. If only a slave is carried out with nobody outside, no caravan forms, the stash is flushed with caravan == null and the party-lost letter fires. This matches AnyoneStaysOutside (DungeonEntry.cs:61), so it is probably intended, but it is a player-visible behaviour change worth a changelog line.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs:155"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Everyone warning may wrap to two Small lines in a 40px row",
+      "detail": "TUBAD_Enter_Everyone is about 150 characters drawn MiddleCenter in an 860x40 rect. At Small font it likely wraps to two lines (about 44px) and overflows the row by a couple of pixels into the gap. This is an estimate; check it in game.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Languages/English/Keyed/TUBAD.xml:51"
+      }
+    }
+  ],
+  "checked": [
+    "DrawExtraInfo leaves Text.Font Small, Text.Anchor UpperLeft and GUI.color white on exit, so neither the unwrapped outside-row DrawCaravanInfo call nor the party strip leaks text state; the ResetLabel…",
+    "DrawCaravanInfo isCaravan:false drops CaravanMass, speed, forage and visibility, leaving Mass and Days of food: 2 cells, matching the col*2 rect (RimWorld.Planet/CaravanUIUtility.cs:175-237)",
+    "Grid: at the 1024 window width col = 172; the 5-, 2- and 3-cell strips are all under DrawExtraInfo's 230px-per-cell cap, so none is re-centred and the rows line up",
+    "HeaderHeight (116) is used consistently for both the DoHeader rect and inRect.yMin",
+    "Widgets.DrawLineHorizontal(x, y, length, Color) overload exists",
+    "TryAccept going = party is the same as the old everyone branch: SelectionChanged auto-ticks every caravan pawn transferable before party is re-read",
+    "Finder: candidates is sorted by LabelShort in RefreshCandidates, so dropping the ticked-first ordering gives a stable by-name list as the comment says",
+    "Keyed strings: People, Wealth and Effective lost their {0}/{1} placeholders and every call site now calls Translate() with no args; LockedTip is still used by Patches.cs:98; English is the only langu…",
+    "No Harmony patches changed in this diff",
+    "Not checked: pyxis_mod_errors did not run because no Pyxis token is configured (Settings > Integrations)"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/Dialog_DungeonFinder.cs",
+    "Source/Dialog_EnterDungeon.cs",
+    "Source/DungeonSite.cs",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 1,
+  "buildCommit": "a775f175f4156447ab2ac2e90e34118a2b9c9ae8",
+  "partial": false
+}
