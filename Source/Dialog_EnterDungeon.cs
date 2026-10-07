@@ -17,6 +17,7 @@ namespace ThisUsedToBeAboutDungeons
         private enum Tab { Pawns, Items, Supplies }
 
         private const float TitleHeight = 35f;
+        private const float StatsHeight = 40f;
         private const float InfoHeight = 66f;
         private static readonly Vector2 ButtonSize = new Vector2(160f, 40f);
 
@@ -31,6 +32,8 @@ namespace ThisUsedToBeAboutDungeons
         private List<Pawn> party = new List<Pawn>();
         private bool everyone;
         private float wealth;
+        // Vanilla caravan stats: the caravan left outside and the party going in, as in the split caravan dialog
+        private CaravanUIUtility.CaravanInfo outsideInfo, partyInfo;
 
         public override Vector2 InitialSize => new Vector2(1024f, UI.screenHeight);
         protected override float Margin => 0f;
@@ -55,7 +58,7 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var p in caravan.PawnsListForReading) Add(p);
             foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) Add(t);
             CaravanUIUtility.CreateCaravanTransferableWidgets(transferables, out pawnsTransfer, out itemsTransfer, out suppliesTransfer,
-                "TUBAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => float.MaxValue,
+                "TUBAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => partyInfo.massCapacity - partyInfo.massUsage,
                 ignoreSpawnedCorpsesGearAndInventoryMass: false, caravan.Tile);
             SelectionChanged();
         }
@@ -77,19 +80,66 @@ namespace ThisUsedToBeAboutDungeons
             everyone = party.Count > 0 && !DungeonEntry.AnyoneStaysOutside(caravan, party);
             var going = everyone ? caravan.PawnsListForReading : party;
             wealth = DungeonEntry.PartyWealth(going);
+            RecacheStats();
+        }
+
+        private void RecacheStats()
+        {
+            PlanetTile tile = caravan.Tile;
+            var sb = new System.Text.StringBuilder();
+            var biome = caravan.Biome;
+
+            float outMass = CollectionsMassCalculator.MassUsageLeftAfterTransfer(transferables, IgnorePawnsInventoryMode.Ignore);
+            sb.Length = 0;
+            float outCap = CollectionsMassCalculator.CapacityLeftAfterTransfer(transferables, sb);
+            string outCapTip = sb.ToString();
+            sb.Length = 0;
+            float outSpeed = TilesPerDayCalculator.ApproxTilesPerDayLeftAfterTransfer(transferables, outMass, outCap, tile, PlanetTile.Invalid, caravan.Shuttle != null, sb);
+            string outSpeedTip = sb.ToString();
+            float outFood = DaysWorthOfFoodCalculator.ApproxDaysWorthOfFoodLeftAfterTransfer(transferables, tile, IgnorePawnsInventoryMode.Ignore, caravan.Faction);
+            float outRot = DaysUntilRotCalculator.ApproxDaysUntilRotLeftAfterTransfer(transferables, tile, IgnorePawnsInventoryMode.Ignore);
+            sb.Length = 0;
+            var outForage = ForagedFoodPerDayCalculator.ForagedFoodPerDayLeftAfterTransfer(transferables, biome, Faction.OfPlayer, sb);
+            string outForageTip = sb.ToString();
+            sb.Length = 0;
+            float outVis = CaravanVisibilityCalculator.VisibilityLeftAfterTransfer(transferables, sb);
+            outsideInfo = new CaravanUIUtility.CaravanInfo(outMass, outCap, outCapTip, outSpeed, outSpeedTip, (outFood, outRot), outForage, outForageTip, outVis, sb.ToString());
+
+            float inMass = CollectionsMassCalculator.MassUsageTransferables(transferables, IgnorePawnsInventoryMode.Ignore);
+            sb.Length = 0;
+            float inCap = CollectionsMassCalculator.CapacityTransferables(transferables, sb);
+            string inCapTip = sb.ToString();
+            sb.Length = 0;
+            float inSpeed = TilesPerDayCalculator.ApproxTilesPerDay(transferables, inMass, inCap, tile, PlanetTile.Invalid, caravan.Shuttle != null, sb);
+            string inSpeedTip = sb.ToString();
+            float inFood = DaysWorthOfFoodCalculator.ApproxDaysWorthOfFood(transferables, tile, IgnorePawnsInventoryMode.Ignore, caravan.Faction);
+            float inRot = DaysUntilRotCalculator.ApproxDaysUntilRot(transferables, tile, IgnorePawnsInventoryMode.Ignore);
+            sb.Length = 0;
+            var inForage = ForagedFoodPerDayCalculator.ForagedFoodPerDay(transferables, biome, Faction.OfPlayer, sb);
+            string inForageTip = sb.ToString();
+            sb.Length = 0;
+            float inVis = CaravanVisibilityCalculator.Visibility(transferables, sb);
+            partyInfo = new CaravanUIUtility.CaravanInfo(inMass, inCap, inCapTip, inSpeed, inSpeedTip, (inFood, inRot), inForage, inForageTip, inVis, sb.ToString());
         }
 
         public override void DoWindowContents(Rect inRect)
         {
             using (new TextBlock(GameFont.Medium, TextAnchor.MiddleCenter))
                 Widgets.Label(new Rect(0f, 0f, inRect.width, TitleHeight), "TUBAD_EnterDungeon_Title".Translate(level));
-            DoInfo(new Rect(17f, TitleHeight, inRect.width - 34f, InfoHeight));
+            // Outside caravan on the left, party on the right, like split caravan. When everyone goes in there is no
+            // caravan left outside, so only the party is shown.
+            var statsRect = new Rect(12f, TitleHeight, inRect.width - 24f, StatsHeight);
+            if (everyone)
+                CaravanUIUtility.DrawCaravanInfo(partyInfo, null, caravan.Tile, null, -9999f, statsRect);
+            else
+                CaravanUIUtility.DrawCaravanInfo(outsideInfo, partyInfo, caravan.Tile, null, -9999f, statsRect);
+            DoInfo(new Rect(17f, TitleHeight + StatsHeight, inRect.width - 34f, InfoHeight));
 
             tabs.Clear();
             tabs.Add(new TabRecord("PawnsTab".Translate(), () => tab = Tab.Pawns, tab == Tab.Pawns));
             tabs.Add(new TabRecord("ItemsTab".Translate(), () => tab = Tab.Items, tab == Tab.Items));
             tabs.Add(new TabRecord("TravelSupplies".Translate(), () => tab = Tab.Supplies, tab == Tab.Supplies));
-            inRect.yMin += TitleHeight + InfoHeight + TabDrawer.TabHeight + 4f;
+            inRect.yMin += TitleHeight + StatsHeight + InfoHeight + TabDrawer.TabHeight + 4f;
             Widgets.DrawMenuSection(inRect);
             TabDrawer.DrawTabs(inRect, tabs);
             inRect = inRect.ContractedBy(17f);

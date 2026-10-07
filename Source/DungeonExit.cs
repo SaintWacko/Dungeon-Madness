@@ -33,8 +33,12 @@ namespace ThisUsedToBeAboutDungeons
             containerProxy = new DungeonExitProxy { portal = this };
         }
 
+        /// <summary>The floor cell in front of the stairway. The exit itself is part of the wall and cannot be stood on.</summary>
+        public static IntVec3 InsideCellFor(IntVec3 exitPos) => exitPos + IntVec3.South;
+        public IntVec3 InsideCell => InsideCellFor(Position);
+
         public override Map GetOtherMap() => Map;
-        public override IntVec3 GetDestinationLocation() => Position;
+        public override IntVec3 GetDestinationLocation() => InsideCell;
 
         public override void OnEntered(Pawn pawn)
         {

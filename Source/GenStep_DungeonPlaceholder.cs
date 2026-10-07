@@ -40,12 +40,17 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var r in rooms) foreach (var c in r) open.Add(c);
             for (int i = 0; i + 1 < rooms.Count; i++) Corridor(rooms[i].CenterCell, rooms[i + 1].CenterCell, open);
 
-            foreach (var c in map.AllCells)
-                if (!open.Contains(c)) GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonWall, c, map);
+            // The exit is a stairway set into the middle of the first room's north wall: 3 cells of wall become the
+            // exit, and pawns use it from the room side
+            CellRect first = rooms.Count > 0 ? rooms[0] : CellRect.CenteredOn(map.Center, 4);
+            IntVec3 exitCell = new IntVec3(first.CenterCell.x, 0, first.maxZ + 1);
+            var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.TUBAD_DungeonExit.size);
 
-            IntVec3 exitCell = rooms.Count > 0 ? rooms[0].CenterCell : map.Center;
+            foreach (var c in map.AllCells)
+                if (!open.Contains(c) && !exitRect.Contains(c)) GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonWall, c, map);
+
             GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonExit, exitCell, map);
-            MapGenerator.PlayerStartSpot = exitCell;
+            MapGenerator.PlayerStartSpot = DungeonExit.InsideCellFor(exitCell);
         }
 
         // L-shaped, 3 cells wide

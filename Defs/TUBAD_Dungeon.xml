@@ -84,15 +84,25 @@
   <ThingDef ParentName="PocketMapExit">
     <defName>TUBAD_DungeonExit</defName>
     <label>dungeon exit</label>
-    <description>The way back out to the world. Pawns leaving through it rejoin the caravan waiting outside, carrying whatever they bring here.</description>
+    <description>Stairs cut into the wall, leading back up to the world. Pawns leaving climb them and rejoin the caravan waiting outside, carrying whatever they bring here.</description>
     <thingClass>ThisUsedToBeAboutDungeons.DungeonExit</thingClass>
-    <size>(3,3)</size>
+    <size>(3,1)</size>
     <drawerType>MapMeshAndRealTime</drawerType>
     <graphicData>
       <graphicClass>Graphic_Single</graphicClass>
-      <texPath>Things/Building/Misc/CaveExit/CaveExit</texPath>
-      <drawSize>(3,3)</drawSize>
+      <texPath>Things/Building/TUBAD_DungeonExit</texPath>
+      <drawSize>(3,1)</drawSize>
     </graphicData>
+    <!-- Part of the wall: pawns walk up to it rather than onto it -->
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <blockWind>true</blockWind>
+    <blockLight>true</blockLight>
+    <holdsRoof>true</holdsRoof>
+    <staticSunShadowHeight>1</staticSunShadowHeight>
+    <castEdgeShadows>true</castEdgeShadows>
+    <coversFloor>true</coversFloor>
     <statBases>
       <Flammability>0</Flammability>
     </statBases>

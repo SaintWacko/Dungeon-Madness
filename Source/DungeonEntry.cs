@@ -124,7 +124,7 @@ namespace ThisUsedToBeAboutDungeons
                 foreach (var p in party)
                     if (p.RaceProps.Humanlike) comp.MarkEntered(tile.tileId, p);
 
-                IntVec3 entrance = map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit).FirstOrDefault()?.Position ?? map.Center;
+                IntVec3 entrance = (map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit).FirstOrDefault() as DungeonExit)?.InsideCell ?? map.Center;
                 CaravanEnterMapUtility.Enter(partyCaravan, map, p => CellFinder.RandomClosewalkCellNear(entrance, map, 4),
                     CaravanDropInventoryMode.DoNotDrop, draftColonists: false);
                 CameraJumper.TryJump(entrance, map);
