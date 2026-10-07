@@ -23,6 +23,8 @@ namespace ThisUsedToBeAboutDungeons
         private static IntRange levelRange = new IntRange(1, 10);
         private static int maxDistance = AnyDistance;
         private static readonly HashSet<Pawn> ticked = new HashSet<Pawn>();
+        // The game the ticks belong to: a load or a new game drops them so old pawns are not kept alive
+        private static World tickedWorld;
 
         private List<Pawn> candidates = new List<Pawn>();
         private List<PlanetTile> origins = new List<PlanetTile>();
@@ -46,6 +48,11 @@ namespace ThisUsedToBeAboutDungeons
             closeOnClickedOutside = false;
             absorbInputAroundWindow = false;
             forcePause = false;
+            if (tickedWorld != Find.World)
+            {
+                ticked.Clear();
+                tickedWorld = Find.World;
+            }
             RefreshCandidates();
             var caravan = Find.WorldSelector.FirstSelectedObject as Caravan;
             if (caravan != null && caravan.IsPlayerControlled) LoadCaravan(caravan);
@@ -242,6 +249,9 @@ namespace ThisUsedToBeAboutDungeons
             var blocked = comp.BlockedSurfaceTiles();
             var surface = Find.WorldGrid.Surface;
             bool limit = origin.Valid && maxDistance < AnyDistance;
+            // Measured as directions from the planet's centre, so an origin on another layer (a gravship in orbit)
+            // still works: its tile ids do not index the surface.
+            Vector3 originDir = origin.Valid ? origin.Layer.GetTileCenter(origin).normalized : Vector3.zero;
             for (int i = 0; i < comp.Count; i++)
             {
                 int level = comp.GetLevel(i);
@@ -250,7 +260,9 @@ namespace ThisUsedToBeAboutDungeons
                 if (blocked.Contains(id)) continue;
                 if (ticked.Any(p => comp.HasEntered(id, p))) continue;
                 var tile = new PlanetTile(id, surface);
-                float dist = origin.Valid ? Find.WorldGrid.ApproxDistanceInTiles(origin, tile) : 0f;
+                float dist = origin.Valid
+                    ? surface.ApproxDistanceInTiles(GenMath.SphericalDistance(originDir, surface.GetTileCenter(id).normalized))
+                    : 0f;
                 if (limit && dist > maxDistance) continue;
                 results.Add((tile, level, dist, null));
             }

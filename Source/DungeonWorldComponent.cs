@@ -216,6 +216,8 @@ namespace ThisUsedToBeAboutDungeons
 
             chosen.Sort();
             tiles = chosen.ToArray();
+            // Entry records are keyed by tile and belong to the old layout
+            enteredBy.Clear();
             levels = AssignLevels(layer, tiles, seed, settings);
             genVersion = CurrentGenVersion;
             generatedMaxLevel = settings.maxLevel;

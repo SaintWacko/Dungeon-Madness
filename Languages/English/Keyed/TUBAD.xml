@@ -23,7 +23,7 @@
   <TUBAD_Finder_NoOrigins>No colonies or caravans</TUBAD_Finder_NoOrigins>
   <TUBAD_Finder_Within>Within {0} tiles</TUBAD_Finder_Within>
   <TUBAD_Finder_AnyDistance>Any distance</TUBAD_Finder_AnyDistance>
-  <TUBAD_Finder_Matches>{0} dungeons match</TUBAD_Finder_Matches>
+  <TUBAD_Finder_Matches>Matching dungeons: {0}</TUBAD_Finder_Matches>
   <TUBAD_Finder_LevelShort>Lv {0}</TUBAD_Finder_LevelShort>
   <TUBAD_Finder_Tiles>{0} tiles</TUBAD_Finder_Tiles>
 
