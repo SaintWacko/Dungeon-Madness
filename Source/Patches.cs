@@ -86,6 +86,19 @@ namespace ThisUsedToBeAboutDungeons
         }
     }
 
+    // Tooltip on the pawn rows the enter dialog has ticked and locked. The row is drawn deep inside vanilla's
+    // transferable widget, so the count/checkbox call is the one place that has both the row's rect and its
+    // transferable. Costs a HashSet lookup per row only while that dialog has locked something.
+    [HarmonyPatch(typeof(TransferableUIUtility), nameof(TransferableUIUtility.DoCountAdjustInterface))]
+    public static class Patch_TransferableUIUtility_DoCountAdjustInterface
+    {
+        public static void Postfix(Rect rect, Transferable trad)
+        {
+            if (Dialog_EnterDungeon.Locked.Count == 0 || !(trad is TransferableOneWay tr) || !Dialog_EnterDungeon.Locked.Contains(tr)) return;
+            TooltipHandler.TipRegion(rect, "TUBAD_Enter_LockedTip".Translate());
+        }
+    }
+
     // ---- Vanilla world search: dungeons are listed as "Dungeon (level N)"
 
     public class DungeonSearchElement : WorldSearchElement

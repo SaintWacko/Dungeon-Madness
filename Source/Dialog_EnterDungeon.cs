@@ -52,8 +52,19 @@ namespace ThisUsedToBeAboutDungeons
             Recache();
         }
 
+        /// <summary>Pawn rows ticked and locked by the dialog because nobody able would stay outside with them.
+        /// Read by the row tooltip patch; empty while no enter dialog is open.</summary>
+        public static readonly HashSet<TransferableOneWay> Locked = new HashSet<TransferableOneWay>();
+
+        public override void PostClose()
+        {
+            base.PostClose();
+            Locked.Clear();
+        }
+
         private void Recache()
         {
+            Locked.Clear();
             transferables = new List<TransferableOneWay>();
             foreach (var p in caravan.PawnsListForReading) Add(p);
             foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) Add(t);
@@ -76,9 +87,29 @@ namespace ThisUsedToBeAboutDungeons
 
         private void SelectionChanged()
         {
+            // Undo the previous auto-ticks, so the check below sees only what the player chose
+            foreach (var tr in Locked)
+            {
+                tr.interactive = true;
+                tr.AdjustTo(0);
+            }
+            Locked.Clear();
+
             party = TransferableUtility.GetPawnsFromTransferables(transferables);
             everyone = party.Count > 0 && !DungeonEntry.AnyoneStaysOutside(caravan, party);
-            var going = everyone ? caravan.PawnsListForReading : party;
+            if (everyone)
+            {
+                // Nobody left outside could lead a caravan, so they all go in: show them ticked and locked
+                foreach (var tr in transferables)
+                    if (tr.AnyThing is Pawn && tr.CountToTransfer < tr.GetMaximumToTransfer())
+                    {
+                        tr.AdjustTo(tr.GetMaximumToTransfer());
+                        tr.interactive = false;
+                        Locked.Add(tr);
+                    }
+                party = TransferableUtility.GetPawnsFromTransferables(transferables);
+            }
+            var going = party;
             wealth = DungeonEntry.PartyWealth(going);
             RecacheStats();
         }
@@ -105,19 +136,6 @@ namespace ThisUsedToBeAboutDungeons
             float outVis = CaravanVisibilityCalculator.VisibilityLeftAfterTransfer(transferables, sb);
             outsideInfo = new CaravanUIUtility.CaravanInfo(outMass, outCap, outCapTip, outSpeed, outSpeedTip, (outFood, outRot), outForage, outForageTip, outVis, sb.ToString());
 
-            // When everyone goes in, unticked pawns go too: count them in the party's stats, then put the ticks back
-            List<(TransferableOneWay tr, int count)> restore = null;
-            if (everyone)
-            {
-                restore = new List<(TransferableOneWay, int)>();
-                foreach (var tr in transferables)
-                    if (tr.AnyThing is Pawn && tr.CountToTransfer < tr.GetMaximumToTransfer())
-                    {
-                        restore.Add((tr, tr.CountToTransfer));
-                        tr.AdjustTo(tr.GetMaximumToTransfer());
-                    }
-            }
-
             float inMass = CollectionsMassCalculator.MassUsageTransferables(transferables, IgnorePawnsInventoryMode.Ignore);
             sb.Length = 0;
             float inCap = CollectionsMassCalculator.CapacityTransferables(transferables, sb);
@@ -134,8 +152,6 @@ namespace ThisUsedToBeAboutDungeons
             float inVis = CaravanVisibilityCalculator.Visibility(transferables, sb);
             partyInfo = new CaravanUIUtility.CaravanInfo(inMass, inCap, inCapTip, inSpeed, inSpeedTip, (inFood, inRot), inForage, inForageTip, inVis, sb.ToString());
 
-            if (restore != null)
-                foreach (var (tr, count) in restore) tr.AdjustTo(count);
         }
 
         public override void DoWindowContents(Rect inRect)
