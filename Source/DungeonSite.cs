@@ -33,8 +33,15 @@ namespace ThisUsedToBeAboutDungeons
 
         public override string Label => "TUBAD_SiteLabel".Translate(level);
 
-        public ThingOwner GetDirectlyHeldThings() => stash;
-        public void GetChildHolders(List<IThingHolder> outChildren) => ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, GetDirectlyHeldThings());
+        // MapParent's version is not virtual and returns null; re-listing IThingHolder on this class makes the
+        // interface map to this one, so the stash's contents are reachable as held things (and kept by world GC)
+        public new ThingOwner GetDirectlyHeldThings() => stash;
+
+        public override void GetChildHolders(List<IThingHolder> outChildren)
+        {
+            ThingOwnerUtility.AppendThingHoldersFromThings(outChildren, stash);
+            if (HasMap) outChildren.Add(Map);
+        }
 
         public void AddToStash(Thing t)
         {
