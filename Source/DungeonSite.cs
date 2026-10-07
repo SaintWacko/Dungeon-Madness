@@ -152,7 +152,7 @@ namespace ThisUsedToBeAboutDungeons
             // A colonist carried out (downed) with nobody outside would vanish with the site: they form a caravan
             if (caravan == null)
             {
-                var colonist = stash.OfType<Pawn>().FirstOrDefault(p => !p.Dead && p.IsColonist);
+                var colonist = stash.OfType<Pawn>().FirstOrDefault(p => !p.Dead && p.RaceProps.Humanlike && CaravanUtility.IsOwner(p, Faction.OfPlayer));
                 if (colonist != null)
                 {
                     stash.Remove(colonist);

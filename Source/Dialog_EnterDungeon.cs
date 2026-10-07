@@ -194,7 +194,7 @@ namespace ThisUsedToBeAboutDungeons
         private void DoInfo(Rect rect)
         {
             int cap = DungeonsMod.Settings.maxPartySize;
-            var going = everyone ? caravan.PawnsListForReading : party;
+            var going = party;
             int people = DungeonEntry.HumanlikeCount(going);
             float mult = DungeonEntry.WealthMultiplier(wealth);
             float col = rect.width / 3f;
@@ -250,7 +250,7 @@ namespace ThisUsedToBeAboutDungeons
                 Messages.Message("TUBAD_Enter_NeedColonist".Translate(), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
-            var going = everyone ? caravan.PawnsListForReading : party;
+            var going = party; // already every pawn when everyone goes in
             int cap = DungeonsMod.Settings.maxPartySize;
             if (DungeonEntry.HumanlikeCount(going) > cap)
             {
