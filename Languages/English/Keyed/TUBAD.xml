@@ -5,6 +5,27 @@
   <!-- World map -->
   <TUBAD_ToggleIcons>Show dungeon icons.</TUBAD_ToggleIcons>
   <TUBAD_TileDungeon>Dungeon: level {0}</TUBAD_TileDungeon>
+  <TUBAD_SearchLabel>Dungeon (level {0})</TUBAD_SearchLabel>
+  <TUBAD_River>river</TUBAD_River>
+  <TUBAD_Coastal>coastal</TUBAD_Coastal>
+
+  <!-- Dungeon finder -->
+  <TUBAD_Finder_Open>Find dungeons by level, distance and party.</TUBAD_Finder_Open>
+  <TUBAD_Finder_Title>Dungeon finder</TUBAD_Finder_Title>
+  <TUBAD_Finder_Party>party</TUBAD_Finder_Party>
+  <TUBAD_Finder_PartyHint>Hides dungeons any ticked pawn has entered. Untick retainers who won't go in.</TUBAD_Finder_PartyHint>
+  <TUBAD_Finder_LoadCaravan>Load selected caravan</TUBAD_Finder_LoadCaravan>
+  <TUBAD_Finder_LoadCaravan_Disabled>Select one of your caravans on the world map first.</TUBAD_Finder_LoadCaravan_Disabled>
+  <TUBAD_Finder_PartyCount>Party: {0} / {1}</TUBAD_Finder_PartyCount>
+  <TUBAD_Finder_Level>level</TUBAD_Finder_Level>
+  <TUBAD_Finder_Distance>distance</TUBAD_Finder_Distance>
+  <TUBAD_Finder_From>From: {0}</TUBAD_Finder_From>
+  <TUBAD_Finder_NoOrigins>No colonies or caravans</TUBAD_Finder_NoOrigins>
+  <TUBAD_Finder_Within>Within {0} tiles</TUBAD_Finder_Within>
+  <TUBAD_Finder_AnyDistance>Any distance</TUBAD_Finder_AnyDistance>
+  <TUBAD_Finder_Matches>{0} dungeons match</TUBAD_Finder_Matches>
+  <TUBAD_Finder_LevelShort>Lv {0}</TUBAD_Finder_LevelShort>
+  <TUBAD_Finder_Tiles>{0} tiles</TUBAD_Finder_Tiles>
 
   <!-- Settings -->
   <TUBAD_Tab_World>World</TUBAD_Tab_World>

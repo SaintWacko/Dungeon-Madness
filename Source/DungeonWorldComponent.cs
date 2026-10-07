@@ -26,6 +26,21 @@ namespace ThisUsedToBeAboutDungeons
         private ushort[] levels = Array.Empty<ushort>();
         private Dictionary<int, int> indexByTile = new Dictionary<int, int>();
 
+        // Pawns who have entered each dungeon, by surface tile id, as pawn load ids. Load ids rather than Pawn
+        // references so a pawn who has died and been discarded does not leave a dangling reference.
+        private Dictionary<int, EnteredSet> enteredBy = new Dictionary<int, EnteredSet>();
+
+        // Scribe cannot nest a collection directly inside a dictionary value
+        private class EnteredSet : IExposable
+        {
+            public HashSet<string> ids = new HashSet<string>();
+            public void ExposeData()
+            {
+                Scribe_Collections.Look(ref ids, "ids", LookMode.Value);
+                if (ids == null) ids = new HashSet<string>();
+            }
+        }
+
         // Map parent count the layer was last drawn against: a settlement or site on a dungeon tile hides its icon,
         // and an abandoned one shows it again. Caravans are not map parents, so they never trigger a rebuild.
         private int drawnMapParentCount = -1;
@@ -38,6 +53,15 @@ namespace ThisUsedToBeAboutDungeons
         public int GetTile(int index) => tiles[index];
         public int GetLevel(int index) => levels[index];
         public int MaxLevel => generatedMaxLevel;
+
+        public bool HasEntered(int tileId, Pawn pawn) =>
+            enteredBy.TryGetValue(tileId, out var set) && set.ids.Contains(pawn.GetUniqueLoadID());
+
+        public void MarkEntered(int tileId, Pawn pawn)
+        {
+            if (!enteredBy.TryGetValue(tileId, out var set)) enteredBy[tileId] = set = new EnteredSet();
+            set.ids.Add(pawn.GetUniqueLoadID());
+        }
 
         public bool TryGetLevel(PlanetTile tile, out int level)
         {
@@ -76,6 +100,8 @@ namespace ThisUsedToBeAboutDungeons
                 levelBytes = new byte[levels.Length * sizeof(ushort)];
                 Buffer.BlockCopy(levels, 0, levelBytes, 0, levelBytes.Length);
             }
+            Scribe_Collections.Look(ref enteredBy, "enteredBy", LookMode.Value, LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && enteredBy == null) enteredBy = new Dictionary<int, EnteredSet>();
             DataExposeUtility.LookByteArray(ref tileBytes, "tiles");
             DataExposeUtility.LookByteArray(ref levelBytes, "levels");
             if (Scribe.mode == LoadSaveMode.LoadingVars)

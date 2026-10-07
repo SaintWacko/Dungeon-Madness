@@ -1,1 +1,1 @@
-{ "textures": ["UI/TUBAD_ShowDungeons", "World/TUBAD_Dungeon"], "audio": [] }
+{ "textures": ["UI/TUBAD_ShowDungeons", "UI/TUBAD_FindDungeons", "World/TUBAD_Dungeon", "World/SelectedTile"], "audio": [] }
