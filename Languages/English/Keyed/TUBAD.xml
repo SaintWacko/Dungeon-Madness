@@ -47,6 +47,9 @@
   <TUBAD_Enter_Effective>Effective level</TUBAD_Enter_Effective>
   <TUBAD_Enter_Effective_Tip>The dungeon is generated for the party that enters it. Level {0}, multiplied by 1 + party wealth / {3}.\n\nParty wealth counts the pawns going in and what they wear and wield: {1}. Items carried in do not count.\n\nMultiplier: x{2}</TUBAD_Enter_Effective_Tip>
   <TUBAD_Enter_AlreadyEntered>Already entered this dungeon, and cannot go in again: {0}.</TUBAD_Enter_AlreadyEntered>
+  <TUBAD_Enter_EnteredShort>entered</TUBAD_Enter_EnteredShort>
+  <TUBAD_Enter_EnteredTip>Has already entered this dungeon, and cannot go in again.</TUBAD_Enter_EnteredTip>
+  <TUBAD_Enter_EnteredStuck>Already entered this dungeon, and cannot stay outside on their own: {0}. Leave a non-downed colonist outside with them.</TUBAD_Enter_EnteredStuck>
   <TUBAD_Enter_LockedTip>Cannot stay outside on their own. Leave a non-downed colonist with them to allow them to stay outside.</TUBAD_Enter_LockedTip>
   <TUBAD_Enter_Everyone>No caravan left outside. Only the items and supplies you select enter the dungeon; the rest wait at the entrance and are lost if the whole party dies.</TUBAD_Enter_Everyone>
   <TUBAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</TUBAD_Enter_NeedColonist>

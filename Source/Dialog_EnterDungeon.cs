@@ -59,21 +59,38 @@ namespace ThisUsedToBeAboutDungeons
         /// Read by the row tooltip patch; empty while no enter dialog is open.</summary>
         public static readonly HashSet<TransferableOneWay> Locked = new HashSet<TransferableOneWay>();
 
+        /// <summary>Pawn rows locked unticked because that pawn has already entered this dungeon. Read by the row
+        /// indicator patch; empty while no enter dialog is open.</summary>
+        public static readonly HashSet<TransferableOneWay> EnteredRows = new HashSet<TransferableOneWay>();
+
+        // Pawns who have been in before but would be swept in anyway, because nobody able stays outside with them
+        private List<Pawn> stuckEntered = new List<Pawn>();
+
         public override void PostClose()
         {
             base.PostClose();
             Locked.Clear();
+            EnteredRows.Clear();
         }
 
         private void Recache()
         {
             Locked.Clear();
+            EnteredRows.Clear();
             transferables = new List<TransferableOneWay>();
             foreach (var p in caravan.PawnsListForReading) Add(p);
             foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) Add(t);
             CaravanUIUtility.CreateCaravanTransferableWidgets(transferables, out pawnsTransfer, out itemsTransfer, out suppliesTransfer,
                 "TUBAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => partyInfo.massCapacity - partyInfo.massUsage,
                 ignoreSpawnedCorpsesGearAndInventoryMass: false, caravan.Tile);
+            // Anyone who has been in this dungeon before cannot go again: shown unticked and locked, with a marker
+            foreach (var tr in transferables)
+                if (tr.AnyThing is Pawn p && DungeonEntry.AlreadyEntered(caravan.Tile, Gen.YieldSingle(p)).Any())
+                {
+                    tr.AdjustTo(0);
+                    tr.interactive = false;
+                    EnteredRows.Add(tr);
+                }
             SelectionChanged();
         }
 
@@ -104,7 +121,7 @@ namespace ThisUsedToBeAboutDungeons
             {
                 // Nobody left outside could lead a caravan, so they all go in: show them ticked and locked
                 foreach (var tr in transferables)
-                    if (tr.AnyThing is Pawn && tr.CountToTransfer < tr.GetMaximumToTransfer())
+                    if (tr.AnyThing is Pawn && !EnteredRows.Contains(tr) && tr.CountToTransfer < tr.GetMaximumToTransfer())
                     {
                         tr.AdjustTo(tr.GetMaximumToTransfer());
                         tr.interactive = false;
@@ -112,6 +129,9 @@ namespace ThisUsedToBeAboutDungeons
                     }
                 party = TransferableUtility.GetPawnsFromTransferables(transferables);
             }
+            stuckEntered = everyone
+                ? EnteredRows.SelectMany(tr => tr.things).OfType<Pawn>().ToList()
+                : new List<Pawn>();
             var going = party;
             wealth = DungeonEntry.PartyWealth(going);
             RecacheStats();
@@ -240,14 +260,16 @@ namespace ThisUsedToBeAboutDungeons
             GenUI.ResetLabelAlign();
             GUI.color = Color.white;
 
-            var entered = DungeonEntry.AlreadyEntered(caravan.Tile, party).ToList();
+            // Pawns who have entered before are locked out of the party, so the only way one goes in is being swept
+            // along when nobody able stays outside with them
+            var entered = stuckEntered;
             if (entered.Any())
             {
                 using (new TextBlock(GameFont.Small, TextAnchor.MiddleCenter))
                 {
                     GUI.color = ColorLibrary.RedReadable;
                     Widgets.Label(new Rect(rect.x, partyRow.yMax + 4f, rect.width, NoteHeight),
-                        "TUBAD_Enter_AlreadyEntered".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
+                        "TUBAD_Enter_EnteredStuck".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
                     GUI.color = Color.white;
                 }
             }
@@ -285,6 +307,12 @@ namespace ThisUsedToBeAboutDungeons
                 Messages.Message((everyone ? "TUBAD_Enter_TooManyEveryone" : "TUBAD_Enter_TooMany").Translate(cap), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
+            if (stuckEntered.Any())
+            {
+                Messages.Message("TUBAD_Enter_EnteredStuck".Translate(stuckEntered.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
+            // Safety net: the locked rows should already keep these out of the party
             var entered = DungeonEntry.AlreadyEntered(caravan.Tile, going).ToList();
             if (entered.Any())
             {

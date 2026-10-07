@@ -94,8 +94,23 @@ namespace ThisUsedToBeAboutDungeons
     {
         public static void Postfix(Rect rect, Transferable trad)
         {
-            if (Dialog_EnterDungeon.Locked.Count == 0 || !(trad is TransferableOneWay tr) || !Dialog_EnterDungeon.Locked.Contains(tr)) return;
-            TooltipHandler.TipRegion(rect, "TUBAD_Enter_LockedTip".Translate());
+            if (Dialog_EnterDungeon.Locked.Count == 0 && Dialog_EnterDungeon.EnteredRows.Count == 0) return;
+            if (!(trad is TransferableOneWay tr)) return;
+            if (Dialog_EnterDungeon.EnteredRows.Contains(tr))
+            {
+                // Vanilla draws the pawn checkbox at the left of a 90px box centred in the count area
+                rect = rect.Rounded();
+                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 80f, 25f);
+                using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
+                {
+                    GUI.color = ColorLibrary.RedReadable;
+                    Widgets.Label(label, "TUBAD_Enter_EnteredShort".Translate());
+                    GUI.color = Color.white;
+                }
+                TooltipHandler.TipRegion(rect, "TUBAD_Enter_EnteredTip".Translate());
+            }
+            else if (Dialog_EnterDungeon.Locked.Contains(tr))
+                TooltipHandler.TipRegion(rect, "TUBAD_Enter_LockedTip".Translate());
         }
     }
 
