@@ -24,7 +24,8 @@ namespace ThisUsedToBeAboutDungeons
         private static int maxDistance = AnyDistance;
         private static readonly HashSet<Pawn> ticked = new HashSet<Pawn>();
         // The game the ticks belong to: a load or a new game drops them so old pawns are not kept alive
-        private static World tickedWorld;
+        // An id rather than the World itself, so the old game can be freed after a load
+        private static int tickedWorld;
 
         private List<Pawn> candidates = new List<Pawn>();
         private List<PlanetTile> origins = new List<PlanetTile>();
@@ -48,10 +49,11 @@ namespace ThisUsedToBeAboutDungeons
             closeOnClickedOutside = false;
             absorbInputAroundWindow = false;
             forcePause = false;
-            if (tickedWorld != Find.World)
+            int worldId = Find.World.info.persistentRandomValue;
+            if (tickedWorld != worldId)
             {
                 ticked.Clear();
-                tickedWorld = Find.World;
+                tickedWorld = worldId;
             }
             RefreshCandidates();
             var caravan = Find.WorldSelector.FirstSelectedObject as Caravan;

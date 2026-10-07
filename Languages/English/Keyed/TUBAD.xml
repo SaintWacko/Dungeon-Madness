@@ -43,7 +43,7 @@
   <TUBAD_Enter_Effective>Effective level: {0} (x{1})</TUBAD_Enter_Effective>
   <TUBAD_Enter_Effective_Tip>The dungeon is generated for the party that enters it. Level {0}, multiplied by 1 + party wealth / {3}.\n\nParty wealth counts the pawns going in and what they wear and wield: {1}. Items carried in do not count.\n\nMultiplier: x{2}</TUBAD_Enter_Effective_Tip>
   <TUBAD_Enter_AlreadyEntered>Already entered this dungeon, and cannot go in again: {0}.</TUBAD_Enter_AlreadyEntered>
-  <TUBAD_Enter_Everyone>Nobody able to lead the caravan stays outside, so every pawn in it goes in. Items left behind wait at the entrance and are lost if the whole party dies.</TUBAD_Enter_Everyone>
+  <TUBAD_Enter_Everyone>Nobody able to lead the caravan stays outside, so every pawn in it goes in. Only the items and supplies you tick go in, food and medicine included; the rest wait at the entrance and are lost if the whole party dies.</TUBAD_Enter_Everyone>
   <TUBAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</TUBAD_Enter_NeedColonist>
   <TUBAD_Enter_TooMany>At most {0} people can enter a dungeon. Animals and mechs do not count.</TUBAD_Enter_TooMany>
   <TUBAD_Enter_TooManyEveryone>At most {0} people can enter a dungeon. Nobody would stay with the caravan, so everyone in it would go in: leave a colonist outside, or take fewer people.</TUBAD_Enter_TooManyEveryone>

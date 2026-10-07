@@ -45,6 +45,11 @@ namespace ThisUsedToBeAboutDungeons
         protected override void Tick()
         {
             base.Tick();
+            MoveArrivedOut();
+        }
+
+        public void MoveArrivedOut()
+        {
             if (arrived.Count == 0) return;
             var site = Site;
             for (int i = arrived.Count - 1; i >= 0; i--)

@@ -71,7 +71,7 @@ namespace ThisUsedToBeAboutDungeons
             Scribe_Values.Look(ref maxPartySize, "maxPartySize", DefaultMaxPartySize);
             maxPartySize = Mathf.Clamp(maxPartySize, 1, 20);
             Scribe_Values.Look(ref wealthToDouble, "wealthToDouble", DefaultWealthToDouble);
-            wealthToDouble = Mathf.Clamp(wealthToDouble, 1000f, 1000000f);
+            wealthToDouble = Mathf.Clamp(wealthToDouble, 5000f, 300000f);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

@@ -51,7 +51,8 @@ namespace ThisUsedToBeAboutDungeons
         }
     }
 
-    // Used to revalidate an open menu and to run orders given while forming a caravan
+    // Vanilla calls this overload only from CaravanExitMapUtility, to carry out a destination picked while forming a
+    // caravan; with a dungeon tile as destination the new caravan travels there and opens the party dialog
     [HarmonyPatch(typeof(FloatMenuMakerWorld), nameof(FloatMenuMakerWorld.ChoicesAtFor), new[] { typeof(PlanetTile), typeof(Caravan) })]
     public static class Patch_FloatMenuMakerWorld_ChoicesAtFor_Tile
     {

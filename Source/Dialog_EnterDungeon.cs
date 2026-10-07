@@ -187,7 +187,8 @@ namespace ThisUsedToBeAboutDungeons
                 if (!report.Reason.NullOrEmpty()) Messages.Message(report.Reason, MessageTypeDefOf.RejectInput, false);
                 return false;
             }
-            DungeonEntry.Enter(caravan, party, transferables.Where(t => !(t.AnyThing is Pawn)).ToList());
+            // Everyone going in counts toward the effective level shown above; a copy, since Enter empties the caravan
+            DungeonEntry.Enter(caravan, going.ToList(), transferables.Where(t => !(t.AnyThing is Pawn)).ToList());
             return true;
         }
     }

@@ -19,7 +19,7 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var c in map.AllCells)
             {
                 map.terrainGrid.SetTerrain(c, floor);
-                map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
+                map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThin); // thick rock roof would invite infestations
             }
 
             // Rooms laid along a wandering line from one side of the map to the other

@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "buildId": 10,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-07T03:55:23.443Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Phase 2 entry/exit flow: DungeonEntry.Enter caravan split + map generation, DungeonExit as a MapPortal leading to its own cell (deferred move-out, proxy to stash), DungeonSite map removal and IThingHolder re-implementation, the ChoicesAtFor/Caravan.GetGizmos patches",
+  "diffSource": "since build 6 (2026-10-07T02:32:14Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 1,
+    "should": 4,
+    "note": 6
+  },
+  "findings": [
+    {
+      "severity": "must",
+      "title": "DungeonSite still offers vanilla's generic Enter, which drops a second caravan into the walls",
+      "detail": "DungeonSite.GetFloatMenuOptions starts by calling base (MapParent). MapParent adds CaravanArrivalAction_Enter options whenever UseGenericEnterMapFloatMenuOption is true, and CaravanArrivalAction_Enter.CanEnter only checks HasMap. So while a party is inside, any caravan sees a working vanilla 'Enter' next to the mod's greyed-out 'Enter dungeon (party inside)'. It enters from the map edge, and the placeholder map is solid wall on every edge, so FindNearEdgeCell logs 'Could not find any valid edge cell' and falls back to CellFinder.RandomCell. Pawns can be spawned inside walls, with no party-size or already-entered check. Fix with one line in DungeonSite: `protected override bool UseGenericEnterMapFloatMenuOption => false;`.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Assembly-CSharp/RimWorld.Planet/CaravanEnterMapUtility.cs:99-117 (FindNearEdgeCell) via MapParent.GetFloatMenuOptions, Source/Assembly-CSharp/RimWorld.Planet/MapParent.cs"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Enter dialog shows one party wealth and effective level, but the dungeon is built from another",
+      "detail": "When nobody able stays outside (the 'everyone' case), SelectionChanged and DoInfo work out wealth and the effective level from `going` = caravan.PawnsListForReading. The dialog shows that number and calls it the level the dungeon is generated for. TryAccept then calls DungeonEntry.Enter(caravan, party, ...) with only the ticked `party`. Enter takes `wealth = PartyWealth(party)` before it swaps in everyone, so site.effectiveLevel and the letter leave out the unticked pawns who go in anyway, and the player gets a different level from the one they agreed to. At line 190, pass `(everyone ? caravan.PawnsListForReading : party).ToList()`. Use a copy, not the live list, because Enter removes pawns from the caravan.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Dialog_EnterDungeon.cs:190"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "A DungeonSite with no map blocks its tile for good",
+      "detail": "Enter adds the site to the world before MapGenerator.GenerateMap. MapParent.CheckRemoveMapNow does nothing when there is no map, and CanEnterAt rejects any tile with a site on it ('party inside'). If map generation throws, or the site ends up without a map some other way, that dungeon can never be entered again. In CanEnterAt, treat (or Destroy) a SiteAt(tile) whose HasMap is false.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonEntry.cs:23"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "A drafted pawn leaving through the exit loses the item it carries",
+      "detail": "JobDriver_EnterPortal only drops a carried item when the pawn is not drafted, and it re-drafts pawns that were drafted. TryMovePawnOut then calls Caravan.AddPawn, which only removes carried pawns, and Pawn.ExitMap destroys any carried item that is not a pawn. In TryMovePawnOut, move carryTracker.CarriedThing into the pawn's inventory (or the stash) before AddPawn.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Assembly-CSharp/Verse/Pawn.cs:2513-2605"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Player animals waiting at the exit can be lost when the map is removed",
+      "detail": "TryMovePawnOut returns false for an animal when no caravan is outside, so the animal waits in DungeonExit.arrived. When the last colonist leaves, MapParent.TickInterval -> CheckRemoveMapNow can remove the map before DungeonExit.Tick hands the animal to the new caravan, because ShouldRemoveMapNow ignores animals. In DungeonSite.Notify_MyMapAboutToBeRemoved, move still-spawned player pawns from the exit's arrived list out to the waiting caravan.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs:92"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "In the 'everyone' case, food and medicine stay outside unless the player ticks them",
+      "detail": "TransferableOneWay counts start at 0, and in the everyone branch DungeonEntry.Enter stashes `total - CountToTransfer` of each item. If the player never opens the Items or Travel supplies tab, every item, including food and medicine, goes to the stash and the party goes in with nothing. That matches vanilla's split-caravan default, but the TUBAD_Enter_Everyone warning does not mention it. This is my opinion of the UX, not a bug.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Source/Dialog_EnterDungeon.cs:56"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Static tickedWorld keeps the previous game's World alive",
+      "detail": "The fix clears the ticked pawns when the finder opens in a new game, but `tickedWorld` is itself a static strong reference to the old World. That World holds its world objects and pawns. After a load, the old game stays in memory until the finder is next opened. A static field can't be avoided here, but clearing it from a GameComponent's FinalizeInit, or holding the world's unique id instead of the object, would let the old game be freed at load time.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Source/Dialog_DungeonFinder.cs:27"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Placeholder roof counts as overhead mountain",
+      "detail": "Every cell is roofed with RoofRockThick, which probably makes the dungeon map a target for infestations. Thin roof would avoid that until phase 3 replaces this GenStep.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Source/GenStep_DungeonPlaceholder.cs:22"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Comment on the PlanetTile ChoicesAtFor postfix names the wrong caller",
+      "detail": "Patches.cs says the tile overload is 'used to revalidate an open menu'. FloatMenuWorld revalidates through the Vector2 overload (FloatMenuWorld.cs:28, :76, :95), which the other postfix already covers. The only vanilla caller of the tile overload is CaravanExitMapUtility:77, which runs the first enabled option for a destination chosen while forming a caravan. So a caravan formed with a dungeon tile as its destination gets the enter order automatically, unless an earlier option on that tile wins (ours is appended last). The behaviour is fine; correct the comment so nobody 'fixes' the wrong patch later.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Patches.cs:53"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "wealthToDouble slider range is narrower than the range the settings file allows",
+      "detail": "DungeonSettings clamps a loaded value to 1000..1000000, but the Parties tab slider runs 5000..300000. A hand-edited or older value outside 5000..300000 is replaced with the slider bound as soon as the tab is opened. Either match the slider bounds to the clamp, or tighten the clamp to the slider.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Mod.cs:87"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "verify_patches' MethodType.Enumerator advice for Caravan.GetGizmos does not apply",
+      "detail": "The postfix takes and returns IEnumerable<Gizmo> and yields the original gizmos first. Harmony runs that as a pass-through postfix, so the added command is enumerated as expected and the vanilla gizmos are kept. No corpus mod patches Caravan.GetGizmos or Pawn.GetGizmos, so there is no precedent to compare against. Leave it as is.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Patches.cs:65"
+      }
+    }
+  ],
+  "checked": [
+    "Dialog_LeaveDungeon.TryAccept and Recache match vanilla Dialog_EnterPortal.TryAccept and CalculateAndRecacheTransferables line for line: leftToLoad is replaced and refilled, transferables with a 0 co…",
+    "Dialog_LeaveDungeon overrides OnAcceptKeyPressed, so Enter accepts rather than closing the window (Verse/Window.cs:351)",
+    "Dialog_EnterDungeon builds its lists like Dialog_SplitCaravan: TransferAsOneMode.Normal, CaravanInventoryUtility.AllInventoryItems, CreateCaravanTransferableWidgets with IgnorePawnsInventoryMode.Igno…",
+    "Dialog_EnterDungeon.TryAccept's colonist check matches Dialog_SplitCaravan.CheckForErrors, and the source-caravan-colonist rule is replaced on purpose by the 'everyone' mode",
+    "CaravanArrivalAction_EnterDungeon: parameterless constructor for Scribe is present; PlanetTile is saved with Scribe_Values the way WorldObject does (WorldObject.cs:270); GetFloatMenuOptions uses Cara…",
+    "Dialog_DungeonFinder's cross-layer distance: origin.Layer.GetTileCenter(origin) passes the same-layer check in PlanetLayer.GetTileCenter (PlanetLayer.cs:679), and surface.ApproxDistanceInTiles(float)…",
+    "Textures/World/TUBAD_Highlight.png exists to back the MaterialPool.MatFrom path in the [StaticConstructorOnStartup] class",
+    "DungeonSettings: new fields have defaults on reset, Scribe_Values defaults match, and values are clamped after loading",
+    "Every translation key used by the three new dialogs and the arrival action is defined in Languages/English/Keyed/TUBAD.xml",
+    "every [HarmonyPatch] target binds (verify_patches: 9 of 9 resolved). The changed files declare no patches, so none of the prefix or patch-success lint rules apply",
+    "pyxis_mod_errors could not run (no Pyxis token configured), so there is no error-class evidence either way",
+    "DungeonSite re-listing IThingHolder with `new GetDirectlyHeldThings()`: MapParent's version is non-virtual and returns null, so re-implementing the interface is the right way to expose the stash; Get…",
+    "DungeonExit overrides (Tick, SpawnSetup, OnEntered, GetOtherMap, GetDestinationLocation, EnterTex, the Enter/Cancel/Entering strings) match MapPortal's virtual members",
+    "TUBAD_DungeonExit inherits tickerType Normal from the PocketMapExit parent def, so DungeonExit.Tick runs (tickerType-missing lint)",
+    "UI/Commands/ExitCave texture exists in vanilla (PocketMapExit uses it)",
+    "Gizmo filter: MapPortal's enter command label is exactly EnterString + \"...\", so it is replaced as intended",
+    "Deferring the move-out by a tick is justified: JobDriver_EnterPortal changes UnloadEverything, the draft and the lord after OnEntered",
+    "TryMovePawnOut follows vanilla CaravanExitMapUtility.ExitMapAndJoinOrCreateCaravan (AddPawn, then ExitMap, then PassToWorld)",
+    "DungeonExitProxy matches PortalContainerProxy's contract (Notify_ThingAdded, returns true); the item has no holdingOwner by the time TryAdd is called",
+    "Enter's split branch mirrors Dialog_SplitCaravan; the everyone branch empties the caravan before Destroy, so Caravan.PostRemove destroys no pawns",
+    "CaravanEnterMapUtility.Enter overload with spawnCellGetter destroys the temporary party caravan",
+    "MapPortal members that read exit/pocketMap (OnEntered, View gizmo) are overridden or null-guarded; no other vanilla code reads portal.exit",
+    "DungeonWorldComponent.IsBlocked / BlockedSurfaceTiles excluding DungeonSite, and enteredBy cleared on regeneration",
+    "GenStep_DungeonPlaceholder rooms and corridors stay in bounds; the 3x3 exit fits inside the first room",
+    "DungeonDefOf uses DefOfHelper.EnsureInitializedInCtor (defof-in-mod-ctor lint)",
+    "ExposeData for arrived (Reference, nulls pruned) and stash (Deep, with a fallback)",
+    "every [HarmonyPatch] target binds (verify_patches, 9 of 9)",
+    "verify_patches on Source/Patches.cs: all 9 targets resolve; each ChoicesAtFor postfix picks exactly one of the 2 overloads",
+    "FloatMenuMakerWorld.ChoicesAtFor(Vector2) postfix: mousePos is UI.MousePositionOnUI, the same space GenWorld.TileAt expects (GenWorld.cs:42), so revalidating from clickPos is correct",
+    "No duplicate enter option: DungeonEntry.CanEnterAt rejects while a DungeonSite exists, and the site's own disabled option is then the only one",
+    "Caravan.GetGizmos postfix: pass-through, keeps the original gizmos, gated to a single selected player caravan on an unblocked dungeon tile, and disabled while moving",
+    "All three new patches are postfixes that only add; none skips the original or other mods' patches; precedents finds no corpus mod on these targets",
+    "Defs/TUBAD_Dungeon.xml: every field exists in 1.6 (MapGeneratorDef.isUnderground/ignoreAreaRevealedLetter/disableCallAid, WorldObjectDef.isTempIncidentMapOwner, BuildingProperties.isAirtight/supports…",
+    "TUBAD_DungeonWall mirrors vanilla RockBase (same graphic, link flags and building flags), without mining and with destroyable/useHitPoints/isTargetable off",
+    "TUBAD_DungeonExit: parent PocketMapExit gives tickerType Normal; it follows vanilla CaveExit; DungeonExit overrides EnterString, GetOtherMap, GetDestinationLocation and OnEntered, and pocketMap stays…",
+    "worldObjectClass, genStep class and thingClass resolve to classes in the ThisUsedToBeAboutDungeons namespace (DungeonSite : MapParent, GenStep_DungeonPlaceholder : GenStep, DungeonExit : MapPortal)",
+    "Languages/English/Keyed/TUBAD.xml: every TUBAD_ key used in Source/ exists, no duplicate keys, placeholder counts match the Translate argument counts in Patches.cs and Mod.cs",
+    "Mod.cs Parties tab: wealthToDouble can't be zero (Scribe default 50000, clamp at 1000, slider minimum 5000), so the example division is safe"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/CaravanArrivalAction_EnterDungeon.cs",
+    "Source/Dialog_DungeonFinder.cs",
+    "Source/Dialog_EnterDungeon.cs",
+    "Source/Dialog_LeaveDungeon.cs",
+    "Source/DungeonEntry.cs",
+    "Source/DungeonExit.cs",
+    "Source/DungeonSettings.cs",
+    "Source/DungeonSite.cs",
+    "Source/DungeonWorldComponent.cs",
+    "Source/GenStep_DungeonPlaceholder.cs",
+    "Source/Mod.cs",
+    "Source/Patches.cs",
+    "Defs/TUBAD_Dungeon.xml",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Textures/World/TUBAD_Highlight.png"
+  ],
+  "parts": 3,
+  "buildCommit": "1b5d1eceee23adea19f14106d1460f115f20d803",
+  "partial": false
+}

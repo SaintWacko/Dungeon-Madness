@@ -31,6 +31,10 @@ namespace ThisUsedToBeAboutDungeons
 
         public override MapGeneratorDef MapGeneratorDef => DungeonDefOf.TUBAD_Dungeon;
 
+        // Vanilla's generic "Enter" would walk a second caravan in from the map edge, which is solid wall, with no
+        // party checks. The only way in is the mod's own entry.
+        protected override bool UseGenericEnterMapFloatMenuOption => false;
+
         public override string Label => "TUBAD_SiteLabel".Translate(level);
 
         // MapParent's version is not virtual and returns null; re-listing IThingHolder on this class makes the
@@ -61,6 +65,11 @@ namespace ThisUsedToBeAboutDungeons
         /// Returns false when the pawn cannot leave yet (an animal or prisoner with no caravan to join).</summary>
         public bool TryMovePawnOut(Pawn pawn)
         {
+            // Pawn.ExitMap destroys a carried item, and a drafted pawn keeps carrying through the exit
+            Thing carried = pawn.carryTracker?.CarriedThing;
+            if (carried != null && !(carried is Pawn) && pawn.inventory != null)
+                pawn.carryTracker.innerContainer.TryTransferToContainer(carried, pawn.inventory.innerContainer, carried.stackCount);
+
             var caravan = WaitingCaravan();
             if (caravan != null)
             {
@@ -117,6 +126,9 @@ namespace ThisUsedToBeAboutDungeons
             base.Notify_MyMapAboutToBeRemoved();
             bool anyCorpse = Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse)
                 .OfType<Corpse>().Any(c => c.InnerPawn.Faction == Faction.OfPlayer && c.InnerPawn.RaceProps.Humanlike);
+            // Animals waiting on the exit for a caravan that only formed this tick would otherwise be left behind
+            foreach (var exit in Map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit))
+                (exit as DungeonExit)?.MoveArrivedOut();
             var caravan = WaitingCaravan();
             FlushStash(caravan);
             if (!everyoneLeft || (anyCorpse && caravan == null))

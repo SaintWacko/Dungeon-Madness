@@ -21,7 +21,13 @@ namespace ThisUsedToBeAboutDungeons
                 level = 0;
                 return false;
             }
-            if (SiteAt(tile) != null) return "TUBAD_PartyInside".Translate();
+            var site = SiteAt(tile);
+            if (site != null)
+            {
+                // A site without a map is left over from a generation that failed; it must not lock the dungeon
+                if (!site.HasMap) site.Destroy();
+                else return "TUBAD_PartyInside".Translate();
+            }
             return true;
         }
 
