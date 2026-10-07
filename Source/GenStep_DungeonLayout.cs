@@ -54,7 +54,7 @@ namespace ThisUsedToBeAboutDungeons
 
             GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonExit, exitCell, map);
             MapGenerator.PlayerStartSpot = DungeonExit.InsideCellFor(exitCell);
-            Log.Message($"[Dungeons] Level {site?.level} layout: {layout.data.chambers.Count} chambers, {layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
+            if (Prefs.DevMode) Log.Message($"[Dungeons] Level {site?.level} layout: {layout.data.chambers.Count} chambers, {layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
         }
     }
 }

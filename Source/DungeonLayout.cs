@@ -395,7 +395,9 @@ namespace ThisUsedToBeAboutDungeons
                 data.dividers.Add(new DungeonDivider
                 {
                     cell = e.cells[e.dividerIndex],
-                    type = Rand.Chance(0.55f) ? DividerType.Door : DividerType.Rubble,
+                    // Passages out of the entrance chamber are always doors, so a party with nobody to mine can
+                    // still leave the first room. Deeper rubble is accepted as part of the design.
+                    type = (e.a == 0 || e.b == 0 || Rand.Chance(0.55f)) ? DividerType.Door : DividerType.Rubble,
                     a = e.a,
                     b = e.b,
                 });

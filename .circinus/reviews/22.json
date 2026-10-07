@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "buildId": 22,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-07T20:14:53.968Z",
+  "conversationId": "01a117e4-74d2-747c-aab3-f8242f41c5fa",
+  "focus": "New chamber-graph layout generator and gen step: passage routing, divider placement, fog behaviour, save data",
+  "diffSource": "since build 21 (2026-10-07T18:40:56Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 2,
+    "note": 6
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "Rubble dividers can strand a party that has no pawn able to mine",
+      "detail": "Every connection gets a divider and about 45% of them are rubble (`Rand.Chance(0.55f)` picks Door, otherwise Rubble). Rubble is a Mineable and is the only way past that passage. A tree edge can be the only route to the rest of the dungeon. If no pawn in the party can do Mining work, the party cannot get past it. That may be intended. If it isn't, force the first divider out of the entrance chamber (depth 0 to 1) to be a Door, or note the requirement on the entry dialog.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonLayout.cs:Compile (type = Rand.Chance(0.55f) ? DividerType.Door : DividerType.Rubble)"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Door access for animals only applies to dungeons created from now on",
+      "detail": "`doorsAlwaysOpenForPlayerPawns` is set only when a new site is created in DungeonEntry. It is saved on MapParent, so new saves keep it. A site that already existed (made in build 21 or earlier, or reused on re-entry through some other path) lacks the flag. Its map has no doors anyway, because the old placeholder step made none. If a site can be reused and its map regenerated, set the flag in the same place that sets `layoutSeed` rather than only at creation. Check that.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonEntry.cs:91-97; Building_Door.PawnCanOpen in Assembly-CSharp/RimWorld/Building_Door.cs:434"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Old saves load with a null `site.layout`",
+      "detail": "`Scribe_Deep.Look(ref layout, \"layout\")` leaves `layout` null for sites saved before this build. The generator code is fine, because `Scribe_Collections` null-guards the lists. The phase 4 code that reads `site.layout` must null-check it. A site's map that was already generated keeps its old placeholder layout and has no chamber data.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs:187-188"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Map size depends on the current MaxLevel setting",
+      "detail": "`MapSizeFor` scales by `(level-1)/(max-1)`, and `max` falls back to the live setting. The comment says the same dungeon is the same size for every party. That holds only while `maxLevel` is unchanged. Changing the setting resizes the dungeon at that level. This is harmless because generation happens once per entry, but the comment overstates it.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonEntry.cs:MapSizeFor"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Unconditional Log.Message on every map generation",
+      "detail": "The gen step logs one info line per dungeon entry. That is fine while developing. Drop it or gate it behind a dev-mode check before release so players' logs stay quiet.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/GenStep_DungeonLayout.cs:57"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "A layout with a single chamber is possible",
+      "detail": "If every route is refused, all other chambers are dropped and only chamber 0 remains: one room, no dividers, just the exit. It is very unlikely at these map sizes, and it is handled without exceptions (`Compile` and the gen step both cope with an empty dividers list). Phase 4 should not assume at least two chambers.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonLayout.cs:Connect/Compile"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Rubble is the only way through some passages and has no yield, so a party that can't mine is stuck",
+      "detail": "Rubble-divided passages can only be opened by mining. A party with no pick or no one able to mine cannot progress, and explosives or fire can also open them. If the layout generator can seal a branch behind rubble alone, make sure a door or an alternate route always exists, or accept this as design. I did not read the generator code, which another reviewer has, so I could not confirm whether it guarantees this.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Defs/TUBAD_Dungeon.xml:84-118"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "TUBAD_DungeonRubble omits building.isNaturalRock, so it is a normal building to the game",
+      "detail": "This is probably intended, since it keeps it out of the rock-only code paths such as smoothing and the stone chunk lists. The side effect is that `ListerBuildings` tracks it as a non-colonist building. It is also destroyed through `Building.Destroy`'s non-rock path, which may leave rubble filth beyond what `filthLeaving` implies. I judge this harmless.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Verse/ListerBuildings.cs:105"
+      }
+    }
+  ],
+  "checked": [
+    "The changed C# declares no Harmony patches, so verify_patches and precedents do not apply.",
+    "Gen step and def: GenStep_DungeonLayout is referenced by Defs/TUBAD_Dungeon.xml, and the removed GenStep_DungeonPlaceholder has no remaining references in the mod.",
+    "Fog: `ThingDef.MakeFog` is `Fillage == Full`. Walls and rubble (fillPercent 1) and doors (assumed fillPercent 1, not opened in the def) block `FloodFillerFog.FloodUnfog`, so the next chamber stays fo…",
+    "Fog: removing a rubble Mineable calls `Building.DeSpawn` then `Notify_FogBlockerRemoved` (Building.cs:210), and opening a door unfogs adjacent cells (FogGrid.cs:150). Both reveal the next chamber.",
+    "Passage routing: `PassageIsClear` refuses any passage that touches another chamber, another corridor, the reserved exit zone, or the map edge. Middle cells may not touch the endpoint chambers either,…",
+    "Passage routing: `TryRoute` requires phase order A, outside, B, so a path that re-enters A or crosses a third chamber is rejected. Every passage has at least 3 outside cells.",
+    "Divider placement: `PickDividerIndex` only picks straight middle cells with collinear neighbours, so solid wall sits on both sides of the divider. Corridor-adjacent cells are checked clear of other c…",
+    "Connect: the id remap after dropping unreachable chambers is correct. Dropped cells are cleared before the remap, edges are remapped, and links are rebuilt from edges with no duplicates. The Edge2 st…",
+    "Compile: BFS depth uses the rebuilt links, and the Reserved markers are reset to Unowned before the grid is used.",
+    "Exit: chamber 0 is never a cave. The exit cell sits in the top wall row, and the placement bound (zMax = n-4-h) keeps it inside the map. The reserved zone stops passages from running through it, and …",
+    "Save data: DungeonChamber, DungeonDivider and DungeonLayoutData are IExposable with default constructors. Enum and IntVec3 values go through Scribe_Values and the lists through Scribe_Collections. Li…",
+    "Determinism: `Rand.PushState` and `PopState` are wrapped in try/finally. Generation inside the push is deterministic for a given seed.",
+    "Terrain fallbacks (`PavedTile`, `Gravel` via GetNamed with a Concrete fallback) cannot return null.",
+    "Doors: they are spawned factionless and the player's animals can follow because `doorsAlwaysOpenForPlayerPawns` is set. `Building_Door.PawnCanOpen` honours it for pawns of the player's faction.",
+    "Lint rules: DefOf is initialised through `DefOfHelper.EnsureInitializedInCtor`, not a mod constructor. No patches, so the prefix and patch-success rules do not apply.",
+    "Languages/English/Keyed/TUBAD.xml: the one-word label change is harmless.",
+    "TUBAD_DungeonRubble inherits BuildingNaturalBase and its fields match vanilla RockBase / UglyRockBase (Defs/ThingDefs_Misc/Various_Stone.xml)",
+    "Mineable class has no required def fields: mineableThing is null-safe in TrySpawnYield, and yieldPct saves cleanly",
+    "GenStepDef TUBAD_DungeonLayout and the MapGeneratorDef genSteps list reference the class and defName consistently (GenStep_DungeonLayout exists)",
+    "Fog step follows the layout step; the rubble blocks sight (fillPercent 1, blockLight), so the next chamber stays fogged until it is mined out",
+    "Thick rock roof set on every cell in the gen step, so removing rubble cannot cause a roof collapse",
+    "DungeonDefOf declares TUBAD_DungeonRubble and the DefOf is initialised in the static constructor via EnsureInitializedInCtor (no defof-in-mod-ctor issue)",
+    "Textures/Things/Building/TUBAD_Rubble.png exists and matches the texPath",
+    "The changed C# declares no Harmony patches, so there is nothing for verify_patches or precedents to check; the build is green",
+    "No tickerType-missing concern: rubble and wall are plain buildings with no comps or tick behaviour"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/DungeonEntry.cs",
+    "Source/DungeonLayout.cs",
+    "Source/DungeonSite.cs",
+    "Source/GenStep_DungeonLayout.cs",
+    "Source/GenStep_DungeonPlaceholder.cs",
+    "Defs/TUBAD_Dungeon.xml",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Textures/Things/Building/TUBAD_Rubble.png"
+  ],
+  "parts": 2,
+  "buildCommit": "d64b8f19e207d6343eec8d9b3fef5dce3a716a5b",
+  "partial": false
+}
