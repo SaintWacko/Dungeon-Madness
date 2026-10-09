@@ -62,7 +62,7 @@
     <coversFloor>true</coversFloor>
     <neverMultiSelect>true</neverMultiSelect>
     <rotatable>false</rotatable>
-    <saveCompressible>true</saveCompressible>
+    <!-- Not saveCompressible: compressed things reload without their stuff, so every wall would lose its stone -->
     <holdsRoof>true</holdsRoof>
     <staticSunShadowHeight>1</staticSunShadowHeight>
     <blockLight>true</blockLight>
@@ -148,6 +148,7 @@
       <texPath>Things/Building/TUBAD_RootTangle</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
+    <filthLeaving IsNull="True" />
     <statBases>
       <MaxHitPoints>120</MaxHitPoints>
       <Flammability>0.6</Flammability>
@@ -162,6 +163,7 @@
       <texPath>Things/Building/TUBAD_SandDrift</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
+    <filthLeaving IsNull="True" />
     <statBases>
       <MaxHitPoints>100</MaxHitPoints>
     </statBases>

@@ -145,7 +145,8 @@ namespace ThisUsedToBeAboutDungeons
         static ThingDef BlocksOf(ThingDef rock)
         {
             var chunk = rock?.building?.mineableThing;
-            return chunk?.butcherProducts?.FirstOrDefault()?.thingDef;
+            var blocks = chunk?.butcherProducts?.FirstOrDefault()?.thingDef;
+            return blocks != null && blocks.IsStuff && blocks.stuffProps.CanMake(DungeonDefOf.TUBAD_DungeonWall) ? blocks : null;
         }
 
         static bool Natural(DungeonLayoutResult layout, int k) => layout.open[k] && layout.built[k] < 0 && layout.feature[k] == CellFeature.None;

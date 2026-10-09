@@ -22,7 +22,8 @@ namespace ThisUsedToBeAboutDungeons
         public int layoutSeed;
         // Chambers and dividers, filled in by map generation; phase 4 places creatures with it
         public DungeonLayoutData layout;
-        // Picked from the tile on first generation; the same tile always gives the same theme
+        // The theme this visit was generated with. Every visit makes a new site, so this is only for the visit;
+        // "same tile, same theme" comes from DungeonThemeUtility.ThemeFor's seed, not from this field
         public DungeonThemeDef theme;
 
         // Items left at the entrance when nobody stayed outside, and items carried out through the exit before any

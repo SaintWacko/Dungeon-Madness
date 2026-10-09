@@ -128,11 +128,11 @@ namespace ThisUsedToBeAboutDungeons
         {
             var all = DefDatabase<DungeonThemeDef>.AllDefsListForReading;
             Tile info = tile.Valid ? Find.WorldGrid[tile] : null;
-            Rand.PushState(Gen.HashCombineInt(Find.World.info.Seed, tile.tileId ^ 0x5D1E));
+            Rand.PushState(Gen.HashCombineInt(Gen.HashCombineInt(Find.World.info.Seed, tile.tileId ^ 0x5D1E), tile.Layer?.LayerID ?? 0));
             try
             {
                 foreach (var t in all.Where(t => t.rareChance > 0f).OrderBy(t => t.defName))
-                    if (Rand.Chance(t.rareChance) && (t.biomes.NullOrEmpty() || t.Matches(info))) return t;
+                    if (Rand.Chance(t.rareChance) && t.Matches(info)) return t;
 
                 var named = all.Where(t => t.rareChance <= 0f && !t.biomes.NullOrEmpty() && t.Matches(info)).ToList();
                 var pool = named.Count > 0 ? named : all.Where(t => t.rareChance <= 0f && t.Matches(info)).ToList();

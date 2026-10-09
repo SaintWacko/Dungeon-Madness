@@ -175,7 +175,6 @@ namespace ThisUsedToBeAboutDungeons
         readonly ThingDef[] plug;
         readonly List<Proto> ch = new List<Proto>();
         readonly List<DungeonDivider> dividers = new List<DungeonDivider>();
-        readonly List<KeyValuePair<int, int>> links = new List<KeyValuePair<int, int>>();
         readonly List<KeyValuePair<int, int>> carved = new List<KeyValuePair<int, int>>();
         int exitX, exitZ;
 
@@ -216,9 +215,7 @@ namespace ThisUsedToBeAboutDungeons
             var blobNoise = new ValueNoise(7f * s + 3f);
             var pillarNoise = new ValueNoise(3.5f);
             foreach (var c in ch) if (!c.built) StampCave(c, blobNoise, pillarNoise);
-            ChooseLinks();
-            var cost = new ValueNoise(6f);
-            foreach (var l in links) if (Carve(l.Key, l.Value, cost)) carved.Add(l);
+            ConnectChambers(new ValueNoise(6f));
             Smooth();
             Smooth();
             return Compile();
@@ -351,7 +348,10 @@ namespace ThisUsedToBeAboutDungeons
             return Mathf.Sqrt(dx * dx + dz * dz) - ch[i].r - ch[j].r;
         }
 
-        void ChooseLinks()
+        /// <summary>Spanning tree by gap distance, carving as it goes: a pair joins two groups only once its tunnel
+        /// is actually carved, so a failed door or path falls through to the next-nearest pair rather than
+        /// stranding a whole branch. Then a few loops between near neighbours.</summary>
+        void ConnectChambers(ValueNoise cost)
         {
             int count = ch.Count;
             var pairs = new List<KeyValuePair<float, int>>();
@@ -369,8 +369,9 @@ namespace ThisUsedToBeAboutDungeons
             {
                 int a = p.Value / count, b = p.Value % count;
                 if (Find(a) == Find(b)) continue;
+                if (!Carve(a, b, cost)) continue;
                 parent[Find(a)] = Find(b);
-                links.Add(new KeyValuePair<int, int>(a, b));
+                carved.Add(new KeyValuePair<int, int>(a, b));
                 used.Add(p.Value);
             }
             // Loops between near neighbours
@@ -378,7 +379,7 @@ namespace ThisUsedToBeAboutDungeons
             {
                 if (p.Key >= 9f * s) break;
                 if (used.Contains(p.Value) || !Rand.Chance(0.3f)) continue;
-                links.Add(new KeyValuePair<int, int>(p.Value / count, p.Value % count));
+                if (Carve(p.Value / count, p.Value % count, cost)) carved.Add(new KeyValuePair<int, int>(p.Value / count, p.Value % count));
             }
         }
 
@@ -453,6 +454,13 @@ namespace ThisUsedToBeAboutDungeons
                     for (int q = p - 2; q <= p + 2 && ok; q++) if (open[path[q]]) ok = false;
                     foreach (int q in new[] { p - 3, p + 3 })
                     {
+                        float ddx = X(path[q]) - px, ddz = Z(path[q]) - pz;
+                        if (ddx * ddx + ddz * ddz <= 2.6f * 2.6f) ok = false;
+                    }
+                    // The locked ring must not cut this tunnel anywhere else (a path that bends back into it)
+                    for (int q = 0; q < path.Count && ok; q++)
+                    {
+                        if (q >= p - 2 && q <= p + 2) continue;
                         float ddx = X(path[q]) - px, ddz = Z(path[q]) - pz;
                         if (ddx * ddx + ddz * ddz <= 2.6f * 2.6f) ok = false;
                     }
