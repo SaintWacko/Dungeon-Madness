@@ -1,0 +1,232 @@
+<style>
+.dg{display:flex;gap:14px;padding:12px;align-items:flex-start}
+.dg-side{width:230px;flex:none}
+.dg canvas{image-rendering:pixelated;border:1px solid var(--rw-line);background:#111}
+.lg{display:flex;align-items:center;gap:6px;font-size:12px;margin:2px 0}
+.sw{width:12px;height:12px;display:inline-block;border:1px solid #0008}
+.dg .rw-btn{margin:2px 2px 2px 0}
+</style>
+<div class="rw-window dg">
+  <div class="dg-side">
+    <div class="rw-title">Dungeon layout prototype</div>
+    <div class="rw-hint">Needs scripts enabled for this mockup.</div>
+    <div class="rw-section">Theme</div>
+    <div id="themes" class="rw-list"></div>
+    <div class="rw-section">Map size</div>
+    <div id="sizes"></div>
+    <div class="rw-section">Seed</div>
+    <button class="rw-btn is-primary" id="regen">New seed</button>
+    <div class="rw-hint" id="info" style="margin-top:6px"></div>
+    <div class="rw-section">Legend</div>
+    <div id="legend"></div>
+  </div>
+  <canvas id="cv" width="600" height="600"></canvas>
+</div>
+<script>
+(function(){
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let theme='cave',N=100,seed=1337;
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+let R=Math.random;
+const rr=(a,b)=>a+R()*(b-a),ri=(a,b)=>Math.floor(rr(a,b+1)),chance=p=>R()<p;
+function noise(scale){const S=97,g=new Float32Array(S*S);for(let i=0;i<g.length;i++)g[i]=R();
+  const v=(x,z)=>g[(((z%S)+S)%S)*S+(((x%S)+S)%S)];
+  return (x,z)=>{x/=scale;z/=scale;const x0=Math.floor(x),z0=Math.floor(z);let fx=x-x0,fz=z-z0;fx=fx*fx*(3-2*fx);fz=fz*fz*(3-2*fz);
+    const a=v(x0,z0)+(v(x0+1,z0)-v(x0,z0))*fx,b=v(x0,z0+1)+(v(x0+1,z0+1)-v(x0,z0+1))*fx;return a+(b-a)*fz;};}
+function pick(w){let t=0;for(const k in w)t+=w[k];let r=R()*t;for(const k in w){r-=w[k];if(r<=0)return k;}return Object.keys(w)[0];}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const t=f<0?0:255,p=Math.abs(f);
+  return `rgb(${Math.round((t-r)*p+r)},${Math.round((t-g)*p+g)},${Math.round((t-b)*p+b)})`;}
+
+const ROCK={granite:'#77716c',limestone:'#a49a82',marble:'#c4c1b9',slate:'#5a5e66',sandstone:'#b08b5e'};
+const FLOORC={gravel:'#837b6f',mud:'#5c4a35',water:'#3f6f8c',moss:'#55733b',soil:'#614b33',ice:'#cfe3ee',sand:'#c9b07a',softsand:'#dcc995',marsh:'#4b5a39'};
+const THEMES={
+  cave:{label:'Cave (temperate, default)',rock:'granite',built:0.12,divider:0.75,dividers:{rubble:1},
+    floors:[['water',0.12,'low'],['mud',0.2,'low'],['gravel',0.35,'high']],fungus:0.05,chunks:0.012},
+  frozen:{label:'Frozen (cold biomes)',rock:'marble',built:0.08,divider:0.75,dividers:{rubble:0.4,ice:0.6},
+    floors:[['ice',0.5,'low'],['gravel',0.25,'high']],fungus:0.01,chunks:0.014},
+  overgrown:{label:'Overgrown (forest, jungle)',rock:'limestone',built:0.12,divider:0.8,dividers:{rubble:0.35,roots:0.65},
+    floors:[['water',0.1,'low'],['moss',0.55,'high'],['soil',0.3,'mid']],fungus:0.16,chunks:0.006},
+  flooded:{label:'Flooded (swamp, river, coast)',rock:'slate',built:0.1,divider:0.7,dividers:{rubble:1},
+    floors:[['water',0.5,'low'],['marsh',0.3,'mid'],['mud',0.3,'high']],fungus:0.06,chunks:0.006},
+  desert:{label:'Buried ruins (desert)',rock:'sandstone',built:0.3,divider:0.75,dividers:{rubble:0.5,sand:0.5},
+    floors:[['softsand',0.3,'high'],['sand',0.45,'low']],fungus:0,chunks:0.014,sandInBuilt:true},
+  crypt:{label:'Crypt (rare)',rock:'marble',built:0.6,divider:0.8,dividers:{rubble:1},
+    floors:[['gravel',0.2,'high']],fungus:0.03,chunks:0.008,crypt:true},
+};
+const D4=[[1,0],[-1,0],[0,1],[0,-1]];
+
+function generate(){
+  R=mulberry(seed*7919+N);
+  const T=THEMES[theme],s=N/100,I=(x,z)=>z*N+x,X=k=>k%N,Z=k=>(k/N)|0;
+  const open=new Uint8Array(N*N),keep=new Uint8Array(N*N),lock=new Uint8Array(N*N),exitM=new Uint8Array(N*N);
+  const owner=new Int16Array(N*N).fill(-1),built=new Int16Array(N*N).fill(-1);
+  const obj=new Array(N*N).fill(null),floor=new Array(N*N).fill(null);
+  const inMap=(x,z)=>x>=2&&z>=2&&x<=N-3&&z<=N-3;
+
+  // ---- Chambers: big, varied, packed close so tunnels stay short
+  const ch=[];
+  const fits=(x,z,r)=>{if(x-r<4||z-r<4||x+r>N-5||z+r>N-5)return false;for(const c of ch)if(Math.hypot(c.x-x,c.z-z)<c.r+r+rr(3,7))return false;return true;};
+  {const r=Math.max(6,rr(8,10)*s);ch.push({x:Math.round(N/2+rr(-10,10)*s),z:Math.round(N-1-(r+6)),r,built:!!T.crypt,id:0});}
+  for(let f=0;f<900;){let r=Math.max(5,(chance(0.2)?rr(12,18):rr(6,11))*s);const b=chance(T.built);if(b)r=Math.min(r,Math.max(6,10*s));
+    const x=Math.round(rr(0,N)),z=Math.round(rr(0,N));if(fits(x,z,r))ch.push({x,z,r,built:b,id:ch.length});else f++;}
+
+  // ---- Built rooms first: exact shapes with a locked one-cell wall
+  for(const c of ch){if(!c.built)continue;
+    const hw=Math.max(3,Math.round(c.r*rr(0.7,1))),hh=Math.max(3,Math.round(c.r*rr(0.7,1)));
+    c.shape=c.id===0?'hall':pick(T.crypt?{hall:2,rect:2,cross:1}:{rect:2,hall:1.5,round:1,L:1.5,cross:1});
+    c.hw=hw;c.hh=hh;const fx=chance(.5)?1:-1,fz=chance(.5)?1:-1;
+    for(let dz=-hh;dz<=hh;dz++)for(let dx=-hw;dx<=hw;dx++){let inn=true;
+      if(c.shape==='round')inn=(dx*dx)/(hw*hw)+(dz*dz)/(hh*hh)<=1;
+      else if(c.shape==='L')inn=!(dx*fx>1&&dz*fz>1);
+      else if(c.shape==='cross')inn=Math.abs(dx)<=hw/2.5||Math.abs(dz)<=hh/2.5;
+      const x=c.x+dx,z=c.z+dz;if(inn&&inMap(x,z)){const k=I(x,z);built[k]=c.id;owner[k]=c.id;open[k]=1;keep[k]=1;}}
+    c.border=[];
+    for(let k=0;k<N*N;k++)if(built[k]===c.id)for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const nk=I(X(k)+dx,Z(k)+dz);if(built[nk]<0&&!lock[nk]){lock[nk]=1;c.border.push(nk);}}
+  }
+
+  // ---- Exit: a 3-cell stairway in chamber 0's north wall
+  const c0=ch[0];let ex=c0.x,exz;
+  if(c0.built)exz=c0.z+c0.hh+1;
+  else{exz=c0.z+Math.round(c0.r*0.75);
+    for(let z=c0.z;z<exz;z++)for(let x=ex-2;x<=ex+2;x++){const k=I(x,z);open[k]=1;keep[k]=1;owner[k]=0;}
+    for(let z=exz;z<=exz+1;z++)for(let x=ex-2;x<=ex+2;x++)lock[I(x,z)]=1;}
+  for(let x=ex-1;x<=ex+1;x++){exitM[I(x,exz)]=1;lock[I(x,exz)]=1;}
+
+  // ---- Natural chambers: wobbly blobs with the odd rock pillar
+  const nA=noise(7*s+3),nP=noise(3.5);
+  for(const c of ch){if(c.built)continue;const p1=rr(0,6.28),p2=rr(0,6.28),R0=Math.ceil(c.r*1.45);
+    for(let dz=-R0;dz<=R0;dz++)for(let dx=-R0;dx<=R0;dx++){const x=c.x+dx,z=c.z+dz;if(!inMap(x,z))continue;
+      if(c.id===0&&z>=exz)continue;const k=I(x,z);if(lock[k]||built[k]>=0)continue;
+      const a=Math.atan2(dz,dx),d=Math.hypot(dx,dz)/c.r;
+      const lim=0.85+0.12*Math.sin(3*a+p1)+0.08*Math.sin(5*a+p2)+(nA(x,z)-0.5)*0.55;
+      if(d<lim){if(d<lim-0.3&&c.r>8&&nP(x,z)>0.8)continue;open[k]=1;if(owner[k]<0)owner[k]=c.id;}}}
+
+  // ---- Links: spanning tree on gap distance, plus loops between near neighbours
+  const pairs=[];for(let i=0;i<ch.length;i++)for(let j=i+1;j<ch.length;j++)pairs.push([Math.hypot(ch[i].x-ch[j].x,ch[i].z-ch[j].z)-ch[i].r-ch[j].r,i,j]);
+  pairs.sort((a,b)=>a[0]-b[0]);
+  const par=ch.map((_,i)=>i),find=x=>{while(par[x]!==x)x=par[x]=par[par[x]];return x;};
+  const links=[];
+  for(const [d,i,j] of pairs){if(find(i)===find(j))continue;par[find(i)]=find(j);links.push([i,j]);}
+  for(const [d,i,j] of pairs)if(d<9*s&&chance(0.3)&&!links.some(l=>l[0]===i&&l[1]===j))links.push([i,j]);
+
+  // Doors only ever go in built walls, on a straight stretch, spaced apart
+  function doorFor(c,tx,tz){let best=null,bd=1e9;
+    for(const k of c.border){if(exitM[k]||obj[k])continue;const x=X(k),z=Z(k);let inward=null,n=0;
+      for(const [dx,dz] of D4)if(built[I(x+dx,z+dz)]===c.id){inward=[dx,dz];n++;}
+      if(n!==1)continue;const ox=x-inward[0],oz=z-inward[1];if(!inMap(ox,oz)||built[I(ox,oz)]>=0||lock[I(ox,oz)])continue;
+      if(!lock[I(x+inward[1],z+inward[0])]||!lock[I(x-inward[1],z-inward[0])])continue;
+      if(c.border.some(b=>obj[b]==='door'&&Math.abs(X(b)-x)+Math.abs(Z(b)-z)<4))continue;
+      const d=Math.hypot(tx-x,tz-z);if(d<bd){bd=d;best={k,out:[ox,oz]};}}
+    return best;}
+
+  const cost=noise(6);
+  function astar(sx,sz,tx,tz,A,B){const g=new Float32Array(N*N).fill(Infinity),from=new Int32Array(N*N).fill(-1),heap=[];
+    const push=(k,f)=>{heap.push([f,k]);let i=heap.length-1;while(i>0){const p=(i-1)>>1;if(heap[p][0]<=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}};
+    const pop=()=>{const top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;let i=0;for(;;){const l=2*i+1,r=l+1;let m=i;if(l<heap.length&&heap[l][0]<heap[m][0])m=l;if(r<heap.length&&heap[r][0]<heap[m][0])m=r;if(m===i)break;[heap[m],heap[i]]=[heap[i],heap[m]];i=m;}}return top;};
+    const s0=I(sx,sz),t=I(tx,tz);g[s0]=0;push(s0,0);
+    while(heap.length){const [f,k]=pop();if(k===t)break;const x=X(k),z=Z(k);
+      for(const [dx,dz] of D4){const nx=x+dx,nz=z+dz;if(!inMap(nx,nz))continue;const nk=I(nx,nz);
+        if(nk!==t&&(lock[nk]||(built[nk]>=0)))continue;
+        const c=open[nk]?0.5:1.5+cost(nx,nz)*7;const ng=g[k]+c;
+        if(ng<g[nk]){g[nk]=ng;from[nk]=k;push(nk,ng+Math.abs(nx-tx)+Math.abs(nz-tz));}}}
+    if(from[t]<0)return null;const p=[];for(let k=t;k!==-1;k=from[k])p.push([X(k),Z(k)]);return p.reverse();}
+
+  const dividers=[];
+  for(const [i,j] of links){const A=ch[i],B=ch[j];let a=[A.x,A.z],b=[B.x,B.z];
+    if(A.built){const d=doorFor(A,B.x,B.z);if(!d)continue;obj[d.k]='door';open[d.k]=1;keep[d.k]=1;a=d.out;}
+    if(B.built){const d=doorFor(B,a[0],a[1]);if(!d)continue;obj[d.k]='door';open[d.k]=1;keep[d.k]=1;b=d.out;}
+    const path=astar(a[0],a[1],b[0],b[1],A,B);if(!path)continue;
+    // A natural-to-natural link may get a pinch: one cell wide for five cells, sealed by locked rock, with a plug in it
+    let pinch=-1;
+    if(!A.built&&!B.built&&chance(T.divider)){const mid=(path.length-1)/2;let bd=1e9;
+      for(let p=3;p<path.length-3;p++){let ok=true;const [px,pz]=path[p];
+        for(let q=p-2;q<=p+2&&ok;q++)if(open[I(path[q][0],path[q][1])])ok=false;
+        for(const q of [p-3,p+3])if(Math.hypot(path[q][0]-px,path[q][1]-pz)<=2.6)ok=false;
+        for(let dz=-3;dz<=3&&ok;dz++)for(let dx=-3;dx<=3&&ok;dx++){const k=I(px+dx,pz+dz);if(open[k]||lock[k])ok=false;}
+        if(ok&&Math.abs(p-mid)<bd){bd=Math.abs(p-mid);pinch=p;}}}
+    const w=rr(0.9,1.7);
+    if(pinch>=0){const [px,pz]=path[pinch];
+      for(let dz=-3;dz<=3;dz++)for(let dx=-3;dx<=3;dx++)if(Math.hypot(dx,dz)<=2.6)lock[I(px+dx,pz+dz)]=1;
+      for(let q=pinch-2;q<=pinch+2;q++){const k=I(path[q][0],path[q][1]);lock[k]=0;open[k]=1;keep[k]=1;}
+      const L=ri(1,3),from=pinch-(L===3?1:0),type=pick(T.dividers);
+      for(let q=from;q<from+L;q++)obj[I(path[q][0],path[q][1])]=type;dividers.push(type);}
+    path.forEach(([x,z],p)=>{if(pinch>=0&&p>=pinch-2&&p<=pinch+2)return;const r=Math.ceil(w);
+      for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){if(Math.hypot(dx,dz)>w)continue;const nx=x+dx,nz=z+dz;if(!inMap(nx,nz))continue;const k=I(nx,nz);
+        if(lock[k]||built[k]>=0)continue;open[k]=1;}});
+  }
+
+  // ---- Smooth the natural rock (built rooms, pinches and the exit are kept as they are)
+  for(let pass=0;pass<2;pass++){const nx=open.slice();
+    for(let z=2;z<=N-3;z++)for(let x=2;x<=N-3;x++){const k=I(x,z);if(keep[k]||lock[k]||built[k]>=0)continue;let n=0;
+      for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++)if((dx||dz)&&open[I(x+dx,z+dz)])n++;
+      if(n>=5)nx[k]=1;else if(n<=1)nx[k]=0;}
+    open.set(nx);}
+
+  // ---- Anything the exit cannot reach is filled back in
+  const seen=new Uint8Array(N*N),st=[I(ex,exz-1)];seen[st[0]]=1;
+  while(st.length){const k=st.pop();for(const [dx,dz] of D4){const nk=k+dx+dz*N;if(!seen[nk]&&open[nk]){seen[nk]=1;st.push(nk);}}}
+  for(let k=0;k<N*N;k++)if(open[k]&&!seen[k]){open[k]=0;obj[k]=null;}
+  const reached=ch.filter(c=>seen[I(c.x,c.z)]||(c.built&&c.border&&seen[I(c.x,c.z)]));
+
+  // ---- Floors and features
+  const fN=T.floors.map(()=>noise(rr(5,10)*s+2)),glow=noise(4),sandN=noise(5);
+  for(let k=0;k<N*N;k++){if(!open[k])continue;const x=X(k),z=Z(k);
+    if(built[k]>=0){floor[k]=T.crypt?'tile':'flag';if(T.sandInBuilt&&sandN(x,z)>0.6)floor[k]='sand';continue;}
+    floor[k]='rough';
+    for(let i=0;i<T.floors.length;i++){const [f,sh,mode]=T.floors[i],n=fN[i](x,z);
+      if((mode==='low'&&n<0.25+sh*0.5)||(mode==='high'&&n>0.75-sh*0.5)||(mode==='mid'&&Math.abs(n-0.5)<sh*0.25)){floor[k]=f;break;}}
+    if(obj[k])continue;
+    if(floor[k]!=='water'&&glow(x,z)>0.62&&chance(T.fungus))obj[k]='fungus';
+    else if(chance(T.chunks))obj[k]='chunk';}
+  for(const c of ch){if(!c.built||!seen[I(c.x,c.z)])continue;
+    for(let k=0;k<N*N;k++){if(built[k]!==c.id||obj[k])continue;const x=X(k),z=Z(k);let inner=true;
+      for(let dz=-2;dz<=2&&inner;dz++)for(let dx=-2;dx<=2;dx++)if(built[I(x+dx,z+dz)]!==c.id){inner=false;break;}
+      if(!inner)continue;const dx=x-c.x,dz=z-c.z;
+      if(c.shape==='hall'&&dx%3===0&&dz%4===0&&dx!==0)obj[k]='column';
+      else if(T.crypt&&c.shape==='rect'&&dx%3===0&&dz%3===0)obj[k]='sarc';
+      else if(!T.crypt&&chance(0.04))obj[k]='debris';}}
+
+  return {T,open,obj,floor,exitM,lock,reached:reached.length,builtN:reached.filter(c=>c.built).length,
+    dividers:dividers.length,doors:obj.filter(o=>o==='door').length,openPct:Math.round(100*open.reduce((a,b)=>a+b,0)/(N*N))};
+}
+
+function draw(){
+  const g=generate(),T=g.T,rock=ROCK[T.rock],cs=Math.max(3,Math.floor(600/N));
+  cv.width=cv.height=cs*N;const I=(x,z)=>z*N+x;
+  const deep=shade(rock,-0.72),face=shade(rock,-0.38);
+  const FL={rough:shade(rock,-0.12),flag:shade(rock,0.18),tile:shade(rock,0.32),...FLOORC};
+  for(let z=0;z<N;z++)for(let x=0;x<N;x++){const k=I(x,z),px=x*cs,py=(N-1-z)*cs;
+    if(g.exitM[k]){ctx.fillStyle='#e8c860';ctx.fillRect(px,py,cs,cs);continue;}
+    if(!g.open[k]){let edge=false;for(let dz=-1;dz<=1&&!edge;dz++)for(let dx=-1;dx<=1;dx++){const nx=x+dx,nz=z+dz;if(nx>=0&&nz>=0&&nx<N&&nz<N&&g.open[I(nx,nz)]){edge=true;break;}}
+      ctx.fillStyle=edge?face:deep;ctx.fillRect(px,py,cs,cs);continue;}
+    ctx.fillStyle=FL[g.floor[k]]||'#f0f';ctx.fillRect(px,py,cs,cs);
+    const o=g.obj[k];if(!o)continue;const cx=px+cs/2,cy=py+cs/2;
+    const dot=(c,r)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(cx,cy,cs*r,0,7);ctx.fill();};
+    if(o==='door'){ctx.fillStyle='#8a5a2b';ctx.fillRect(px+1,py+1,cs-2,cs-2);}
+    else if(o==='rubble'){ctx.fillStyle='#7d7064';ctx.fillRect(px,py,cs,cs);ctx.fillStyle='#4a423a';ctx.fillRect(px+cs*.2,py+cs*.3,cs*.25,cs*.25);ctx.fillRect(px+cs*.55,py+cs*.55,cs*.25,cs*.25);}
+    else if(o==='ice'){ctx.fillStyle='#a9dcef';ctx.fillRect(px,py,cs,cs);ctx.fillStyle='#e9f8ff';ctx.fillRect(px+cs*.2,py+cs*.2,cs*.3,cs*.3);}
+    else if(o==='roots'){ctx.fillStyle='#3b5420';ctx.fillRect(px,py,cs,cs);ctx.strokeStyle='#7b5a33';ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px+cs,py+cs);ctx.moveTo(px+cs,py);ctx.lineTo(px,py+cs);ctx.stroke();}
+    else if(o==='sand'){ctx.fillStyle='#d9c08a';ctx.fillRect(px,py,cs,cs);ctx.fillStyle='#a88f5c';ctx.fillRect(px,py+cs*.6,cs,cs*.15);}
+    else if(o==='fungus')dot('#8fe7ff',0.28);
+    else if(o==='chunk')dot('#8b8680',0.3);
+    else if(o==='debris')dot('#6b625a',0.22);
+    else if(o==='column')dot(shade(rock,0.45),0.45);
+    else if(o==='sarc'){ctx.fillStyle='#ddd5c4';ctx.fillRect(px+cs*.15,py-cs*.4,cs*.7,cs*1.6);}
+  }
+  document.getElementById('info').innerHTML=`${N}x${N}, seed ${seed}<br>${g.reached} chambers (${g.builtN} built)<br>${g.dividers} dividers, ${g.doors} doors<br>${g.openPct}% open floor`;
+  legend(T,rock);
+}
+function legend(T,rock){const items=[['Rock wall',shade(rock,-0.38)],['Rough '+T.rock+' floor',shade(rock,-0.12)],['Built floor',T.crypt?shade(rock,0.32):shade(rock,0.18)]];
+  for(const [f] of T.floors)items.push([f,FLOORC[f]]);
+  items.push(['Exit stairway','#e8c860'],['Door (built rooms only)','#8a5a2b']);
+  for(const d in T.dividers)items.push([{rubble:'Rubble plug (mine)',ice:'Ice plug (mine)',roots:'Root tangle (cut)',sand:'Sand drift (dig)'}[d],{rubble:'#7d7064',ice:'#a9dcef',roots:'#3b5420',sand:'#d9c08a'}[d]]);
+  if(T.fungus)items.push(['Glowing fungus','#8fe7ff']);
+  document.getElementById('legend').innerHTML=items.map(([l,c])=>`<div class="lg"><span class="sw" style="background:${c}"></span>${l}</div>`).join('');}
+function ui(){document.getElementById('themes').innerHTML=Object.keys(THEMES).map(k=>`<div class="rw-item${k===theme?' is-on':''}" data-t="${k}">${THEMES[k].label}</div>`).join('');
+  document.getElementById('sizes').innerHTML=[60,100,150].map(n=>`<button class="rw-btn${n===N?' is-primary':''}" data-n="${n}">${n}</button>`).join('');
+  document.querySelectorAll('[data-t]').forEach(e=>e.onclick=()=>{theme=e.dataset.t;ui();draw();});
+  document.querySelectorAll('[data-n]').forEach(e=>e.onclick=()=>{N=+e.dataset.n;ui();draw();});}
+document.getElementById('regen').onclick=()=>{seed=Math.floor(Math.random()*1e6);draw();};
+ui();draw();
+})();
+</script>

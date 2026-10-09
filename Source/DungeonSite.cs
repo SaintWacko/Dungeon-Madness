@@ -22,6 +22,8 @@ namespace ThisUsedToBeAboutDungeons
         public int layoutSeed;
         // Chambers and dividers, filled in by map generation; phase 4 places creatures with it
         public DungeonLayoutData layout;
+        // Picked from the tile on first generation; the same tile always gives the same theme
+        public DungeonThemeDef theme;
 
         // Items left at the entrance when nobody stayed outside, and items carried out through the exit before any
         // pawn came out to take them. Handed to the caravan on the tile as soon as one exists.
@@ -186,6 +188,7 @@ namespace ThisUsedToBeAboutDungeons
             Scribe_Values.Look(ref effectiveLevel, "effectiveLevel");
             Scribe_Values.Look(ref layoutSeed, "layoutSeed");
             Scribe_Deep.Look(ref layout, "layout");
+            Scribe_Defs.Look(ref theme, "theme");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
             if (stash == null) stash = new ThingOwner<Thing>(this);
@@ -200,6 +203,7 @@ namespace ThisUsedToBeAboutDungeons
         public static ThingDef TUBAD_DungeonWall;
         public static ThingDef TUBAD_DungeonRubble;
         public static ThingDef TUBAD_DungeonExit;
+        public static DungeonThemeDef TUBAD_Cave;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

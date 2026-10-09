@@ -33,7 +33,8 @@
     <genStep Class="ThisUsedToBeAboutDungeons.GenStep_DungeonLayout" />
   </GenStepDef>
 
-  <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted -->
+  <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted. Made from the tile's
+       primary stone blocks only so it takes that rock's colour and name. -->
   <ThingDef ParentName="BuildingNaturalBase">
     <defName>TUBAD_DungeonWall</defName>
     <label>dungeon wall</label>
@@ -47,8 +48,12 @@
         <li>Rock</li>
         <li>MapEdge</li>
       </linkFlags>
-      <color>(62,58,70)</color>
     </graphicData>
+    <madeFromStuff>true</madeFromStuff>
+    <stuffCategories>
+      <li>Stony</li>
+    </stuffCategories>
+    <costStuffCount>1</costStuffCount>
     <altitudeLayer>Building</altitudeLayer>
     <passability>Impassable</passability>
     <blockWind>true</blockWind>
@@ -82,15 +87,8 @@
   </ThingDef>
 
   <!-- Fills a passage between chambers. Full fill blocks sight, so the next chamber stays fogged until it is mined out. -->
-  <ThingDef ParentName="BuildingNaturalBase">
-    <defName>TUBAD_DungeonRubble</defName>
-    <label>rubble</label>
-    <description>Fallen stone packed into a passage. It can be mined out.</description>
+  <ThingDef Name="TUBAD_PlugBase" ParentName="BuildingNaturalBase" Abstract="True">
     <thingClass>Mineable</thingClass>
-    <graphicData>
-      <texPath>Things/Building/TUBAD_Rubble</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-    </graphicData>
     <altitudeLayer>Building</altitudeLayer>
     <passability>Impassable</passability>
     <blockWind>true</blockWind>
@@ -117,6 +115,56 @@
       <deconstructible>false</deconstructible>
       <claimable>false</claimable>
     </building>
+  </ThingDef>
+
+  <ThingDef ParentName="TUBAD_PlugBase">
+    <defName>TUBAD_DungeonRubble</defName>
+    <label>rubble</label>
+    <description>Fallen stone packed into a squeeze between caverns. It can be mined out.</description>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_Rubble</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+  </ThingDef>
+
+  <ThingDef ParentName="TUBAD_PlugBase">
+    <defName>TUBAD_IcePlug</defName>
+    <label>ice plug</label>
+    <description>Water that seeped into a squeeze and froze solid. It can be mined out.</description>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_IcePlug</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>150</MaxHitPoints>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef ParentName="TUBAD_PlugBase">
+    <defName>TUBAD_RootTangle</defName>
+    <label>root tangle</label>
+    <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be hacked out with mining tools, or burned.</description>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_RootTangle</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>120</MaxHitPoints>
+      <Flammability>0.6</Flammability>
+    </statBases>
+  </ThingDef>
+
+  <ThingDef ParentName="TUBAD_PlugBase">
+    <defName>TUBAD_SandDrift</defName>
+    <label>sand drift</label>
+    <description>Sand that has poured in from above and choked a squeeze between caverns. It can be dug out.</description>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_SandDrift</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <statBases>
+      <MaxHitPoints>100</MaxHitPoints>
+    </statBases>
   </ThingDef>
 
   <ThingDef ParentName="PocketMapExit">

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!--
+    Dungeon themes. A dungeon's theme is picked from its tile, once per tile, so every party sees the same kind of
+    dungeon there. Matching runs on the tile's numbers (annual temperature, rainfall, swampiness, the biome's plant
+    density), which is how modded biomes get a theme with no patch: the highest-priority theme whose ranges all
+    include the tile wins. A theme with <biomes> matches only those biomes and beats every numeric match. A theme
+    with <rareChance> is rolled for first and is never picked otherwise.
+
+    Rock, wall colour and the biome's own ground, plants and animal remains come from the tile, not from here.
+    Floor patches with <biomeTerrain> use the biome's own gravel, mud or water, so a modded biome's version shows up.
+  -->
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_Cave</defName>
+    <label>caves</label>
+    <description>Plain caverns in the local rock, with puddles, mud and gravel.</description>
+    <priority>0</priority>
+    <builtChance>0.12</builtChance>
+    <pinchChance>0.75</pinchChance>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing></li>
+    </dividers>
+    <floors>
+      <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.12</share><mode>Low</mode></li>
+      <li><biomeTerrain>Mud</biomeTerrain><share>0.2</share><mode>Low</mode></li>
+      <li><biomeTerrain>Gravel</biomeTerrain><share>0.35</share><mode>High</mode></li>
+    </floors>
+    <caveFungus>0.05</caveFungus>
+    <chunks>0.012</chunks>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_Frozen</defName>
+    <label>frozen caves</label>
+    <description>Caverns where the seepage has frozen into sheets of ice and the squeezes are choked with it.</description>
+    <temperature>-999~-4</temperature>
+    <priority>3</priority>
+    <builtChance>0.08</builtChance>
+    <pinchChance>0.75</pinchChance>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing><weight>0.4</weight></li>
+      <li><thing>TUBAD_IcePlug</thing><weight>0.6</weight></li>
+    </dividers>
+    <floors>
+      <li><terrain>Ice</terrain><share>0.5</share><mode>Low</mode></li>
+      <li><biomeTerrain>Gravel</biomeTerrain><share>0.25</share><mode>High</mode></li>
+    </floors>
+    <caveFungus>0.01</caveFungus>
+    <chunks>0.014</chunks>
+    <skylightChance>0.08</skylightChance>
+    <remainsPerThousand>0.8</remainsPerThousand>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_Overgrown</defName>
+    <label>overgrown caves</label>
+    <description>Caverns under thick growth: moss and soil on the floors, roots knotted through the squeezes, and more of the ceiling fallen in.</description>
+    <plantDensity>0.55~99</plantDensity>
+    <priority>1</priority>
+    <builtChance>0.12</builtChance>
+    <pinchChance>0.8</pinchChance>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing><weight>0.35</weight></li>
+      <li><thing>TUBAD_RootTangle</thing><weight>0.65</weight></li>
+    </dividers>
+    <floors>
+      <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.1</share><mode>Low</mode></li>
+      <li><terrain>MossyTerrain</terrain><share>0.55</share><mode>High</mode></li>
+      <li><biomeTerrain>Soil</biomeTerrain><terrain>Soil</terrain><share>0.3</share><mode>Mid</mode></li>
+    </floors>
+    <biomeGroundShare>0.2</biomeGroundShare>
+    <caveFungus>0.16</caveFungus>
+    <chunks>0.006</chunks>
+    <skylightChance>0.3</skylightChance>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_Flooded</defName>
+    <label>flooded caves</label>
+    <description>Caverns half under water, with marsh and mud where it has drained.</description>
+    <swampiness>0.4~99</swampiness>
+    <priority>3</priority>
+    <builtChance>0.1</builtChance>
+    <pinchChance>0.7</pinchChance>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing></li>
+    </dividers>
+    <floors>
+      <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.5</share><mode>Low</mode></li>
+      <li><terrain>Marsh</terrain><share>0.3</share><mode>Mid</mode></li>
+      <li><biomeTerrain>Mud</biomeTerrain><share>0.3</share><mode>High</mode></li>
+    </floors>
+    <caveFungus>0.06</caveFungus>
+    <chunks>0.006</chunks>
+    <skylightChance>0.2</skylightChance>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_BuriedRuins</defName>
+    <label>buried ruins</label>
+    <description>Old stonework swallowed by sand. More of it is built than anywhere else, and sand has drifted into the rooms and squeezes.</description>
+    <temperature>8~999</temperature>
+    <rainfall>-1~450</rainfall>
+    <priority>2</priority>
+    <builtChance>0.3</builtChance>
+    <pinchChance>0.75</pinchChance>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing><weight>0.5</weight></li>
+      <li><thing>TUBAD_SandDrift</thing><weight>0.5</weight></li>
+    </dividers>
+    <floors>
+      <li><terrain>SoftSand</terrain><share>0.3</share><mode>High</mode></li>
+      <li><terrain>Sand</terrain><share>0.45</share><mode>Low</mode></li>
+    </floors>
+    <builtFloorDrift>Sand</builtFloorDrift>
+    <caveFungus>0</caveFungus>
+    <chunks>0.014</chunks>
+    <skylightChance>0.1</skylightChance>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+  <ThisUsedToBeAboutDungeons.DungeonThemeDef>
+    <defName>TUBAD_Crypt</defName>
+    <label>crypt</label>
+    <description>A tomb complex cut into the rock: pillared halls and rooms of sarcophagi, more built than natural.</description>
+    <rareChance>0.08</rareChance>
+    <builtChance>0.6</builtChance>
+    <pinchChance>0.8</pinchChance>
+    <cryptRooms>true</cryptRooms>
+    <tiledBuiltFloor>true</tiledBuiltFloor>
+    <dividers>
+      <li><thing>TUBAD_DungeonRubble</thing></li>
+    </dividers>
+    <floors>
+      <li><biomeTerrain>Gravel</biomeTerrain><share>0.2</share><mode>High</mode></li>
+    </floors>
+    <biomeGroundShare>0.05</biomeGroundShare>
+    <caveFungus>0.03</caveFungus>
+    <chunks>0.008</chunks>
+    <skylightChance>0.03</skylightChance>
+    <remainsPerThousand>0.3</remainsPerThousand>
+  </ThisUsedToBeAboutDungeons.DungeonThemeDef>
+
+</Defs>
