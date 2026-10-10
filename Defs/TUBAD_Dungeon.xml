@@ -139,19 +139,48 @@
     </statBases>
   </ThingDef>
 
-  <ThingDef ParentName="TUBAD_PlugBase">
+  <!-- A plant rather than a mineable, so it is cleared with "cut" or "chop wood" by plant cutters and gives a
+       little wood. It never grows, ages, spreads, blights or dies of darkness: the generator spawns it fully grown
+       and it stays until cut or burned. Impassable like the other plugs. -->
+  <ThingDef ParentName="PlantBaseNonEdible">
     <defName>TUBAD_RootTangle</defName>
     <label>root tangle</label>
-    <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be hacked out with mining tools, or burned.</description>
+    <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be chopped out for a little wood, or burned.</description>
     <graphicData>
       <texPath>Things/Building/TUBAD_RootTangle</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
-    <filthLeaving IsNull="True" />
+    <altitudeLayer>Building</altitudeLayer>
+    <selectable>true</selectable>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <blockWind>true</blockWind>
+    <rotatable>false</rotatable>
     <statBases>
       <MaxHitPoints>120</MaxHitPoints>
       <Flammability>0.6</Flammability>
+      <BeautyOutdoors>0</BeautyOutdoors>
     </statBases>
+    <plant>
+      <fertilityMin>0</fertilityMin>
+      <fertilitySensitivity>0</fertilitySensitivity>
+      <growDays>1</growDays>
+      <lifespanDaysPerGrowDays>0</lifespanDaysPerGrowDays>
+      <dieIfNoSunlight>false</dieIfNoSunlight>
+      <neverBlightable>true</neverBlightable>
+      <showGrowthInInspectPane>false</showGrowthInInspectPane>
+      <harvestWork>600</harvestWork>
+      <harvestedThingDef>WoodLog</harvestedThingDef>
+      <harvestYield>8</harvestYield>
+      <harvestTag>Wood</harvestTag>
+      <harvestMinGrowth>0</harvestMinGrowth>
+      <harvestFailable>false</harvestFailable>
+      <soundHarvesting>Harvest_Tree</soundHarvesting>
+      <soundHarvestFinish>Harvest_Tree_Finish</soundHarvestFinish>
+      <visualSizeRange>1~1</visualSizeRange>
+      <topWindExposure>0</topWindExposure>
+      <destroyedByFlooding>false</destroyedByFlooding>
+    </plant>
   </ThingDef>
 
   <ThingDef ParentName="TUBAD_PlugBase">

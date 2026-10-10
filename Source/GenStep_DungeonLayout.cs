@@ -131,6 +131,9 @@ namespace ThisUsedToBeAboutDungeons
                 foreach (var c in d.cells)
                 {
                     Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? DungeonDefOf.TUBAD_DungeonRubble);
+                    // A plant plug (root tangle) spawns at its starting growth, which would draw it tiny and
+                    // halve its wood; it never grows underground, so set it mature here
+                    if (thing is Plant plant) plant.Growth = 1f;
                     GenSpawn.Spawn(thing, c, map);
                 }
             GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonExit, exitCell, map);

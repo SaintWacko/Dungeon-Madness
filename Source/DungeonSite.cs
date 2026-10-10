@@ -56,6 +56,28 @@ namespace ThisUsedToBeAboutDungeons
 
         public override string Label => "TUBAD_SiteLabel".Translate(level);
 
+        static readonly MaterialPropertyBlock drawBlock = new MaterialPropertyBlock();
+
+        // Vanilla's zoomed-in draw (WorldObject.Draw) orients the quad so texture-up points east, which lays an upright
+        // sprite on its side; settlement icons are symmetric so vanilla never notices. Same draw, turned a quarter
+        // so texture-up points north, matching the batched dungeon icons in WorldDrawLayer_Dungeons.
+        public override void Draw()
+        {
+            Material mat = Material;
+            if (Tile.LayerDef.isSpace || mat == null) return;
+            float size = 0.7f * Tile.Layer.AverageTileSize;
+            float alt = DrawAltitude + Rand.RangeSeeded(0f, 0.01f, ID) + def.drawAltitudeOffset;
+            float transition = ExpandableWorldObjectsUtility.RawTransitionPct;
+            if (def.expandingIcon && transition > 0f && !ExpandableWorldObjectsUtility.HiddenByRules(this))
+            {
+                Color c = mat.color;
+                drawBlock.SetColor(ShaderPropertyIDs.Color, new Color(c.r, c.g, c.b, c.a * (1f - transition)));
+                WorldRendererUtility.DrawQuadTangentialToPlanet(DrawPos, size, alt, mat, -90f, propertyBlock: drawBlock);
+            }
+            else
+                WorldRendererUtility.DrawQuadTangentialToPlanet(DrawPos, size, alt, mat, -90f);
+        }
+
         // MapParent's version is not virtual and returns null; re-listing IThingHolder on this class makes the
         // interface map to this one, so the stash's contents are reachable as held things (and kept by world GC)
         public new ThingOwner GetDirectlyHeldThings() => stash;
