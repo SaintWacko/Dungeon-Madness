@@ -3,6 +3,7 @@ using System.Linq;
 using RimWorld;
 using RimWorld.BaseGen;
 using RimWorld.Planet;
+using RimWorld.SketchGen;
 using UnityEngine;
 using Verse;
 
