@@ -269,8 +269,10 @@ namespace ThisUsedToBeAboutDungeons
             var leaves = new List<CellRect>();
             Split(map, rect, blocks, keepOpen, leaves);
 
+            // Grouped by texture, so the dozen carpet colours count as one floor against stone tile or parquet
             var floors = DefDatabase<TerrainDef>.AllDefsListForReading.Where(t => t.layerable && t.constructionSkillPrerequisite > 0
-                && !t.IsWater && !t.bridge && t.designationCategory != null && t.statBases.GetStatValueFromList(StatDefOf.Beauty, 0f) >= 0f).ToList();
+                && !t.IsWater && !t.bridge && t.designationCategory != null && t.statBases.GetStatValueFromList(StatDefOf.Beauty, 0f) >= 0f)
+                .GroupBy(FloorFamily).Select(g => g.ToList()).ToList();
             var bag = new List<RoomUse>();
             var uses = new List<RoomUse>();
             foreach (var leaf in leaves)
@@ -280,9 +282,10 @@ namespace ThisUsedToBeAboutDungeons
                 BaseGen.globalSettings.map = map;
                 if (PushRoom(use, leaf, blocks)) BaseGen.Generate();
                 else BaseGen.symbolStack.Clear();
+                if (use == RoomUse.Storage) StockRoom(map, leaf, blocks);
                 // Floor last, so nothing BaseGen clears can take it. A proper laid floor, one a builder needs skill
                 // for: stone or fine tile, carpet, parquet and so on. Doors on the edge take the floor too.
-                if (floors.TryRandomElement(out var floor))
+                if (floors.TryRandomElement(out var family) && family.TryRandomElement(out var floor))
                     foreach (var c in leaf.ExpandedBy(1))
                         if (leaf.Contains(c) || c.GetDoor(map) != null)
                             map.terrainGrid.SetTerrain(c, floor);
@@ -350,11 +353,6 @@ namespace ThisUsedToBeAboutDungeons
                 case RoomUse.BatteryRoom: stack.Push("interior_batteryRoom", rp); return true;
                 case RoomUse.PrisonCell: stack.Push("interior_prisonCell", rp); return true;
                 case RoomUse.ThroneRoom: stack.Push("interior_throneRoom", rp); return true;
-                case RoomUse.Storage:
-                    // Ordinary goods for now; Phase 5 swaps this for the dungeon's own loot
-                    rp.stockpileMarketValue = Mathf.Min(rect.Area * 25f, 700f);
-                    stack.Push("interior_storage", rp);
-                    return true;
             }
             switch (use)
             {
@@ -393,6 +391,56 @@ namespace ThisUsedToBeAboutDungeons
         }
 
         static ThingDef Named(string defName) => DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+
+        /// <summary>Colour and pattern variants share a texture (every carpet is Terrain/Surfaces/Carpet; mindbend
+        /// carpet is one folder of _a.._e files), so the texture path, or its folder for lettered files, names the family.</summary>
+        static string FloorFamily(TerrainDef t)
+        {
+            string p = t.texturePath ?? t.defName;
+            int slash = p.LastIndexOf('/');
+            return slash >= 0 && p.IndexOf('_', slash) >= 0 ? p.Substring(0, slash) : p;
+        }
+
+        /// <summary>Small shelves along the walls, facing in, then ordinary goods placed onto them; whatever does not
+        /// fit on a shelf is not spawned. Phase 5 swaps the goods for the dungeon's own loot.</summary>
+        static void StockRoom(Map map, CellRect rect, ThingDef blocks)
+        {
+            ThingDef shelfDef = ThingDefOf.ShelfSmall ?? Named("ShelfSmall");
+            if (shelfDef == null) return;
+            ThingDef stuff = blocks.stuffProps.CanMake(shelfDef) ? blocks : GenStuff.DefaultStuffFor(shelfDef);
+            var shelves = new List<IntVec3>();
+            foreach (var c in rect.EdgeCells)
+            {
+                if (c.GetEdifice(map) != null || c.GetFirstItem(map) != null || BaseGenUtility.AnyDoorAdjacentCardinalTo(c, map)) continue;
+                Rot4 rot = c.z == rect.maxZ ? Rot4.South : c.z == rect.minZ ? Rot4.North : c.x == rect.minX ? Rot4.East : Rot4.West;
+                GenSpawn.Spawn(ThingMaker.MakeThing(shelfDef, stuff), c, map, rot);
+                shelves.Add(c);
+            }
+            if (shelves.Count == 0) return;
+            float value = Mathf.Min(shelves.Count * 60f, 900f);
+            var parms = new ThingSetMakerParams
+            {
+                techLevel = TechLevel.Undefined,
+                totalMarketValueRange = new FloatRange(value, value),
+                countRange = new IntRange(shelves.Count, shelves.Count * 2),
+            };
+            var goods = ThingSetMakerDefOf.MapGen_DefaultStockpile.root.Generate(parms);
+            shelves.Shuffle();
+            int i = 0;
+            foreach (var t in goods)
+            {
+                bool placed = false;
+                for (int tries = 0; tries < shelves.Count && !placed; tries++, i++)
+                    placed = GenPlace.TryPlaceThing(t, shelves[i % shelves.Count], map, ThingPlaceMode.Direct, out var put) && Forbid(put);
+                if (!placed && !t.Destroyed && !t.Spawned) t.Destroy();
+            }
+        }
+
+        static bool Forbid(Thing t)
+        {
+            t?.SetForbidden(true, false);
+            return true;
+        }
 
         static void PushThing(ResolveParams rp, ThingDef def, ThingDef blocks)
         {
