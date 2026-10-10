@@ -17,14 +17,24 @@ namespace ThisUsedToBeAboutDungeons
     }
 
     /// <summary>What a built room was used for. Ruins are dressed with steles, sarcophagi and urns; the rest are
-    /// furnished rooms whose walls carry power.</summary>
+    /// furnished rooms whose walls carry power. A suite is a large furnished room split by inner walls into smaller
+    /// rooms of different uses.</summary>
     public enum RoomUse : byte
     {
         None,
         Ruin,
+        Suite,
         Barracks,
         DiningRoom,
         Brewery,
+        Storage,
+        BatteryRoom,
+        PrisonCell,
+        ThroneRoom,
+        Workshop,
+        Kitchen,
+        Hospital,
+        Library,
     }
 
     public enum CellFeature : byte
@@ -50,7 +60,7 @@ namespace ThisUsedToBeAboutDungeons
         public RoomUse use;
         public List<int> links = new List<int>();
 
-        public bool Furnished => use >= RoomUse.Barracks;
+        public bool Furnished => use >= RoomUse.Suite;
 
         public bool Cave => shape == RoomShape.Cave;
         public CellRect Rect => new CellRect(minX, minZ, width, height);

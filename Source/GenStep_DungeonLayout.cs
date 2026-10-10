@@ -157,7 +157,7 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var ch in data.chambers)
             {
                 if (ch.use == RoomUse.Ruin) Ruin(map, layout, ch, blocks);
-                else if (ch.Furnished) FurnishRoom(map, layout, ch);
+                else if (ch.Furnished) FurnishRoom(map, layout, ch, blocks);
             }
             CaveLife(map, layout, theme, biome, rocks);
         }
@@ -175,11 +175,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
                 if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
                 if (!force && !Rand.Chance(theme.furnishedChance)) continue;
-                // Dining rooms and breweries need room for tables or barrels plus a heater or cooler on the edge;
-                // in a 5-wide room BaseGen runs out of space and logs a warning per piece
-                bool roomy = r.Width >= 6 && r.Height >= 6;
-                float w = Rand.Value;
-                ch.use = !roomy || w < 0.4f ? RoomUse.Barracks : w < 0.7f ? RoomUse.DiningRoom : RoomUse.Brewery;
+                ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
                 ids.Add(ch.id);
             }
             return ids;
@@ -218,34 +214,192 @@ namespace ThisUsedToBeAboutDungeons
             return false;
         }
 
-        /// <summary>A room left as it was: vanilla's settlement room fillers (beds and lights, tables and chairs, a
-        /// brewery) run on the room's floor with no faction. Its walls are powered (see the wall pass).</summary>
-        static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch)
+        /// <summary>Longest side of a single furnished room; anything bigger is split into a suite.</summary>
+        const int MaxLeaf = 10;
+        /// <summary>Shortest side a split may leave on either part.</summary>
+        const int MinLeaf = 5;
+
+        static readonly RoomUse[] AllUses =
+        {
+            RoomUse.Barracks, RoomUse.DiningRoom, RoomUse.Brewery, RoomUse.Storage, RoomUse.BatteryRoom, RoomUse.PrisonCell,
+            RoomUse.ThroneRoom, RoomUse.Workshop, RoomUse.Kitchen, RoomUse.Hospital, RoomUse.Library,
+        };
+
+        static bool Fits(RoomUse use, CellRect r)
+        {
+            int lo = Mathf.Min(r.Width, r.Height), hi = Mathf.Max(r.Width, r.Height);
+            switch (use)
+            {
+                // Tables or barrels plus a heater or cooler on the edge: in a 5-wide room BaseGen runs out of space
+                // and logs a warning per piece
+                case RoomUse.DiningRoom:
+                case RoomUse.Brewery: return lo >= 6;
+                case RoomUse.PrisonCell: return hi <= 7;
+                case RoomUse.ThroneRoom: return ModsConfig.RoyaltyActive;
+                default: return true;
+            }
+        }
+
+        /// <summary>Draws the next use that fits from a shuffled bag, refilling it when empty, so a suite repeats a
+        /// use only after it has had every other one that fits.</summary>
+        static RoomUse PickUse(CellRect r, List<RoomUse> bag)
+        {
+            for (int pass = 0; pass < 2; pass++)
+            {
+                if (bag.Count == 0) { bag.AddRange(AllUses); bag.Shuffle(); }
+                int i = bag.FindIndex(u => Fits(u, r));
+                if (i >= 0) { var u = bag[i]; bag.RemoveAt(i); return u; }
+                bag.Clear();
+            }
+            return RoomUse.Barracks;
+        }
+
+        /// <summary>A room left as it was. A room over MaxLeaf on a side is first cut by powered inner walls, each
+        /// with a stone door, into smaller rooms of different uses. Each room gets its own laid floor and is filled
+        /// by vanilla's settlement room fillers or a short list of furniture, with no faction.</summary>
+        static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch, ThingDef blocks)
         {
             if (!Interior(layout, ch, out var rect)) return;
-            // A proper laid floor, one a builder needs some skill for: stone or fine tile, carpet, parquet and so on
+            // Cells in front of a door must stay open, or a split wall could seal it
+            var keepOpen = new HashSet<IntVec3>();
+            foreach (var c in rect.ExpandedBy(1).ClipInsideMap(map))
+                if (layout.feature[layout.Index(c)] == CellFeature.Door)
+                    foreach (var a in GenAdj.CellsAdjacentCardinal(c, Rot4.North, IntVec2.One))
+                        if (rect.Contains(a)) keepOpen.Add(a);
+            var leaves = new List<CellRect>();
+            Split(map, rect, blocks, keepOpen, leaves);
+
             var floors = DefDatabase<TerrainDef>.AllDefsListForReading.Where(t => t.layerable && t.constructionSkillPrerequisite > 0
                 && !t.IsWater && !t.bridge && t.designationCategory != null && t.statBases.GetStatValueFromList(StatDefOf.Beauty, 0f) >= 0f).ToList();
-            if (floors.TryRandomElement(out var floor))
+            var bag = new List<RoomUse>();
+            var uses = new List<RoomUse>();
+            foreach (var leaf in leaves)
             {
-                CellRect box = ch.Rect.ExpandedBy(1).ClipInsideMap(map);
-                foreach (var c in box)
+                RoomUse use = ch.use == RoomUse.Suite ? PickUse(leaf, bag) : ch.use;
+                uses.Add(use);
+                BaseGen.globalSettings.map = map;
+                if (PushRoom(use, leaf, blocks)) BaseGen.Generate();
+                else BaseGen.symbolStack.Clear();
+                // Floor last, so nothing BaseGen clears can take it. A proper laid floor, one a builder needs skill
+                // for: stone or fine tile, carpet, parquet and so on. Doors on the edge take the floor too.
+                if (floors.TryRandomElement(out var floor))
+                    foreach (var c in leaf.ExpandedBy(1))
+                        if (leaf.Contains(c) || c.GetDoor(map) != null)
+                            map.terrainGrid.SetTerrain(c, floor);
+                // Furniture that landed in front of a door goes, so every room stays reachable
+                foreach (var c in leaf)
                 {
-                    int k = layout.Index(c);
-                    if (layout.built[k] == ch.id || (layout.feature[k] == CellFeature.Door && Touches(layout, c.x, c.z, new HashSet<int> { ch.id })))
-                        map.terrainGrid.SetTerrain(c, floor);
+                    if (!BaseGenUtility.AnyDoorAdjacentCardinalTo(c, map)) continue;
+                    var b = c.GetEdifice(map);
+                    if (b != null && !(b is Building_Door) && b.def != DungeonDefOf.TUBAD_DungeonWallPowered) b.Destroy();
                 }
             }
-            string symbol;
-            switch (ch.use)
+            if (Prefs.DevMode && ch.use == RoomUse.Suite)
+                Log.Message($"[Dungeons] Suite at {ch.center}: {string.Join(", ", uses)}");
+        }
+
+        /// <summary>Cuts a rect along its longer side with a powered wall and one door, until every part is at most
+        /// MaxLeaf on a side. A cut never lands on a cell that has to stay open in front of a door.</summary>
+        static void Split(Map map, CellRect r, ThingDef blocks, HashSet<IntVec3> keepOpen, List<CellRect> leaves)
+        {
+            bool vertical = r.Width >= r.Height;
+            int len = vertical ? r.Width : r.Height;
+            if (len <= MaxLeaf || len < MinLeaf * 2 + 1) { leaves.Add(r); return; }
+            int lo = vertical ? r.minX : r.minZ;
+            var options = Enumerable.Range(lo + MinLeaf, len - MinLeaf * 2).ToList();
+            options.Shuffle();
+            foreach (int p in options)
             {
-                case RoomUse.Barracks: symbol = "interior_barracks"; break;
-                case RoomUse.DiningRoom: symbol = "interior_diningRoom"; break;
-                default: symbol = "interior_brewery"; break;
+                var line = vertical ? CellRect.FromLimits(p, r.minZ, p, r.maxZ) : CellRect.FromLimits(r.minX, p, r.maxX, p);
+                if (line.Cells.Any(keepOpen.Contains)) continue;
+                var cells = line.Cells.ToList();
+                IntVec3 door = cells[Rand.RangeInclusive(1, cells.Count - 2)];
+                foreach (var c in cells)
+                {
+                    Thing t = c == door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(DungeonDefOf.TUBAD_DungeonWallPowered, blocks);
+                    GenSpawn.Spawn(t, c, map, WipeMode.Vanish);
+                }
+                foreach (var a in GenAdj.CellsAdjacentCardinal(door, Rot4.North, IntVec2.One)) keepOpen.Add(a);
+                if (vertical)
+                {
+                    Split(map, CellRect.FromLimits(r.minX, r.minZ, p - 1, r.maxZ), blocks, keepOpen, leaves);
+                    Split(map, CellRect.FromLimits(p + 1, r.minZ, r.maxX, r.maxZ), blocks, keepOpen, leaves);
+                }
+                else
+                {
+                    Split(map, CellRect.FromLimits(r.minX, r.minZ, r.maxX, p - 1), blocks, keepOpen, leaves);
+                    Split(map, CellRect.FromLimits(r.minX, p + 1, r.maxX, r.maxZ), blocks, keepOpen, leaves);
+                }
+                return;
             }
-            BaseGen.globalSettings.map = map;
-            BaseGen.symbolStack.Push(symbol, new ResolveParams { rect = rect });
-            BaseGen.Generate();
+            leaves.Add(r);
+        }
+
+        /// <summary>Queues one room's fillers on BaseGen's stack. Vanilla's interior symbols where they exist;
+        /// the rest place single pieces with "thing", which skips a piece that does not fit rather than warning.
+        /// Returns false when nothing was queued.</summary>
+        static bool PushRoom(RoomUse use, CellRect rect, ThingDef blocks)
+        {
+            var rp = new ResolveParams { rect = rect };
+            var stack = BaseGen.symbolStack;
+            switch (use)
+            {
+                case RoomUse.Barracks: stack.Push("interior_barracks", rp); return true;
+                case RoomUse.DiningRoom: stack.Push("interior_diningRoom", rp); return true;
+                case RoomUse.Brewery: stack.Push("interior_brewery", rp); return true;
+                case RoomUse.BatteryRoom: stack.Push("interior_batteryRoom", rp); return true;
+                case RoomUse.PrisonCell: stack.Push("interior_prisonCell", rp); return true;
+                case RoomUse.ThroneRoom: stack.Push("interior_throneRoom", rp); return true;
+                case RoomUse.Storage:
+                    // Ordinary goods for now; Phase 5 swaps this for the dungeon's own loot
+                    rp.stockpileMarketValue = Mathf.Min(rect.Area * 25f, 700f);
+                    stack.Push("interior_storage", rp);
+                    return true;
+            }
+            stack.Push("indoorLighting", rp);
+            switch (use)
+            {
+                case RoomUse.Workshop:
+                    var benches = DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.thingClass != null
+                        && typeof(Building_WorkTable).IsAssignableFrom(d.thingClass) && d.BuildableByPlayer && d.useHitPoints
+                        && d.size.x <= 3 && d.size.z <= 3 && d.techLevel <= TechLevel.Industrial && d.designationCategory?.defName == "Production").ToList();
+                    benches.Shuffle();
+                    foreach (var b in benches.Take(Rand.RangeInclusive(2, 3))) PushThing(rp, b, blocks);
+                    break;
+                case RoomUse.Kitchen:
+                    PushThing(rp, Rand.Bool ? Named("ElectricStove") : Named("FueledStove"), blocks);
+                    PushThing(rp, Named("TableButcher"), blocks);
+                    PushThing(rp, Named("Table1x2c"), blocks);
+                    break;
+                case RoomUse.Hospital:
+                    var beds = rp;
+                    beds.singleThingDef = Named("HospitalBed") ?? ThingDefOf.Bed;
+                    beds.bedCount = Rand.RangeInclusive(2, 4);
+                    stack.Push("fillWithBeds", beds);
+                    PushThing(rp, Named("VitalsMonitor"), blocks);
+                    var med = rp;
+                    med.singleThingDef = ThingDefOf.MedicineHerbal;
+                    med.singleThingStackCount = Rand.RangeInclusive(2, 6);
+                    stack.Push("thing", med);
+                    break;
+                case RoomUse.Library:
+                    for (int i = Rand.RangeInclusive(2, 4); i > 0; i--) PushThing(rp, Named(Rand.Bool ? "Bookcase" : "BookcaseSmall"), blocks);
+                    for (int i = Rand.RangeInclusive(1, 2); i > 0; i--) PushThing(rp, Named("Armchair"), blocks);
+                    PushThing(rp, Named("PlantPot"), blocks);
+                    break;
+            }
+            return true;
+        }
+
+        static ThingDef Named(string defName) => DefDatabase<ThingDef>.GetNamedSilentFail(defName);
+
+        static void PushThing(ResolveParams rp, ThingDef def, ThingDef blocks)
+        {
+            if (def == null) return;
+            rp.singleThingDef = def;
+            rp.singleThingStuff = def.MadeFromStuff && blocks.stuffProps.CanMake(def) && Rand.Chance(0.5f) ? blocks : null;
+            rp.skipSingleThingIfHasToWipeBuildingOrDoesntFit = true;
+            BaseGen.symbolStack.Push("thing", rp);
         }
 
         /// <summary>Ancient ruin dressing from vanilla's monument sketch tools: steles in the open, sarcophagi along
