@@ -46,6 +46,16 @@
     <race>Human</race>
     <isFighter>true</isFighter>
     <chemicalAddictionChance>0</chemicalAddictionChance>
+    <!-- No faction to take backstories from, so the kind names them, as vanilla's wild man does -->
+    <backstoryFilters>
+      <li>
+        <categories>
+          <li>Offworld</li>
+          <li>Pirate</li>
+          <li>Tribal</li>
+        </categories>
+      </li>
+    </backstoryFilters>
     <backstoryCryptosleepCommonality>0</backstoryCryptosleepCommonality>
     <invNutrition>0</invNutrition>
     <gearHealthRange>0.3~0.8</gearHealthRange>
