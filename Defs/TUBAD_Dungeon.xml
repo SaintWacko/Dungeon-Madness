@@ -144,6 +144,7 @@
        and it stays until cut or burned. Impassable like the other plugs. -->
   <ThingDef ParentName="PlantBaseNonEdible">
     <defName>TUBAD_RootTangle</defName>
+    <thingClass>ThisUsedToBeAboutDungeons.Plant_RootTangle</thingClass>
     <label>root tangle</label>
     <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be chopped out for a little wood, or burned.</description>
     <graphicData>
@@ -180,7 +181,42 @@
       <visualSizeRange>1~1</visualSizeRange>
       <topWindExposure>0</topWindExposure>
       <destroyedByFlooding>false</destroyedByFlooding>
+      <treeLoversCareIfChopped>false</treeLoversCareIfChopped>
     </plant>
+  </ThingDef>
+
+  <!-- Invisible edifice under each root tangle. Plants are never edifices, and only an edifice stops the fog flood
+       and line of sight, so this holds the cavern behind fogged until the tangle is cleared. The tangle destroys it
+       on despawn (Plant_RootTangle). Not targetable, no hit points, nothing to select. -->
+  <ThingDef ParentName="BuildingNaturalBase">
+    <defName>TUBAD_TangleCore</defName>
+    <label>root tangle</label>
+    <description>The heart of a root tangle.</description>
+    <thingClass>Building</thingClass>
+    <drawerType>None</drawerType>
+    <graphicData>
+      <texPath>Things/Building/TUBAD_RootTangle</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <passability>Impassable</passability>
+    <fillPercent>1</fillPercent>
+    <blockWind>true</blockWind>
+    <blockLight>true</blockLight>
+    <selectable>false</selectable>
+    <rotatable>false</rotatable>
+    <useHitPoints>false</useHitPoints>
+    <canOverlapZones>false</canOverlapZones>
+    <statBases>
+      <Flammability>0</Flammability>
+    </statBases>
+    <building>
+      <isInert>true</isInert>
+      <deconstructible>false</deconstructible>
+      <claimable>false</claimable>
+      <isTargetable>false</isTargetable>
+      <destroyShakeAmount>0</destroyShakeAmount>
+    </building>
   </ThingDef>
 
   <ThingDef ParentName="TUBAD_PlugBase">

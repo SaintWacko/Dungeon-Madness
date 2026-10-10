@@ -12,6 +12,7 @@ namespace ThisUsedToBeAboutDungeons
     /// has left or died. The next party at this dungeon gets a fresh one. It sits on the dungeon's own tile, so the
     /// map takes that tile's biome and temperature.
     /// </summary>
+    [StaticConstructorOnStartup]
     public class DungeonSite : MapParent, IThingHolder
     {
         public int level;
@@ -227,6 +228,7 @@ namespace ThisUsedToBeAboutDungeons
         public static ThingDef TUBAD_DungeonRubble;
         public static ThingDef TUBAD_DungeonExit;
         public static DungeonThemeDef TUBAD_Cave;
+        public static ThingDef TUBAD_TangleCore;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }
