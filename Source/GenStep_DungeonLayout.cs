@@ -356,7 +356,6 @@ namespace ThisUsedToBeAboutDungeons
                     stack.Push("interior_storage", rp);
                     return true;
             }
-            stack.Push("indoorLighting", rp);
             switch (use)
             {
                 case RoomUse.Workshop:
@@ -388,6 +387,8 @@ namespace ThisUsedToBeAboutDungeons
                     PushThing(rp, Named("PlantPot"), blocks);
                     break;
             }
+            // Pushed last so it resolves first: the lamp needs a free edge cell, and the furniture skips when full
+            stack.Push("indoorLighting", rp);
             return true;
         }
 
