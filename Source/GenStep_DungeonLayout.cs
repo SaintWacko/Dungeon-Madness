@@ -225,7 +225,7 @@ namespace ThisUsedToBeAboutDungeons
             if (!Interior(layout, ch, out var rect)) return;
             // A proper laid floor, one a builder needs some skill for: stone or fine tile, carpet, parquet and so on
             var floors = DefDatabase<TerrainDef>.AllDefsListForReading.Where(t => t.layerable && t.constructionSkillPrerequisite > 0
-                && !t.IsWater && !t.bridge && t.designationCategory != null).ToList();
+                && !t.IsWater && !t.bridge && t.designationCategory != null && t.statBases.GetStatValueFromList(StatDefOf.Beauty, 0f) >= 0f).ToList();
             if (floors.TryRandomElement(out var floor))
             {
                 CellRect box = ch.Rect.ExpandedBy(1).ClipInsideMap(map);

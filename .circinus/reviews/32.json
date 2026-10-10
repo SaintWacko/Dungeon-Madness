@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "buildId": 32,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-10T03:07:19.743Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Build 32 only: the powered wall's Graphic_Appearances graphicData on a BuildingNaturalBase child with stone blocks stuff, and the random skilled floor picker in FurnishRoom. Runtime errors only.",
+  "diffSource": "since build 30 (2026-10-10T02:24:46Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 0,
+    "note": 1
+  },
+  "findings": [
+    {
+      "severity": "note",
+      "title": "Skilled-floor picker also draws bioferrite plate and any modded constructible floor",
+      "detail": "The filter (layerable, constructionSkillPrerequisite > 0, designationCategory set, not water or bridge) takes Anomaly's BioferritePlate (Beauty -2, slightly flammable), which is not the stone/tile/carpet/parquet the comment in FurnishRoom describes. It causes no runtime error. If that matters, filtering on a non-negative Beauty stat at the floors query in FurnishRoom would keep it out.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Defs/Anomaly/TerrainDefs/Terrain_Floors.xml:29"
+      }
+    }
+  ],
+  "checked": [
+    "TUBAD_DungeonWallPowered graphicData matches vanilla Wall's (texPath Things/Building/Linked/Wall, Graphic_Appearances, CornerFiller, Wall+Rock), so the texture folder and Smooth fallback exist (Core …",
+    "Graphic_Appearances.SubGraphicFor handles null stuff and null appearance by falling back to Smooth, so there is no NRE for the stuffed wall or the def icon (Verse/Graphic_Appearances.cs)",
+    "Child linkFlags merge with the parent's Rock/MapEdge; flag lists are OR'd, so the duplicate Rock does no harm (Verse/DirectXmlToObject.cs:115)",
+    "BuildingNaturalBase only adds drawerType MapMeshOnly etc., which suits a linked graphic",
+    "Powered wall is spawned with blocks, which is never null (BlocksOf ?? BlocksGranite) and stays inside Stony stuffCategories (Source/GenStep_DungeonLayout.cs:79,136)",
+    "TerrainGrid.SetTerrain: layerable, temporary and foundation floors are all handled with no error path; TryRandomElement guards an empty floor list",
+    "DoTerrainChangedEffects destroys nothing in furnished rooms: Furnish skips them and Skylights only touches caves",
+    "Floor loop indexes layout only over the box clipped inside the map",
+    "Ruin: blocks is non-null before blocks.stuffProps.CanMake; SketchThing.stuff is a public field (RimWorld/SketchThing.cs:12); the loop does not modify the collection it walks",
+    "requireFloor=false plus placeholder walls on every non-free box cell keeps sketch things off occupied cells",
+    "Root tangle fillPercent 0.75 removes the 'fillPercent is 1.00 but is not edifice' config error (Verse/ThingDef.cs:1794)",
+    "AssignUses roomy gate only narrows the choice to Barracks, nothing that could throw",
+    "No Harmony patches in the diff, so verify_patches and precedents do not apply",
+    "pyxis_mod_errors could not run: no Pyxis token is configured"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/GenStep_DungeonLayout.cs",
+    "Defs/TUBAD_Dungeon.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 1,
+  "buildCommit": "3336539e590c02bab12a85044c2a271da425046f",
+  "partial": false
+}
