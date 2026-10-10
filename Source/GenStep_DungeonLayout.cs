@@ -60,7 +60,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (site != null) site.layout = layout.data;
                 Dress(map, layout, theme, rocks, info);
                 if (Prefs.DevMode)
-                    Log.Message($"[Dungeons] Level {site?.level}, {theme.defName} in {rocks[0].label} ({map.Biome.defName}): " +
+                    Log.Message($"[Dungeons] Tile {tile.tileId} layer {tile.Layer?.LayerID}, level {site?.level}, {theme.defName} in {rocks[0].label} ({map.Biome.defName}): " +
                         $"{layout.data.chambers.Count} chambers ({layout.data.chambers.Count(c => !c.Cave)} built, {layout.data.chambers.Count(c => c.skylight)} open to the sky), " +
                         $"{layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
             }

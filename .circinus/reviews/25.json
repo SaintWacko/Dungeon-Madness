@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "buildId": 25,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-09T23:56:35.839Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "only the fixes since build 24: ConnectChambers carve-as-you-go, the pinch ring check, BlocksOf stuff check, saveCompressible removal, filthLeaving IsNull",
+  "diffSource": "since build 24 (2026-10-09T23:47:58Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 1,
+    "note": 3
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "Old saves with an open dungeon lose every wall once TUBAD_DungeonWall stops being saveCompressible",
+      "detail": "On load, MapFileCompressor.ThingsToSpawnAfterLoad still finds the wall's short hash in any save made on build 24 or earlier. Because thingDef.saveCompressible is now false, it logs 'Tried loading non-compressible thing as compressed thing' once per wall cell and does not spawn the wall, so a dungeon that was open in the save comes back with no walls. The fix itself is right: before it, each wall reloaded through MakeThing(def) with no stuff, logging an error and taking a default stone. If any build 24 or earlier ever reached players, one remedy is to re-place missing walls when a dungeon map loads (the site keeps its layout and every closed cell is a wall). Otherwise, say in the changelog that dungeons open across this update should be left first. If nothing has shipped, ignore this.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Assembly-CSharp/Verse/MapFileCompressor.cs:49-115"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Adding the layer ID to the theme seed changes the theme of every tile in existing saves",
+      "detail": "Gen.HashCombineInt(seed, 0) is not the same as the old seed, so surface tiles also get a new roll. A save from before this build will see different themes on tiles it already visited, a one-time break of the 'same tile, same theme' promise. That's fine before release; after release it belongs in the changelog.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonThemeDef.cs:131"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "The ice plug still inherits Filth_RubbleRock",
+      "detail": "Only TUBAD_RootTangle and TUBAD_SandDrift clear filthLeaving. TUBAD_IcePlug keeps BuildingNaturalBase's Filth_RubbleRock, so mining or damaging ice leaves rock rubble. That may be on purpose; it's an opinion, not a defect.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Defs/TUBAD_Dungeon.xml:91-102"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "A chamber nothing can reach now gets retried against every other group during the spanning tree",
+      "detail": "Before, the spanning tree carved only its chosen links. Now every pair that joins two groups is tried until one carves. If a chamber can't be reached at all, each attempt either fails fast in TryDoor or runs a full-map A* before failing, once per pair. That's acceptable at current chamber counts, but it is where to look if map generation ever stalls.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "Source/DungeonLayout.cs:367-376"
+      }
+    }
+  ],
+  "checked": [
+    "ConnectChambers: a pair joins two groups only after Carve returns true; Carve puts back any claimed door on every failure path, and every failure happens before anything is carved (DungeonLayout.cs:4…",
+    "Removing the links field leaves no remaining references (build 25 green)",
+    "Pinch ring path check: indices p-3..p+3 stay in bounds because p runs from 3 to Count-4; the loop over the whole path skips only the squeeze cells p-2..p+2",
+    "The carve loop and A* both skip locked cells, so the tunnel's own carving cannot breach the pinch ring (DungeonLayout.cs:510, 537)",
+    "filthLeaving IsNull='True': XmlInheritance clears the parent's Filth_RubbleRock text and DirectXmlToObject sets an empty Def field to null with no cross-reference error (XmlInheritance.RecursiveNodeC…",
+    "Without filthLeaving, GenLeaving null-checks it on both the destroy and damage paths (GenLeaving.cs:48, 332)",
+    "BlocksOf: IsStuff and CanMake are checked against TUBAD_DungeonWall's Stony category, so the wall is never spawned from a non-stuff (MakeThing would otherwise log an error); a null result falls back …",
+    "The premise of the saveCompressible removal is correct: ThingMaker.MakeThing with a null stuff logs an error and assigns a default stone",
+    "ThemeFor: tile.Layer can't throw for a negative layer ID (PlanetTile.Layer returns Surface), and an invalid tile already gives info=null, which Matches handles",
+    "Dropping the biomes.NullOrEmpty() shortcut for rare themes: TUBAD_Crypt has no biomes and default wide ranges, so it still matches every valid tile",
+    "Frozen caves at priority 4 now beat flooded caves (3) on cold swampy tiles instead of tying; no other theme is at 4",
+    "The DungeonSite.theme comment change is a comment only",
+    "No Harmony patches in the changed C#, so verify_patches and precedents don't apply",
+    "Lint rules (prefix-returns-void, defof-in-mod-ctor, patch-success-always, tickerType-missing, wrong-target-framework) are not touched by this diff"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/DungeonLayout.cs",
+    "Source/DungeonSite.cs",
+    "Source/DungeonThemeDef.cs",
+    "Source/GenStep_DungeonLayout.cs",
+    "Defs/TUBAD_Dungeon.xml",
+    "Defs/TUBAD_Themes.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb",
+    "Textures/Things/Building/TUBAD_IcePlug.png",
+    "Textures/Things/Building/TUBAD_RootTangle.png",
+    "Textures/Things/Building/TUBAD_SandDrift.png"
+  ],
+  "parts": 1,
+  "buildCommit": "43220da9af11955ce8cfa5482879ba42eb174487",
+  "partial": false
+}

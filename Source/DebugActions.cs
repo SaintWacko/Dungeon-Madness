@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text;
 using LudeonTK;
+using RimWorld.Planet;
 using Verse;
 
 namespace ThisUsedToBeAboutDungeons
@@ -15,6 +16,26 @@ namespace ThisUsedToBeAboutDungeons
             if (comp == null) return;
             comp.Generate();
             Messages.Message($"Placed {comp.Count} dungeons.", RimWorld.MessageTypeDefOf.NeutralEvent, false);
+        }
+
+        // Pins as Actions\Log dungeon themes. Tallies the theme every dungeon on the world would get, plus the
+        // rare-roll value of the first few, to check the per-tile theme pick is spread the way the defs intend
+        [DebugAction("Dungeons", "Log dungeon themes", allowedGameStates = AllowedGameStates.Playing)]
+        private static void LogThemes()
+        {
+            var comp = DungeonWorldComponent.Instance;
+            if (comp == null) return;
+            var surface = Find.WorldGrid.Surface;
+            var sb = new StringBuilder($"[Dungeons] {comp.Count} dungeons by theme:");
+            var picks = Enumerable.Range(0, comp.Count).Select(i => DungeonThemeUtility.ThemeFor(new PlanetTile(comp.GetTile(i), surface))).ToList();
+            foreach (var g in picks.GroupBy(t => t.defName).OrderByDescending(g => g.Count())) sb.Append($"\n  {g.Key}: {g.Count()}");
+            for (int i = 0; i < System.Math.Min(5, comp.Count); i++)
+            {
+                var tile = new PlanetTile(comp.GetTile(i), surface);
+                var info = Find.WorldGrid[tile];
+                sb.Append($"\n  tile {tile.tileId} ({info.PrimaryBiome?.defName}, {info.temperature:F0}C, rain {info.rainfall:F0}, swamp {info.swampiness:F2}): {picks[i].defName}");
+            }
+            Log.Message(sb.ToString());
         }
 
         // Pins as Actions\Log dungeon levels
