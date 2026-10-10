@@ -229,6 +229,7 @@ namespace ThisUsedToBeAboutDungeons
         public static ThingDef TUBAD_DungeonExit;
         public static DungeonThemeDef TUBAD_Cave;
         public static ThingDef TUBAD_TangleCore;
+        public static ThingDef TUBAD_DungeonWallPowered;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

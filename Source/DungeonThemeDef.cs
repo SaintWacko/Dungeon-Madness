@@ -90,8 +90,8 @@ namespace ThisUsedToBeAboutDungeons
         public float chunks = 0.012f;
         /// <summary>Chance a large natural chamber has a collapsed ceiling, letting in daylight and the biome's plants.</summary>
         public float skylightChance = 0.15f;
-        /// <summary>Dried remains of the biome's animals per thousand open cells.</summary>
-        public float remainsPerThousand = 0.6f;
+        /// <summary>Chance a built room (other than the entrance) is a furnished room with powered walls rather than a ruin.</summary>
+        public float furnishedChance = 0.17f;
 
         public bool Matches(Tile tile)
         {

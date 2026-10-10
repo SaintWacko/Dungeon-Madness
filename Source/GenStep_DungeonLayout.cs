@@ -13,7 +13,8 @@ namespace ThisUsedToBeAboutDungeons
     ///
     /// From the tile: the rock (walls are unbreakable but take the primary rock's colour; rough floors, flagstone
     /// and chunks are that rock), the biome's own gravel, mud and water, patches of the biome's natural ground, the
-    /// biome's wild plants under collapsed ceilings, and dried remains of its wild animals. Rivers and coast add
+    /// biome's wild plants under collapsed ceilings. Built rooms are ancient ruins (steles, sarcophagi, urns) or,
+    /// rarely, furnished rooms with powered walls. Rivers and coast add
     /// standing water to themes that have none. Hilliness scales how many rooms are built.
     /// From the theme: which floor patches, which plugs fill the squeezes, how much glowing fungus, how many rooms
     /// are built and how they are furnished.
@@ -50,6 +51,7 @@ namespace ThisUsedToBeAboutDungeons
             if (site != null) site.theme = theme;
             List<ThingDef> rocks = DungeonThemeUtility.RocksFor(tile);
             float builtChance = Mathf.Clamp01(theme.builtChance * DungeonThemeUtility.HillinessBuiltFactor(info.hilliness));
+            if (DungeonDebugActions.forceFurnished) builtChance = Mathf.Max(builtChance, 0.5f);
 
             // MapGenerator seeds from the world and the tile, which would give every party the same dungeon. The
             // site carries a seed rolled when the party entered; dressing uses it too, so plants and remains vary.
@@ -62,6 +64,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (Prefs.DevMode)
                     Log.Message($"[Dungeons] Tile {tile.tileId} layer {tile.Layer?.LayerID}, level {site?.level}, {theme.defName} in {rocks[0].label} ({map.Biome.defName}): " +
                         $"{layout.data.chambers.Count} chambers ({layout.data.chambers.Count(c => !c.Cave)} built, {layout.data.chambers.Count(c => c.skylight)} open to the sky), " +
+                        $"{layout.data.chambers.Count(c => c.Furnished)} furnished ({string.Join(", ", layout.data.chambers.Where(c => c.Furnished).Select(c => $"{c.use} at {c.center}"))}), " +
                         $"{layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
             }
             finally { Rand.PopState(); }
@@ -118,6 +121,9 @@ namespace ThisUsedToBeAboutDungeons
                 }
 
             // ---- Structure. The map generator has already put thick rock roof everywhere (isUnderground).
+            // Walls touching a furnished room carry power, so its lights and heaters run (and anything the party
+            // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
+            var furnishedIds = AssignUses(layout, theme);
             IntVec3 exitCell = data.exitCell;
             var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.TUBAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
@@ -125,7 +131,8 @@ namespace ThisUsedToBeAboutDungeons
                 {
                     var c = new IntVec3(x, 0, z);
                     if (open[z * n + x] || exitRect.Contains(c)) continue;
-                    GenSpawn.Spawn(ThingMaker.MakeThing(DungeonDefOf.TUBAD_DungeonWall, blocks), c, map);
+                    ThingDef wall = furnishedIds.Count > 0 && Touches(layout, x, z, furnishedIds) ? DungeonDefOf.TUBAD_DungeonWallPowered : DungeonDefOf.TUBAD_DungeonWall;
+                    GenSpawn.Spawn(ThingMaker.MakeThing(wall, blocks), c, map);
                 }
             foreach (var d in data.dividers)
                 foreach (var c in d.cells)
@@ -146,8 +153,133 @@ namespace ThisUsedToBeAboutDungeons
 
             Skylights(map, layout, theme, biome);
             Furnish(map, layout, theme, blocks, rocks);
+            foreach (var ch in data.chambers)
+            {
+                if (ch.use == RoomUse.Ruin) Ruin(map, layout, ch, blocks);
+                else if (ch.Furnished) FurnishRoom(map, layout, ch);
+            }
             CaveLife(map, layout, theme, biome, rocks);
-            Remains(map, layout, theme, biome);
+        }
+
+        /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at
+        /// least 5x5 inside can be furnished, and never the entrance room.</summary>
+        static HashSet<int> AssignUses(DungeonLayoutResult layout, DungeonThemeDef theme)
+        {
+            var ids = new HashSet<int>();
+            bool force = DungeonDebugActions.forceFurnished;
+            foreach (var ch in layout.data.chambers)
+            {
+                if (ch.Cave) continue;
+                ch.use = RoomUse.Ruin;
+                if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
+                if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
+                if (!force && !Rand.Chance(theme.furnishedChance)) continue;
+                float w = Rand.Value;
+                ch.use = w < 0.4f ? RoomUse.Barracks : w < 0.7f ? RoomUse.DiningRoom : RoomUse.Brewery;
+                ids.Add(ch.id);
+            }
+            return ids;
+        }
+
+        /// <summary>The bounding box of a built room's floor, when that box is all floor (a plain rectangle).</summary>
+        static bool Interior(DungeonLayoutResult layout, DungeonChamber ch, out CellRect rect)
+        {
+            int n = layout.size, minX = n, minZ = n, maxX = -1, maxZ = -1;
+            CellRect box = ch.Rect.ExpandedBy(1);
+            for (int z = Mathf.Max(0, box.minZ); z <= Mathf.Min(n - 1, box.maxZ); z++)
+                for (int x = Mathf.Max(0, box.minX); x <= Mathf.Min(n - 1, box.maxX); x++)
+                    if (layout.built[z * n + x] == ch.id)
+                    {
+                        minX = Mathf.Min(minX, x); maxX = Mathf.Max(maxX, x);
+                        minZ = Mathf.Min(minZ, z); maxZ = Mathf.Max(maxZ, z);
+                    }
+            rect = maxX < 0 ? CellRect.Empty : CellRect.FromLimits(minX, minZ, maxX, maxZ);
+            if (maxX < 0) return false;
+            foreach (var c in rect)
+                if (layout.built[c.z * n + c.x] != ch.id) return false;
+            return true;
+        }
+
+        static bool Touches(DungeonLayoutResult layout, int x, int z, HashSet<int> ids)
+        {
+            int n = layout.size;
+            for (int dz = -1; dz <= 1; dz++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int ax = x + dx, az = z + dz;
+                    if (ax < 0 || az < 0 || ax >= n || az >= n) continue;
+                    int b = layout.built[az * n + ax];
+                    if (b >= 0 && ids.Contains(b)) return true;
+                }
+            return false;
+        }
+
+        /// <summary>A room left as it was: vanilla's settlement room fillers (beds and lights, tables and chairs, a
+        /// brewery) run on the room's floor with no faction. Its walls are powered (see the wall pass).</summary>
+        static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch)
+        {
+            if (!Interior(layout, ch, out var rect)) return;
+            string symbol;
+            switch (ch.use)
+            {
+                case RoomUse.Barracks: symbol = "interior_barracks"; break;
+                case RoomUse.DiningRoom: symbol = "interior_diningRoom"; break;
+                default: symbol = "interior_brewery"; break;
+            }
+            BaseGen.globalSettings.map = map;
+            BaseGen.symbolStack.Push(symbol, new ResolveParams { rect = rect });
+            BaseGen.Generate();
+        }
+
+        /// <summary>Ancient ruin dressing from vanilla's monument sketch tools: steles in the open, sarcophagi along
+        /// the walls, urns in corners, all in the tile's stone, then weathered. The room's own walls go into the
+        /// sketch only as placeholders for the wall-edge and corner placers and are stripped before spawning.</summary>
+        static void Ruin(Map map, DungeonLayoutResult layout, DungeonChamber ch, ThingDef blocks)
+        {
+            var sk = new Sketch();
+            var doors = new HashSet<IntVec3>();
+            CellRect box = ch.Rect.ExpandedBy(1).ClipInsideMap(map);
+            foreach (var c in box)
+            {
+                int k = layout.Index(c);
+                if (layout.built[k] == ch.id)
+                {
+                    if (c.GetFirstThing<Thing>(map) == null) sk.AddTerrain(c.GetTerrain(map), c);
+                }
+                else if (layout.feature[k] == CellFeature.Door) doors.Add(c);
+                else if (!layout.open[k]) sk.AddThing(ThingDefOf.Wall, c, Rot4.North, blocks);
+            }
+            var p = new SketchResolveParams { sketch = sk, rect = box, allowWood = false, requireFloor = true, useOnlyStonesAvailableOnMap = map };
+            if (Rand.Chance(0.6f))
+            {
+                var q = p;
+                q.thingCentral = Rand.Chance(0.3f) ? ThingDefOf.SteleGrand : ThingDefOf.SteleLarge;
+                SketchResolverDefOf.AddThingsCentral.Resolve(q);
+            }
+            {
+                var q = p;
+                q.wallEdgeThing = ThingDefOf.Sarcophagus;
+                q.chance = 0.3f;
+                SketchResolverDefOf.AddWallEdgeThings.Resolve(q);
+            }
+            {
+                var q = p;
+                q.cornerThing = ThingDefOf.Urn;
+                SketchResolverDefOf.AddCornerThings.Resolve(q);
+            }
+            foreach (var t in sk.Things.ToList())
+                if (t.def == ThingDefOf.Wall || t.OccupiedRect.ExpandedBy(1).Cells.Any(doors.Contains)) sk.Remove(t);
+            if (!sk.Things.Any()) return;
+            var spawned = new List<Thing>();
+            sk.Spawn(map, IntVec3.Zero, null, Sketch.SpawnPosType.Unchanged, Sketch.SpawnMode.Normal, spawnedThings: spawned);
+            foreach (var t in spawned)
+            {
+                if (t.def.category != ThingCategory.Building) continue;
+                if (t.def.useHitPoints) t.HitPoints = Mathf.Max(1, Mathf.RoundToInt(t.MaxHitPoints * Rand.Range(0.35f, 0.9f)));
+                foreach (var a in GenAdj.CellsAdjacent8Way(t))
+                    if (a.InBounds(map) && layout.built[layout.Index(a)] == ch.id && Rand.Chance(0.15f))
+                        FilthMaker.TryMakeFilth(a, map, ThingDefOf.Filth_RubbleRock);
+            }
         }
 
         static ThingDef BlocksOf(ThingDef rock)
@@ -210,7 +342,7 @@ namespace ThisUsedToBeAboutDungeons
             ThingDef sarcophagus = DefDatabase<ThingDef>.GetNamedSilentFail("Sarcophagus");
             foreach (var ch in layout.data.chambers)
             {
-                if (ch.Cave) continue;
+                if (ch.Cave || ch.Furnished) continue;
                 foreach (var c in ch.Rect)
                 {
                     int k = layout.Index(c);
@@ -279,29 +411,5 @@ namespace ThisUsedToBeAboutDungeons
             }
         }
 
-        /// <summary>Dried-out remains of the biome's own wild animals, which wandered in and never left.</summary>
-        static void Remains(Map map, DungeonLayoutResult layout, DungeonThemeDef theme, BiomeDef biome)
-        {
-            if (theme.remainsPerThousand <= 0f) return;
-            var cells = map.AllCells.Where(c => Natural(layout, layout.Index(c)) && !c.GetTerrain(map).IsWater && c.GetFirstThing<Thing>(map) == null).ToList();
-            int count = Mathf.Min(6, GenMath.RoundRandom(cells.Count / 1000f * theme.remainsPerThousand));
-            if (count <= 0) return;
-            var kinds = biome.AllWildAnimals.Where(k => k.RaceProps.Animal && k.race.race.baseBodySize <= 2.5f && biome.CommonalityOfAnimal(k) > 0f).ToList();
-            if (kinds.Count == 0) return;
-            for (int i = 0; i < count; i++)
-            {
-                var kind = kinds.RandomElementByWeight(k => biome.CommonalityOfAnimal(k));
-                if (!cells.TryRandomElement(out var cell)) break;
-                cells.Remove(cell);
-                Pawn pawn = PawnGenerator.GeneratePawn(new PawnGenerationRequest(kind, null, PawnGenerationContext.NonPlayer));
-                HealthUtility.SimulateKilled(pawn, DamageDefOf.Blunt);
-                Corpse corpse = pawn.Corpse;
-                if (corpse == null) continue;
-                var rot = corpse.TryGetComp<CompRottable>();
-                if (rot != null) rot.RotProgress = 1e8f;
-                GenSpawn.Spawn(corpse, cell, map);
-                corpse.SetForbidden(true, warnOnFail: false);
-            }
-        }
     }
 }

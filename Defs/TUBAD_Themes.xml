@@ -50,7 +50,6 @@
     <caveFungus>0.01</caveFungus>
     <chunks>0.014</chunks>
     <skylightChance>0.08</skylightChance>
-    <remainsPerThousand>0.8</remainsPerThousand>
   </ThisUsedToBeAboutDungeons.DungeonThemeDef>
 
   <ThisUsedToBeAboutDungeons.DungeonThemeDef>
@@ -139,7 +138,7 @@
     <caveFungus>0.03</caveFungus>
     <chunks>0.008</chunks>
     <skylightChance>0.03</skylightChance>
-    <remainsPerThousand>0.3</remainsPerThousand>
+    <furnishedChance>0.05</furnishedChance>
   </ThisUsedToBeAboutDungeons.DungeonThemeDef>
 
 </Defs>

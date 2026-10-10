@@ -16,6 +16,17 @@ namespace ThisUsedToBeAboutDungeons
         Cross,
     }
 
+    /// <summary>What a built room was used for. Ruins are dressed with steles, sarcophagi and urns; the rest are
+    /// furnished rooms whose walls carry power.</summary>
+    public enum RoomUse : byte
+    {
+        None,
+        Ruin,
+        Barracks,
+        DiningRoom,
+        Brewery,
+    }
+
     public enum CellFeature : byte
     {
         None,
@@ -36,7 +47,10 @@ namespace ThisUsedToBeAboutDungeons
         public bool skylight;
         /// <summary>Chambers between this one and the entrance, by link count.</summary>
         public int depth;
+        public RoomUse use;
         public List<int> links = new List<int>();
+
+        public bool Furnished => use >= RoomUse.Barracks;
 
         public bool Cave => shape == RoomShape.Cave;
         public CellRect Rect => new CellRect(minX, minZ, width, height);
@@ -53,6 +67,7 @@ namespace ThisUsedToBeAboutDungeons
             Scribe_Values.Look(ref shape, "shape");
             Scribe_Values.Look(ref skylight, "skylight");
             Scribe_Values.Look(ref depth, "depth");
+            Scribe_Values.Look(ref use, "use");
             Scribe_Collections.Look(ref links, "links", LookMode.Value);
             if (links == null) links = new List<int>();
         }

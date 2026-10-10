@@ -35,7 +35,7 @@
 
   <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted. Made from the tile's
        primary stone blocks only so it takes that rock's colour and name. -->
-  <ThingDef ParentName="BuildingNaturalBase">
+  <ThingDef Name="TUBAD_DungeonWallBase" ParentName="BuildingNaturalBase">
     <defName>TUBAD_DungeonWall</defName>
     <label>dungeon wall</label>
     <description>Stone that is not quite stone. Nothing scratches it: not picks, not explosives, not time.</description>
@@ -83,6 +83,22 @@
       <destroyShakeAmount>0</destroyShakeAmount>
       <supportsWallAttachments>true</supportsWallAttachments>
     </building>
+  </ThingDef>
+
+  <!-- The walls of a furnished room. Each one feeds a little power into whatever is connected to it, and passes
+       power along like a conduit, so the room's lights and heaters run. Nothing moved away from them keeps it. -->
+  <ThingDef ParentName="TUBAD_DungeonWallBase">
+    <defName>TUBAD_DungeonWallPowered</defName>
+    <label>humming dungeon wall</label>
+    <description>Stone that is not quite stone, with a faint warmth to it. Anything wired to it gets power from nowhere anyone can find.</description>
+    <comps>
+      <li Class="CompProperties_Power">
+        <compClass>CompPowerPlant</compClass>
+        <basePowerConsumption>-60</basePowerConsumption>
+        <transmitsPower>true</transmitsPower>
+        <shortCircuitInRain>false</shortCircuitInRain>
+      </li>
+    </comps>
   </ThingDef>
 
   <!-- Fills a passage between chambers. Full fill blocks sight, so the next chamber stays fogged until it is mined out. -->

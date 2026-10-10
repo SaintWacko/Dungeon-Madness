@@ -8,6 +8,18 @@ namespace ThisUsedToBeAboutDungeons
 {
     public static class DungeonDebugActions
     {
+        /// <summary>Temporary test aid: every dungeon entered while on gets more built rooms, and every built room
+        /// that can be furnished is.</summary>
+        public static bool forceFurnished;
+
+        // Pins as Actions\Force furnished rooms
+        [DebugAction("Dungeons", "Force furnished rooms", allowedGameStates = AllowedGameStates.Playing)]
+        private static void ToggleForceFurnished()
+        {
+            forceFurnished = !forceFurnished;
+            Messages.Message($"Force furnished rooms: {(forceFurnished ? "on" : "off")}. Applies to the next dungeon entered.", RimWorld.MessageTypeDefOf.NeutralEvent, false);
+        }
+
         // Pins as Actions\Regenerate dungeons
         [DebugAction("Dungeons", "Regenerate dungeons", allowedGameStates = AllowedGameStates.Playing)]
         private static void RegenerateDungeons()
