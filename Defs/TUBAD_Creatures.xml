@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- ===== Dungeon-mad ===== -->
+
+  <!-- Added to every member of a mad pack when it wakes. Keeps a person berserk (TUBAD_DungeonMadness) and an animal
+       manhunting for good; rules out capture and taming (DungeonMadness.cs). -->
+  <HediffDef>
+    <defName>TUBAD_DungeonMad</defName>
+    <hediffClass>ThisUsedToBeAboutDungeons.Hediff_DungeonMad</hediffClass>
+    <label>dungeon-mad</label>
+    <description>The dungeon has its hooks in this creature's mind, and they never come out. It attacks anything that is not also dungeon-mad, and it fights on even after being downed. It cannot be captured, recruited or tamed.</description>
+    <defaultLabelColor>(0.9, 0.2, 0.5)</defaultLabelColor>
+    <isBad>true</isBad>
+    <everCurableByItem>false</everCurableByItem>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+
+  <!-- Berserk that never ends, survives being downed and ignores other dungeon-mad creatures. Its think-tree branch is
+       added by Patches/TUBAD_ThinkTree.xml. -->
+  <MentalStateDef ParentName="BaseMentalState">
+    <defName>TUBAD_DungeonMadness</defName>
+    <stateClass>ThisUsedToBeAboutDungeons.MentalState_DungeonMad</stateClass>
+    <label>dungeon-mad</label>
+    <category>Aggro</category>
+    <blockInteractionInitiationExcept>
+      <li>Insult</li>
+    </blockInteractionInitiationExcept>
+    <blockInteractionRecipientExcept>
+      <li>Insult</li>
+    </blockInteractionRecipientExcept>
+    <blockRandomInteraction>true</blockRandomInteraction>
+    <blockNormalThoughts>true</blockNormalThoughts>
+    <nameColor>(0.9,0.2,0.5)</nameColor>
+    <baseInspectLine>Mental state: Dungeon-mad</baseInspectLine>
+    <stateEffecter>Berserk</stateEffecter>
+    <minTicksBeforeRecovery>99999999</minTicksBeforeRecovery>
+    <recoverFromSleep>false</recoverFromSleep>
+    <recoverFromDowned>false</recoverFromDowned>
+    <inCaravanCanDo>true</inCaravanCanDo>
+  </MentalStateDef>
+
+  <!-- ===== Dungeon dwellers: the people found in furnished rooms. No faction. -->
+
+  <PawnKindDef Name="TUBAD_DwellerBase" Abstract="True">
+    <race>Human</race>
+    <isFighter>true</isFighter>
+    <chemicalAddictionChance>0</chemicalAddictionChance>
+    <backstoryCryptosleepCommonality>0</backstoryCryptosleepCommonality>
+    <invNutrition>0</invNutrition>
+    <gearHealthRange>0.3~0.8</gearHealthRange>
+    <itemQuality>Poor</itemQuality>
+    <apparelAllowHeadgearChance>0.3</apparelAllowHeadgearChance>
+    <initialWillRange>0~1</initialWillRange>
+    <initialResistanceRange>6~12</initialResistanceRange>
+    <modExtensions>
+      <li Class="ThisUsedToBeAboutDungeons.DungeonDweller" />
+    </modExtensions>
+  </PawnKindDef>
+
+  <PawnKindDef ParentName="TUBAD_DwellerBase">
+    <defName>TUBAD_DwellerScavenger</defName>
+    <label>dungeon scavenger</label>
+    <combatPower>35</combatPower>
+    <apparelMoney>80~250</apparelMoney>
+    <apparelTags>
+      <li>Neolithic</li>
+      <li>IndustrialBasic</li>
+    </apparelTags>
+    <weaponMoney>50~200</weaponMoney>
+    <weaponTags>
+      <li>NeolithicMeleeBasic</li>
+      <li>MedievalMeleeBasic</li>
+    </weaponTags>
+  </PawnKindDef>
+
+  <PawnKindDef ParentName="TUBAD_DwellerBase">
+    <defName>TUBAD_DwellerHunter</defName>
+    <label>dungeon hunter</label>
+    <combatPower>55</combatPower>
+    <apparelMoney>150~400</apparelMoney>
+    <apparelTags>
+      <li>Neolithic</li>
+      <li>IndustrialBasic</li>
+    </apparelTags>
+    <weaponMoney>150~400</weaponMoney>
+    <weaponTags>
+      <li>NeolithicRangedBasic</li>
+      <li>SimpleGun</li>
+    </weaponTags>
+  </PawnKindDef>
+
+  <PawnKindDef ParentName="TUBAD_DwellerBase">
+    <defName>TUBAD_DwellerVeteran</defName>
+    <label>dungeon veteran</label>
+    <combatPower>90</combatPower>
+    <itemQuality>Normal</itemQuality>
+    <apparelMoney>400~900</apparelMoney>
+    <apparelTags>
+      <li>IndustrialBasic</li>
+      <li>IndustrialAdvanced</li>
+      <li>IndustrialMilitaryBasic</li>
+    </apparelTags>
+    <weaponMoney>300~700</weaponMoney>
+    <weaponTags>
+      <li>Gun</li>
+      <li>MedievalMeleeAdvanced</li>
+    </weaponTags>
+  </PawnKindDef>
+
+</Defs>

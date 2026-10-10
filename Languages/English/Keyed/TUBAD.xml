@@ -93,4 +93,23 @@
   <TUBAD_Settings_Roughness_Desc>Levels rise and fall across the world like terrain. Higher values give more, smaller peaks and valleys; lower values give a few broad regions.</TUBAD_Settings_Roughness_Desc>
   <TUBAD_Settings_Ocean>Ocean dungeons with Vehicle Framework</TUBAD_Settings_Ocean>
   <TUBAD_Settings_Ocean_Tip>When Vehicle Framework is active, dungeons are also placed on water tiles, reachable by boat.</TUBAD_Settings_Ocean_Tip>
+
+  <TUBAD_Tab_Creatures>Creatures</TUBAD_Tab_Creatures>
+  <TUBAD_Settings_Creatures_Desc>Every creature in a dungeon is a titan. Each chamber may hold one pack, which wakes the first time any of the chamber is seen. These settings apply to dungeons entered from now on.</TUBAD_Settings_Creatures_Desc>
+  <TUBAD_Settings_Packs>Packs</TUBAD_Settings_Packs>
+  <TUBAD_Settings_Occupancy>Chance a chamber has a pack: {0}</TUBAD_Settings_Occupancy>
+  <TUBAD_Settings_EntranceChance>Chance the entrance chamber has a pack: {0}</TUBAD_Settings_EntranceChance>
+  <TUBAD_Settings_MaxPackSize>Largest pack: {0}</TUBAD_Settings_MaxPackSize>
+  <TUBAD_Settings_MaxPackSize_Desc>Animals come in their species' usual group size, up to this. Insects come 2 to 4 at a time, mechanoids 1 to 3, people 1 to 4.</TUBAD_Settings_MaxPackSize_Desc>
+  <TUBAD_Settings_MadChance>Chance a pack is dungeon-mad: {0}</TUBAD_Settings_MadChance>
+  <TUBAD_Settings_MadChance_Desc>Animals and people only. Dungeon-mad creatures attack anything that is not also mad, never recover, and cannot be captured or tamed. The rest are wild animals that can be tamed and people who keep to their rooms. Insects and mechanoids are always hostile.</TUBAD_Settings_MadChance_Desc>
+  <TUBAD_Settings_StoneChance>Chance a pack is made of stone: {0}</TUBAD_Settings_StoneChance>
+  <TUBAD_Settings_StoneChance_Desc>Usually the dungeon's own rock, otherwise a random metal, stone or wood. Not mechanoids. The material comes on top of the pack's titan points.</TUBAD_Settings_StoneChance_Desc>
+  <TUBAD_Settings_Strength>Strength</TUBAD_Settings_Strength>
+  <TUBAD_Settings_PointsPerLevel>Titan points per level: {0}</TUBAD_Settings_PointsPerLevel>
+  <TUBAD_Settings_PointsPerLevel_Desc>A pack's titan points average this times the effective level, and are split between its members, rounded up. All members share the same traits. Example: at effective level 10 a pack averages {0} points, so each wolf in a pack of 4 gets {1}.</TUBAD_Settings_PointsPerLevel_Desc>
+  <TUBAD_Settings_PointNoise>Point variation: up to {0} either way</TUBAD_Settings_PointNoise>
+  <TUBAD_Settings_PowerBase>Strongest species at level 0: {0} combat power</TUBAD_Settings_PowerBase>
+  <TUBAD_Settings_PowerPerLevel>Added per level: {0} combat power</TUBAD_Settings_PowerPerLevel>
+  <TUBAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more titan points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</TUBAD_Settings_Power_Desc>
 </LanguageData>

@@ -230,6 +230,8 @@ namespace ThisUsedToBeAboutDungeons
         public static DungeonThemeDef TUBAD_Cave;
         public static ThingDef TUBAD_TangleCore;
         public static ThingDef TUBAD_DungeonWallPowered;
+        public static HediffDef TUBAD_DungeonMad;
+        public static MentalStateDef TUBAD_DungeonMadness;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

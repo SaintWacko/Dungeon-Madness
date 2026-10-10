@@ -160,6 +160,7 @@ namespace ThisUsedToBeAboutDungeons
                 else if (ch.Furnished) FurnishRoom(map, layout, ch, blocks);
             }
             CaveLife(map, layout, theme, biome, rocks);
+            DungeonCreatureGen.Plan(map, layout, theme, blocks);
         }
 
         /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at

@@ -29,6 +29,7 @@
     </floors>
     <caveFungus>0.05</caveFungus>
     <chunks>0.012</chunks>
+    <insectChance>0.3</insectChance>
   </ThisUsedToBeAboutDungeons.DungeonThemeDef>
 
   <ThisUsedToBeAboutDungeons.DungeonThemeDef>
@@ -73,6 +74,7 @@
     <caveFungus>0.16</caveFungus>
     <chunks>0.006</chunks>
     <skylightChance>0.3</skylightChance>
+    <insectChance>0.3</insectChance>
   </ThisUsedToBeAboutDungeons.DungeonThemeDef>
 
   <ThisUsedToBeAboutDungeons.DungeonThemeDef>
@@ -114,6 +116,7 @@
       <li><terrain>Sand</terrain><share>0.45</share><mode>Low</mode></li>
     </floors>
     <builtFloorDrift>Sand</builtFloorDrift>
+    <mechChance>0.6</mechChance>
     <caveFungus>0</caveFungus>
     <chunks>0.014</chunks>
     <skylightChance>0.1</skylightChance>
@@ -139,6 +142,7 @@
     <chunks>0.008</chunks>
     <skylightChance>0.03</skylightChance>
     <furnishedChance>0.05</furnishedChance>
+    <mechChance>0.6</mechChance>
   </ThisUsedToBeAboutDungeons.DungeonThemeDef>
 
 </Defs>

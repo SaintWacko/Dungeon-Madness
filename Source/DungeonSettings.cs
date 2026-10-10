@@ -35,6 +35,34 @@ namespace ThisUsedToBeAboutDungeons
         public const float DefaultWealthToDouble = 50000f;
         public float wealthToDouble = DefaultWealthToDouble;
 
+        // ---- Creatures: read when a dungeon map is generated, so changes reach the next party to enter
+        // Average titan points a pack gets per effective level; the pack's total is split between its members
+        public const float DefaultPointsPerLevel = 0.3f;
+        public float pointsPerLevel = DefaultPointsPerLevel;
+        // A pack's total is the average times 1 +/- this
+        public const float DefaultPointNoise = 0.25f;
+        public float pointNoise = DefaultPointNoise;
+        // Chance a chamber other than the entrance has a pack, and the chance the entrance does
+        public const float DefaultOccupancy = 0.6f;
+        public float occupancy = DefaultOccupancy;
+        public const float DefaultEntranceChance = 0.1f;
+        public float entranceChance = DefaultEntranceChance;
+        // Chance an animal or humanlike pack is dungeon-mad
+        public const float DefaultMadChance = 0.4f;
+        public float madChance = DefaultMadChance;
+        // Chance a pack (not mechs) is made of stone or another material; outside the point budget
+        public const float DefaultStoneChance = 0.15f;
+        public float stoneChance = DefaultStoneChance;
+        public const int DefaultMaxPackSize = 6;
+        public int maxPackSize = DefaultMaxPackSize;
+        // Strongest species allowed, by vanilla combat power: base + perLevel x effective level
+        public const float DefaultPowerBase = 60f;
+        public float powerBase = DefaultPowerBase;
+        public const float DefaultPowerPerLevel = 10f;
+        public float powerPerLevel = DefaultPowerPerLevel;
+
+        public float PowerCeiling(float level) => powerBase + powerPerLevel * level;
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -51,6 +79,15 @@ namespace ThisUsedToBeAboutDungeons
             oceanDungeons = true;
             maxPartySize = DefaultMaxPartySize;
             wealthToDouble = DefaultWealthToDouble;
+            pointsPerLevel = DefaultPointsPerLevel;
+            pointNoise = DefaultPointNoise;
+            occupancy = DefaultOccupancy;
+            entranceChance = DefaultEntranceChance;
+            madChance = DefaultMadChance;
+            stoneChance = DefaultStoneChance;
+            maxPackSize = DefaultMaxPackSize;
+            powerBase = DefaultPowerBase;
+            powerPerLevel = DefaultPowerPerLevel;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -72,6 +109,24 @@ namespace ThisUsedToBeAboutDungeons
             maxPartySize = Mathf.Clamp(maxPartySize, 1, 20);
             Scribe_Values.Look(ref wealthToDouble, "wealthToDouble", DefaultWealthToDouble);
             wealthToDouble = Mathf.Clamp(wealthToDouble, 5000f, 300000f);
+            Scribe_Values.Look(ref pointsPerLevel, "pointsPerLevel", DefaultPointsPerLevel);
+            pointsPerLevel = Mathf.Clamp(pointsPerLevel, 0.05f, 2f);
+            Scribe_Values.Look(ref pointNoise, "pointNoise", DefaultPointNoise);
+            pointNoise = Mathf.Clamp(pointNoise, 0f, 0.5f);
+            Scribe_Values.Look(ref occupancy, "occupancy", DefaultOccupancy);
+            occupancy = Mathf.Clamp01(occupancy);
+            Scribe_Values.Look(ref entranceChance, "entranceChance", DefaultEntranceChance);
+            entranceChance = Mathf.Clamp01(entranceChance);
+            Scribe_Values.Look(ref madChance, "madChance", DefaultMadChance);
+            madChance = Mathf.Clamp01(madChance);
+            Scribe_Values.Look(ref stoneChance, "stoneChance", DefaultStoneChance);
+            stoneChance = Mathf.Clamp01(stoneChance);
+            Scribe_Values.Look(ref maxPackSize, "maxPackSize", DefaultMaxPackSize);
+            maxPackSize = Mathf.Clamp(maxPackSize, 1, 12);
+            Scribe_Values.Look(ref powerBase, "powerBase", DefaultPowerBase);
+            powerBase = Mathf.Clamp(powerBase, 20f, 500f);
+            Scribe_Values.Look(ref powerPerLevel, "powerPerLevel", DefaultPowerPerLevel);
+            powerPerLevel = Mathf.Clamp(powerPerLevel, 0f, 50f);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

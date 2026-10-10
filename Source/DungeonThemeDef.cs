@@ -93,6 +93,12 @@ namespace ThisUsedToBeAboutDungeons
         /// <summary>Chance a built room (other than the entrance) is a furnished room with powered walls rather than a ruin.</summary>
         public float furnishedChance = 0.17f;
 
+        // ---- Creatures
+        /// <summary>Chance a pack in a natural chamber or ruin is insects rather than the biome's animals.</summary>
+        public float insectChance;
+        /// <summary>Chance a pack in a ruin is mechanoids.</summary>
+        public float mechChance = 0.2f;
+
         public bool Matches(Tile tile)
         {
             if (tile == null) return false;
