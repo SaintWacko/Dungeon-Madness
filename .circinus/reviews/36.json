@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "buildId": 36,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-10T04:04:05.158Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "StockRoom and FloorFamily in GenStep_DungeonLayout.cs: runtime errors only (GenPlace.TryPlaceThing Direct onto ShelfSmall with a partially-merged stack, item destroy logic, ThingSetMaker params).",
+  "diffSource": "since build 34 (2026-10-10T03:17:36Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 0,
+    "note": 2
+  },
+  "findings": [
+    {
+      "severity": "note",
+      "title": "Non-stackable goods are always placed, even onto a full shelf",
+      "detail": "TryPlaceDirect sets num3 = 1 when the cell is at maxItemsInCell and the thing's stackLimit <= 1, so weapons and apparel spawn onto the first shelf tried regardless of capacity. Nothing errors, but the StockRoom summary ('whatever does not fit on a shelf is not spawned') only holds for stackable goods. If the cap matters, skip a shelf when shelves[k].GetItemCount(map) >= GetMaxItemsAllowedInCell(map) before calling TryPlaceThing.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Assembly-CSharp/Verse/GenPlace.cs:321-370"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Split-off pieces of an over-limit stack are not forbidden",
+      "detail": "SplitAndSpawnOneStackOnCell spawns a SplitOff piece and returns false, then the loop spawns the remainder; TryPlaceThing's out param holds only the last resulting thing, so Forbid(put) misses the earlier pieces (and every piece spawned before a placement that then returns false). This only applies when ThingSetMaker returns stackCount > stackLimit. Passing a placedAction (thing, count) => thing.SetForbidden(true, false) to TryPlaceThing forbids every piece.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Assembly-CSharp/Verse/GenPlace.cs:313-319"
+      }
+    }
+  ],
+  "checked": [
+    "GenPlace.TryPlaceThing Direct mode never logs on failure; a partly merged stack returns false and leaves t unspawned with a smaller stackCount (GenPlace.cs:33-127, 321-370)",
+    "the item destroy guard (!placed && !t.Destroyed && !t.Spawned) only destroys unspawned, live things; a fully absorbed t is already destroyed and returns placed=true",
+    "Forbid: SetForbidden(true, warnOnFail:false) does not log on things without the forbid comp; null put is guarded",
+    "ThingSetMakerParams (techLevel Undefined, totalMarketValueRange, countRange) match vanilla SymbolResolver_Stockpile for no faction (SymbolResolver_Stockpile.cs:42-60)",
+    "ThingSetMaker_Sum handles countRange/totalMarketValueRange per option without logging; the Empire conditional option is skipped when makingFaction is null",
+    "ThingSetMaker.Generate(parms) is public and catches and destroys on exception (ThingSetMaker.cs:24-48)",
+    "blocks.stuffProps cannot be null: blocks comes from BlocksOf (IsStuff checked) or BlocksGranite (GenStep_DungeonLayout.cs:80, 511-512)",
+    "ThingDefOf.ShelfSmall is a plain field; ShelfSmall is 1x1, so any Rot4 is valid (Buildings_Furniture.xml ShelfSmall)",
+    "shelf cells skip edifices, items and door-adjacent cells, so the later door-clearing loop never destroys a shelf",
+    "FloorFamily is null-safe (texturePath ?? defName; IndexOf only runs when there is a slash); an empty family list skips the floor without error",
+    "PushRoom: removing the Storage case leaves Storage on the indoorLighting-only path, still returning true; no orphan stack entries",
+    "no Harmony patch in the diff, so verify_patches/precedents were not needed"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/GenStep_DungeonLayout.cs",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 1,
+  "buildCommit": "c322b3f828b02a43757018ae530abada80dd9c62",
+  "partial": false
+}

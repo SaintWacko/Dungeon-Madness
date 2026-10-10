@@ -431,16 +431,16 @@ namespace ThisUsedToBeAboutDungeons
             {
                 bool placed = false;
                 for (int tries = 0; tries < shelves.Count && !placed; tries++, i++)
-                    placed = GenPlace.TryPlaceThing(t, shelves[i % shelves.Count], map, ThingPlaceMode.Direct, out var put) && Forbid(put);
+                {
+                    // Direct placement ignores a full shelf for unstackable goods, so check capacity first
+                    IntVec3 s = shelves[i % shelves.Count];
+                    if (s.GetItemCount(map) >= s.GetMaxItemsAllowedInCell(map)) continue;
+                    placed = GenPlace.TryPlaceThing(t, s, map, ThingPlaceMode.Direct, (put, n) => put.SetForbidden(true, false));
+                }
                 if (!placed && !t.Destroyed && !t.Spawned) t.Destroy();
             }
         }
 
-        static bool Forbid(Thing t)
-        {
-            t?.SetForbidden(true, false);
-            return true;
-        }
 
         static void PushThing(ResolveParams rp, ThingDef def, ThingDef blocks)
         {
