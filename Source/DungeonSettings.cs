@@ -48,7 +48,7 @@ namespace ThisUsedToBeAboutDungeons
         public const float DefaultEntranceChance = 0.1f;
         public float entranceChance = DefaultEntranceChance;
         // Chance an animal or humanlike pack is dungeon-mad
-        public const float DefaultMadChance = 0.4f;
+        public const float DefaultMadChance = 0.95f;
         public float madChance = DefaultMadChance;
         // Chance a pack (not mechs) is made of stone or another material; outside the point budget
         public const float DefaultStoneChance = 0.15f;

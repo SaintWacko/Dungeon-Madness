@@ -144,6 +144,7 @@ namespace ThisUsedToBeAboutDungeons
                 // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
                 if (t is Pawn p)
                 {
+                    if (DungeonDwellerUtility.TryResolveCarriedFollower(p, this)) continue;
                     caravan.AddPawn(p, addCarriedPawnToWorldPawnsIfAny: true);
                     if (!p.Dead && !p.IsWorldPawn()) Find.WorldPawns.PassToWorld(p);
                     if (p.inventory != null) p.inventory.UnloadEverything = false;

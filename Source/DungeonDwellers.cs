@@ -87,18 +87,38 @@ namespace ThisUsedToBeAboutDungeons
             var comp = Comp(dweller.Map);
             if (comp == null || !comp.followers.Contains(dweller)) return false;
             comp.followers.Remove(dweller);
+            // Now a colonist, so the usual way out (caravan join, or a caravan of their own)
+            if (RollJoin(dweller, site)) return false;
+            dweller.ExitMap(allowedToJoinOrCreateCaravan: false, Rot4.Invalid);
+            if (!dweller.IsWorldPawn()) Find.WorldPawns.PassToWorld(dweller);
+            return true;
+        }
+
+        /// <summary>A follower who was downed and carried out arrives in the site's stash rather than walking through
+        /// the exit, so the same join roll happens there. Returns true when the pawn went their own way and must not
+        /// be added to the caravan (which would otherwise capture a factionless person as a prisoner).</summary>
+        public static bool TryResolveCarriedFollower(Pawn dweller, DungeonSite site)
+        {
+            var comp = Comp(site.Map);
+            if (comp == null || !comp.followers.Contains(dweller)) return false;
+            comp.followers.Remove(dweller);
+            if (RollJoin(dweller, site)) return false;
+            if (!dweller.Dead && !dweller.IsWorldPawn()) Find.WorldPawns.PassToWorld(dweller);
+            return true;
+        }
+
+        /// <summary>The join roll: joins with a letter and returns true, or posts the parting message.</summary>
+        static bool RollJoin(Pawn dweller, DungeonSite site)
+        {
             if (Rand.Chance(DungeonsMod.Settings.joinChance))
             {
                 dweller.SetFaction(Faction.OfPlayer);
                 Find.LetterStack.ReceiveLetter("TUBAD_Dweller_Joined_Label".Translate(dweller.Named("PAWN")),
                     "TUBAD_Dweller_Joined_Text".Translate(dweller.Named("PAWN")), LetterDefOf.PositiveEvent, new LookTargets(site));
-                // Now a colonist, so the usual way out (caravan join, or a caravan of their own)
-                return false;
+                return true;
             }
             Messages.Message("TUBAD_Dweller_Left".Translate(dweller.Named("PAWN")), MessageTypeDefOf.NeutralEvent);
-            dweller.ExitMap(allowedToJoinOrCreateCaravan: false, Rot4.Invalid);
-            if (!dweller.IsWorldPawn()) Find.WorldPawns.PassToWorld(dweller);
-            return true;
+            return false;
         }
     }
 
