@@ -65,7 +65,7 @@ namespace ThisUsedToBeAboutDungeons
 
         // Sane dwellers: chance one agrees to leave when invited (times the inviter's social impact), and chance one
         // who came out joins the colony rather than going their own way
-        public const float DefaultInviteChance = 0.6f;
+        public const float DefaultInviteChance = 0.8f;
         public float inviteChance = DefaultInviteChance;
         public const float DefaultJoinChance = 0.5f;
         public float joinChance = DefaultJoinChance;
