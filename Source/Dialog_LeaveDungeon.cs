@@ -92,7 +92,8 @@ namespace ThisUsedToBeAboutDungeons
         {
             var pawns = TransferableUtility.GetPawnsFromTransferables(transferables);
             // Dwellers who agreed to come walk out on their own, with the party; nobody hauls them
-            var followers = pawns.Where(DungeonDwellerUtility.IsFollower).ToList();
+            // A downed follower is not among them: it is listed for capture and carried out like any downed person
+            var followers = pawns.Where(p => DungeonDwellerUtility.IsFollower(p) && !p.Downed && !p.InMentalState).ToList();
             pawns.RemoveAll(followers.Contains);
             if (pawns.Count == 0)
             {
@@ -119,7 +120,7 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonDwellerUtility.Comp(map);
             if (comp != null)
                 foreach (var p in comp.followers)
-                    if (p.Spawned && !p.Downed && p.Map == map) Add(p);
+                    if (p.Spawned && !p.Downed && !p.InMentalState && p.Map == map) Add(p);
             // Everything the party could carry out: home area and reservations do not apply in a dungeon
             foreach (var t in CaravanFormingUtility.AllReachableColonyItems(map, allowEvenIfOutsideHomeArea: true, allowEvenIfReserved: true))
                 Add(t);
@@ -130,7 +131,7 @@ namespace ThisUsedToBeAboutDungeons
                 ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile, drawMarketValue: false, drawEquippedWeapon: true);
             CaravanUIUtility.AddPawnsSections(pawnsTransfer, transferables);
             pawnsTransfer.AddSection("TUBAD_Leave_DwellersSection".Translate(),
-                transferables.Where(x => x.AnyThing is Pawn p && DungeonDwellerUtility.IsFollower(p) && !p.Downed));
+                transferables.Where(x => x.AnyThing is Pawn p && DungeonDwellerUtility.IsFollower(p) && !p.Downed && !p.InMentalState));
             itemsTransfer = new TransferableOneWayWidget(transferables.Where(x => x.ThingDef.category != ThingCategory.Pawn), null, null,
                 "TUBAD_LeaveThingCountTip".Translate(), drawMass: true, IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
                 includePawnsMassInMassUsage: true, () => float.MaxValue, 0f, ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile);

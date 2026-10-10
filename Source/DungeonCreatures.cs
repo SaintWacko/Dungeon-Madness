@@ -149,6 +149,12 @@ namespace ThisUsedToBeAboutDungeons
         {
             base.ExposeData();
             Scribe_Collections.Look(ref packs, "packs", LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.Saving)
+            {
+                // A dead or discarded pawn would be saved as a reference that cannot be resolved on load
+                followers.RemoveAll(p => p == null || p.Destroyed || p.Dead);
+                refused.RemoveAll(p => p == null || p.Destroyed || p.Dead);
+            }
             Scribe_Collections.Look(ref followers, "followers", LookMode.Reference);
             Scribe_Collections.Look(ref refused, "refused", LookMode.Reference);
             if (packs == null) packs = new List<DungeonPack>();

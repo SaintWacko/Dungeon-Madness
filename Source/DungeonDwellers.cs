@@ -34,7 +34,7 @@ namespace ThisUsedToBeAboutDungeons
         }
 
         public static float InviteChance(Pawn inviter) =>
-            Mathf.Clamp(DungeonsMod.Settings.inviteChance * inviter.GetStatValue(StatDefOf.SocialImpact), 0.05f, 0.95f);
+            Mathf.Clamp01(DungeonsMod.Settings.inviteChance * inviter.GetStatValue(StatDefOf.SocialImpact));
 
         public static void ResolveInvite(Pawn dweller, Pawn inviter)
         {

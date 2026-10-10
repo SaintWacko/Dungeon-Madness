@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "buildId": 42,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-10T20:44:26.558Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Dweller invite/follow/arrest flow: DungeonDwellers.cs, Dialog_LeaveDungeon.cs changes, DungeonSite.TryMovePawnOut / DungeonExit.MoveArrivedOut changes",
+  "diffSource": "since build 39 (2026-10-10T07:54:56Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 3,
+    "note": 4
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "A downed follower ticked in the Capture section is silently left behind",
+      "detail": "AllSendablePawns(allowCapturableDownedPawns: true) lists a downed factionless follower, and AddPawnsSections shows it under CaptureSection. In TryAccept it still passes IsFollower, so it is removed from `pawns` and from leftToLoad. SendThroughExit then returns early because it is Downed, so nobody carries it and the player gets no message. Change the follower filter in TryAccept to `p => DungeonDwellerUtility.IsFollower(p) && !p.Downed && !p.InMentalState` so a downed follower goes through the normal haul path. Add `!p.InMentalState` to the Recache follower loop too, to match vanilla's allowEvenIfInMentalState: false.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/Dialog_LeaveDungeon.cs:95"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "followers/refused keep dead or destroyed pawns, so saves hold references that can't be resolved",
+      "detail": "Nothing removes a follower or refused dweller who dies or whose body is destroyed. Saving a LookMode.Reference to a discarded pawn makes the game log a warning on load, which the PostLoadInit null removal hides but does not prevent. In ExposeData, when Scribe.mode == LoadSaveMode.Saving, remove pawns that are Destroyed or Dead from both lists before the Scribe_Collections calls.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonCreatures.cs:152"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "Square-bracket pawn tokens in four new Keyed strings will show literally in-game",
+      "detail": "TUBAD_Invite_Accepted ([PAWN_objective]), TUBAD_Arrested ([PAWN_objective] twice), TUBAD_Dweller_Joined_Text ([PAWN_pronoun]) and TUBAD_Dweller_Left ([PAWN_possessive]) use square brackets. Square brackets are only filled in when a string goes through AdjustedFor (the grammar resolver), and no file under Source/ calls AdjustedFor. Every call site in DungeonDwellers.cs (lines 47, 93-94, 98, 229) runs .Translate(dweller.Named(\"PAWN\")). That goes through GrammarResolverSimple.TryResolveInner, which only looks for '{' and copies every other character as it is. So players will read things like 'Mark [PAWN_objective] in the leave dialog'. Nothing throws and nothing is logged. The fix is to write the tokens with braces: {PAWN_objective}, {PAWN_pronoun}, {PAWN_possessive}. The same strings already use {PAWN_nameDef} that way. Formatted() calls CapitalizeSentences, so {PAWN_pronoun} at the start of a sentence in Joined_Text will be capitalised.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Assembly-CSharp/Verse/GrammarResolverSimple.cs:91-304 (TryResolveInner only matches '{'); Languages/English/Keyed/TUBAD.xml:72,75,77,78"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Vanilla's 'Try to arrest' still shows on dwellers next to 'Arrest here'",
+      "detail": "Vanilla's arrest option returns an option for any pawn that CanBeArrestedBy allows. With no prison bed, clicking it only shows 'CannotArrest: NoPrisonerBed', so players see two arrest entries on a dweller and one of them does nothing useful. Not a bug.",
+      "evidence": {
+        "kind": "index",
+        "ref": "FloatMenuOptionProvider_Arrest.cs:17"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Invite chance clamp (5% to 95%) does not match the 0 to 100% settings slider",
+      "detail": "InviteChance clamps to 0.05..0.95, but Mod.cs lets inviteChance go from 0 to 1 and the settings label shows the raw value. At either end the setting and the chance in the float menu disagree.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonDwellers.cs:36"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "A follower whose walk to the exit is interrupted is lost when the last colonist leaves",
+      "detail": "SendThroughExit removes the follower from its lord before starting EnterPortal. If that job fails (damage, a constant-think-tree flee), the dweller is left without a lord and still listed as a follower. ShouldRemoveMapNow then removes the map once no player humanlike remains, and the follower is never resolved and no message is shown. Uncommon, since followers usually arrive while the party is still hauling.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs:150"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "InviteChance description does not mention the 5%-95% clamp",
+      "detail": "TUBAD_Settings_InviteChance_Desc says the setting is multiplied by the inviter's social impact. InviteChance also clamps the result to 0.05-0.95, so a slider at 0% or 100% does not give a 0% or 100% chance. The description could say so.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonDwellers.cs:36-37"
+      }
+    }
+  ],
+  "checked": [
+    "JobDriver_EnterPortal: the pawn is respawned at GetDestinationLocation before OnEntered, so MoveArrivedOut's Spawned check sees followers and TryResolveFollowerOut runs on a spawned pawn",
+    "Pawn_JobTracker.JobTrackerTickInterval and CheckForJobOverride: a lordless factionless follower's StartJob(EnterPortal) is not overridden by the main think tree (JobGiver_ExitMapBest) because the job…",
+    "Pawn.SetFaction covers the recruit work (ChangeKind, workSettings, lord loss, guest status), so the joined path continuing into TryMovePawnOut as IsColonist is sound",
+    "DungeonExit.MoveArrivedOut: the Faction.OfPlayer guard on Notify_PawnLeft only excludes dwellers who walk off; prisoners and downed pawns still arrive through the stash",
+    "EnterPortalUtility.MakeLordsAsAppropriate: followers and arrested prisoners are not colonists, so they never join LordJob_LoadAndEnterPortal; arrested prisoners go through leftToLoad as hauled pawns",
+    "CaravanUIUtility.AddPawnsSections: a standing follower appears in no vanilla section, so the new Dwellers section does not list it twice",
+    "Pawn_GuestTracker.CapturedBy and JobDriver_TakeToBed.CheckMakeTakeePrisoner: JobDriver_ArrestInPlace's capture matches vanilla's arrest",
+    "GenAI.CanBeArrestedBy allows factionless dwellers that aren't hostile",
+    "LordJob_DwellersWait has the parameterless constructor needed to load it; a lord with no faction matches the existing pack Wake() precedent",
+    "MapComponent_DungeonCreatures ExposeData: lists missing from old saves are recreated in PostLoadInit",
+    "Defs/TUBAD_Creatures.xml: backstory categories Offworld/Pirate/Tribal exist in Core; no child PawnKindDef redefines backstoryFilters; JobDef driverClass names match the C# classes",
+    "DungeonSettings/Mod.cs: new values are saved, clamped and reset with defaults",
+    "No Harmony patches in this diff; the defof-in-mod-ctor lint does not apply (DungeonDwellerDefOf uses EnsureInitializedInCtor in its own static constructor)",
+    "Every new key in TUBAD.xml is used in Source/ and every key the dweller code uses exists in TUBAD.xml (DungeonDwellers.cs, Dialog_LeaveDungeon.cs, Mod.cs)",
+    "Settings keys TUBAD_Settings_Dwellers, InviteChance, JoinChance and their _Desc entries: Section() translates the key it is given (Mod.cs:73-76), and {0} gets ToStringPercent()",
+    "TUBAD_ArrestHere: {0}=LabelCap, {1_pronoun}=the clicked pawn (positional pawn symbols resolve through the int-parse path), {2}=the percent string, matching DungeonDwellers.cs:194",
+    "TUBAD_Invite and TUBAD_Invite_CannotTalk: {0} is given LabelShort, and the extra pawn argument does no harm",
+    "Brace-form tokens ({PAWN_nameDef}) resolve with a .Named(\"PAWN\") argument at every call site",
+    "TUBAD_Arrested says the prisoner can be chosen in the leave dialog, and Recache adds unsecured prisoners through AllSendablePawns(allowEvenIfPrisonerNotSecure: true) (Dialog_LeaveDungeon.cs:115-117)",
+    "TUBAD_Leave_DwellersSection is used by AddSection for followers (Dialog_LeaveDungeon.cs:132)",
+    "The XML is well-formed: the new comment and blank lines sit between elements",
+    "No Harmony patches in scope (none declared in the changed files)"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/Dialog_LeaveDungeon.cs",
+    "Source/DungeonCreatures.cs",
+    "Source/DungeonDwellers.cs",
+    "Source/DungeonExit.cs",
+    "Source/DungeonSettings.cs",
+    "Source/DungeonSite.cs",
+    "Source/Mod.cs",
+    "Defs/TUBAD_Creatures.xml",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 2,
+  "buildCommit": "cab73d7861d616d83ddbd9fc7214874f25aad0f3",
+  "partial": false
+}
