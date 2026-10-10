@@ -91,14 +91,19 @@ namespace ThisUsedToBeAboutDungeons
         private bool TryAccept()
         {
             var pawns = TransferableUtility.GetPawnsFromTransferables(transferables);
+            // Dwellers who agreed to come walk out on their own, with the party; nobody hauls them
+            var followers = pawns.Where(DungeonDwellerUtility.IsFollower).ToList();
+            pawns.RemoveAll(followers.Contains);
             if (pawns.Count == 0)
             {
                 Messages.Message("TUBAD_Leave_NoPawns".Translate(), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             exit.leftToLoad = new List<TransferableOneWay>();
-            foreach (var t in transferables) exit.AddToTheToLoadList(t, t.CountToTransfer);
+            foreach (var t in transferables)
+                if (!(t.AnyThing is Pawn p && followers.Contains(p))) exit.AddToTheToLoadList(t, t.CountToTransfer);
             EnterPortalUtility.MakeLordsAsAppropriate(pawns, exit);
+            foreach (var f in followers) DungeonDwellerUtility.SendThroughExit(f, exit);
             return true;
         }
 
@@ -107,9 +112,14 @@ namespace ThisUsedToBeAboutDungeons
             transferables = new List<TransferableOneWay>();
             if (exit.LoadInProgress) transferables.AddRange(exit.leftToLoad);
             Map map = exit.Map;
+            // Prisoners count even outside a cell: a dungeon has no prison, so an arrested dweller stands where they were
             foreach (var p in CaravanFormingUtility.AllSendablePawns(map, allowEvenIfDowned: true, allowEvenIfInMentalState: false,
-                         allowEvenIfPrisonerNotSecure: false, allowCapturableDownedPawns: true, allowLodgers: true))
+                         allowEvenIfPrisonerNotSecure: true, allowCapturableDownedPawns: true, allowLodgers: true))
                 Add(p);
+            var comp = DungeonDwellerUtility.Comp(map);
+            if (comp != null)
+                foreach (var p in comp.followers)
+                    if (p.Spawned && !p.Downed && p.Map == map) Add(p);
             // Everything the party could carry out: home area and reservations do not apply in a dungeon
             foreach (var t in CaravanFormingUtility.AllReachableColonyItems(map, allowEvenIfOutsideHomeArea: true, allowEvenIfReserved: true))
                 Add(t);
@@ -119,6 +129,8 @@ namespace ThisUsedToBeAboutDungeons
                 IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload, includePawnsMassInMassUsage: true, () => float.MaxValue, 0f,
                 ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile, drawMarketValue: false, drawEquippedWeapon: true);
             CaravanUIUtility.AddPawnsSections(pawnsTransfer, transferables);
+            pawnsTransfer.AddSection("TUBAD_Leave_DwellersSection".Translate(),
+                transferables.Where(x => x.AnyThing is Pawn p && DungeonDwellerUtility.IsFollower(p) && !p.Downed));
             itemsTransfer = new TransferableOneWayWidget(transferables.Where(x => x.ThingDef.category != ThingCategory.Pawn), null, null,
                 "TUBAD_LeaveThingCountTip".Translate(), drawMass: true, IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
                 includePawnsMassInMassUsage: true, () => float.MaxValue, 0f, ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile);

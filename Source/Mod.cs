@@ -115,6 +115,16 @@ namespace ThisUsedToBeAboutDungeons
             list.Label("TUBAD_Settings_StoneChance_Desc".Translate());
             list.Gap();
 
+            Section(list, "TUBAD_Settings_Dwellers");
+            list.Label("TUBAD_Settings_InviteChance".Translate(s.inviteChance.ToStringPercent()));
+            s.inviteChance = Mathf.Round(list.Slider(s.inviteChance, 0f, 1f) * 20f) / 20f;
+            list.Label("TUBAD_Settings_InviteChance_Desc".Translate());
+            list.Gap();
+            list.Label("TUBAD_Settings_JoinChance".Translate(s.joinChance.ToStringPercent()));
+            s.joinChance = Mathf.Round(list.Slider(s.joinChance, 0f, 1f) * 20f) / 20f;
+            list.Label("TUBAD_Settings_JoinChance_Desc".Translate());
+            list.Gap();
+
             Section(list, "TUBAD_Settings_Strength");
             list.Label("TUBAD_Settings_PointsPerLevel".Translate(s.pointsPerLevel.ToString("0.##")));
             s.pointsPerLevel = Mathf.Round(list.Slider(s.pointsPerLevel, 0.05f, 2f) * 20f) / 20f;

@@ -107,6 +107,9 @@ namespace ThisUsedToBeAboutDungeons
         /// Returns false when the pawn cannot leave yet (an animal or prisoner with no caravan to join).</summary>
         public bool TryMovePawnOut(Pawn pawn)
         {
+            // A dweller who agreed to come: joins (and goes on below as a colonist) or goes their own way
+            if (DungeonDwellerUtility.TryResolveFollowerOut(pawn, this)) return true;
+
             // Pawn.ExitMap destroys a carried item, and a drafted pawn keeps carrying through the exit
             Thing carried = pawn.carryTracker?.CarriedThing;
             if (carried != null && !(carried is Pawn) && pawn.inventory != null)

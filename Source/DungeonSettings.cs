@@ -63,6 +63,13 @@ namespace ThisUsedToBeAboutDungeons
 
         public float PowerCeiling(float level) => powerBase + powerPerLevel * level;
 
+        // Sane dwellers: chance one agrees to leave when invited (times the inviter's social impact), and chance one
+        // who came out joins the colony rather than going their own way
+        public const float DefaultInviteChance = 0.6f;
+        public float inviteChance = DefaultInviteChance;
+        public const float DefaultJoinChance = 0.5f;
+        public float joinChance = DefaultJoinChance;
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -88,6 +95,8 @@ namespace ThisUsedToBeAboutDungeons
             maxPackSize = DefaultMaxPackSize;
             powerBase = DefaultPowerBase;
             powerPerLevel = DefaultPowerPerLevel;
+            inviteChance = DefaultInviteChance;
+            joinChance = DefaultJoinChance;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -127,6 +136,10 @@ namespace ThisUsedToBeAboutDungeons
             powerBase = Mathf.Clamp(powerBase, 20f, 500f);
             Scribe_Values.Look(ref powerPerLevel, "powerPerLevel", DefaultPowerPerLevel);
             powerPerLevel = Mathf.Clamp(powerPerLevel, 0f, 50f);
+            Scribe_Values.Look(ref inviteChance, "inviteChance", DefaultInviteChance);
+            inviteChance = Mathf.Clamp01(inviteChance);
+            Scribe_Values.Look(ref joinChance, "joinChance", DefaultJoinChance);
+            joinChance = Mathf.Clamp01(joinChance);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

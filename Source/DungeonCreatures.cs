@@ -74,6 +74,10 @@ namespace ThisUsedToBeAboutDungeons
     public class MapComponent_DungeonCreatures : MapComponent
     {
         public List<DungeonPack> packs = new List<DungeonPack>();
+        /// <summary>Sane dwellers who agreed to leave with the party, waiting by the entrance.</summary>
+        public List<Pawn> followers = new List<Pawn>();
+        /// <summary>Sane dwellers who said no; they cannot be asked again.</summary>
+        public List<Pawn> refused = new List<Pawn>();
 
         public MapComponent_DungeonCreatures(Map map) : base(map)
         {
@@ -145,7 +149,16 @@ namespace ThisUsedToBeAboutDungeons
         {
             base.ExposeData();
             Scribe_Collections.Look(ref packs, "packs", LookMode.Deep);
+            Scribe_Collections.Look(ref followers, "followers", LookMode.Reference);
+            Scribe_Collections.Look(ref refused, "refused", LookMode.Reference);
             if (packs == null) packs = new List<DungeonPack>();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                if (followers == null) followers = new List<Pawn>();
+                if (refused == null) refused = new List<Pawn>();
+                followers.RemoveAll(p => p == null);
+                refused.RemoveAll(p => p == null);
+            }
         }
     }
 

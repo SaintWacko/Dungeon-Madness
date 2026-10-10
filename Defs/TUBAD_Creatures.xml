@@ -42,6 +42,20 @@
 
   <!-- ===== Dungeon dwellers: the people found in furnished rooms. No faction. -->
 
+  <JobDef>
+    <defName>TUBAD_InviteDweller</defName>
+    <driverClass>ThisUsedToBeAboutDungeons.JobDriver_InviteDweller</driverClass>
+    <reportString>inviting TargetA to leave with the party.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
+  <JobDef>
+    <defName>TUBAD_ArrestInPlace</defName>
+    <driverClass>ThisUsedToBeAboutDungeons.JobDriver_ArrestInPlace</driverClass>
+    <reportString>arresting TargetA.</reportString>
+    <casualInterruptible>false</casualInterruptible>
+  </JobDef>
+
   <PawnKindDef Name="TUBAD_DwellerBase" Abstract="True">
     <race>Human</race>
     <isFighter>true</isFighter>
