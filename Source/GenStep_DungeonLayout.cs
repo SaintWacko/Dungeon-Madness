@@ -175,8 +175,11 @@ namespace ThisUsedToBeAboutDungeons
                 if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
                 if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
                 if (!force && !Rand.Chance(theme.furnishedChance)) continue;
+                // Dining rooms and breweries need room for tables or barrels plus a heater or cooler on the edge;
+                // in a 5-wide room BaseGen runs out of space and logs a warning per piece
+                bool roomy = r.Width >= 6 && r.Height >= 6;
                 float w = Rand.Value;
-                ch.use = w < 0.4f ? RoomUse.Barracks : w < 0.7f ? RoomUse.DiningRoom : RoomUse.Brewery;
+                ch.use = !roomy || w < 0.4f ? RoomUse.Barracks : w < 0.7f ? RoomUse.DiningRoom : RoomUse.Brewery;
                 ids.Add(ch.id);
             }
             return ids;
@@ -243,14 +246,14 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var c in box)
             {
                 int k = layout.Index(c);
-                if (layout.built[k] == ch.id)
-                {
-                    if (c.GetFirstThing<Thing>(map) == null) sk.AddTerrain(c.GetTerrain(map), c);
-                }
-                else if (layout.feature[k] == CellFeature.Door) doors.Add(c);
-                else if (!layout.open[k]) sk.AddThing(ThingDefOf.Wall, c, Rot4.North, blocks);
+                // Everything in the box that is not this room's free floor is a placeholder wall, so the placers
+                // only use the room and treat its edge as wall. No floor requirement: sand drift and smoothed
+                // stone are not layerable, and requiring it would leave those ruins bare.
+                if (layout.built[k] == ch.id && c.GetFirstThing<Thing>(map) == null) continue;
+                if (layout.feature[k] == CellFeature.Door) doors.Add(c);
+                sk.AddThing(ThingDefOf.Wall, c, Rot4.North, blocks);
             }
-            var p = new SketchResolveParams { sketch = sk, rect = box, allowWood = false, requireFloor = true, useOnlyStonesAvailableOnMap = map };
+            var p = new SketchResolveParams { sketch = sk, rect = box, allowWood = false, requireFloor = false, useOnlyStonesAvailableOnMap = map };
             if (Rand.Chance(0.6f))
             {
                 var q = p;
@@ -271,6 +274,9 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var t in sk.Things.ToList())
                 if (t.def == ThingDefOf.Wall || t.OccupiedRect.ExpandedBy(1).Cells.Any(doors.Contains)) sk.Remove(t);
             if (!sk.Things.Any()) return;
+            // The placers pick any stone (or metal) on the world; carve everything from the dungeon's own stone
+            foreach (var t in sk.Things)
+                if (t.def.MadeFromStuff && blocks.stuffProps.CanMake(t.def)) t.stuff = blocks;
             var spawned = new List<Thing>();
             sk.Spawn(map, IntVec3.Zero, null, Sketch.SpawnPosType.Unchanged, Sketch.SpawnMode.Normal, spawnedThings: spawned);
             foreach (var t in spawned)
