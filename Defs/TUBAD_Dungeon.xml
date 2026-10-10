@@ -90,7 +90,17 @@
   <ThingDef ParentName="TUBAD_DungeonWallBase">
     <defName>TUBAD_DungeonWallPowered</defName>
     <label>humming dungeon wall</label>
-    <description>Stone that is not quite stone, with a faint warmth to it. Anything wired to it gets power from nowhere anyone can find.</description>
+    <description>Dressed stone, laid by someone, with a faint warmth to it. Nothing scratches it, and anything wired to it gets power from nowhere anyone can find.</description>
+    <!-- Looks built (vanilla's wall atlas in the tile's stone bricks) and still links with the rock around it -->
+    <graphicData>
+      <texPath>Things/Building/Linked/Wall</texPath>
+      <graphicClass>Graphic_Appearances</graphicClass>
+      <linkType>CornerFiller</linkType>
+      <linkFlags>
+        <li>Wall</li>
+        <li>Rock</li>
+      </linkFlags>
+    </graphicData>
     <comps>
       <li Class="CompProperties_Power">
         <compClass>CompPowerPlant</compClass>
@@ -170,7 +180,8 @@
     <altitudeLayer>Building</altitudeLayer>
     <selectable>true</selectable>
     <passability>Impassable</passability>
-    <fillPercent>1</fillPercent>
+    <!-- Below full: only an edifice may give full cover. The TUBAD_TangleCore under it blocks fog, sight and shots. -->
+    <fillPercent>0.75</fillPercent>
     <blockWind>true</blockWind>
     <rotatable>false</rotatable>
     <statBases>

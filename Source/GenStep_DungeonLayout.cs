@@ -223,6 +223,19 @@ namespace ThisUsedToBeAboutDungeons
         static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch)
         {
             if (!Interior(layout, ch, out var rect)) return;
+            // A proper laid floor, one a builder needs some skill for: stone or fine tile, carpet, parquet and so on
+            var floors = DefDatabase<TerrainDef>.AllDefsListForReading.Where(t => t.layerable && t.constructionSkillPrerequisite > 0
+                && !t.IsWater && !t.bridge && t.designationCategory != null).ToList();
+            if (floors.TryRandomElement(out var floor))
+            {
+                CellRect box = ch.Rect.ExpandedBy(1).ClipInsideMap(map);
+                foreach (var c in box)
+                {
+                    int k = layout.Index(c);
+                    if (layout.built[k] == ch.id || (layout.feature[k] == CellFeature.Door && Touches(layout, c.x, c.z, new HashSet<int> { ch.id })))
+                        map.terrainGrid.SetTerrain(c, floor);
+                }
+            }
             string symbol;
             switch (ch.use)
             {
