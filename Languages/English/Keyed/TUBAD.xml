@@ -73,7 +73,7 @@
   <TUBAD_Invite_CannotTalk>{0} cannot talk</TUBAD_Invite_CannotTalk>
   <TUBAD_Invite_Accepted>{PAWN_nameDef} agrees to leave with the party, and goes to wait by the entrance. Mark {PAWN_objective} in the leave dialog when the party goes.</TUBAD_Invite_Accepted>
   <TUBAD_Invite_Refused>{PAWN_nameDef} would rather stay in the dungeon.</TUBAD_Invite_Refused>
-  <TUBAD_ArrestHere>Arrest {0} where {1_pronoun} stands ({2} chance to accept)</TUBAD_ArrestHere>
+  <TUBAD_ArrestHere>Arrest {0} where {1_pronoun} stands ({2} chance)</TUBAD_ArrestHere>
   <TUBAD_Arrested>{PAWN_nameDef} is now your prisoner. Choose {PAWN_objective} in the leave dialog to take {PAWN_objective} out.</TUBAD_Arrested>
   <TUBAD_Dweller_Joined_Label>{PAWN_nameDef} joins</TUBAD_Dweller_Joined_Label>
   <TUBAD_Dweller_Joined_Text>{PAWN_nameDef} came up out of the dungeon with the party and has decided to stay with you. {PAWN_pronoun} is now a member of your colony.</TUBAD_Dweller_Joined_Text>
@@ -81,7 +81,7 @@
   <TUBAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</TUBAD_Dweller_Left>
 
   <TUBAD_PartyLost_Label>Party lost</TUBAD_PartyLost_Label>
-  <TUBAD_PartyLost_Text>Nobody from the party made it out of the level {0} dungeon. The dungeon is closed, and everything inside it is gone.</TUBAD_PartyLost_Text>
+  <TUBAD_PartyLost_Text>Nobody from the party made it out of the level {0} dungeon. Everything they carried in is lost with them. The dungeon is still there, but the next party to go down will find it changed.</TUBAD_PartyLost_Text>
 
   <!-- Settings -->
   <TUBAD_Tab_Parties>Parties</TUBAD_Tab_Parties>

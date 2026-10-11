@@ -126,15 +126,16 @@ namespace ThisUsedToBeAboutDungeons
     /// <summary>
     /// A hungry dweller (whose Titan diet made them a hunter) may pick one of the party's animals, or a colonist, as
     /// prey. The first time, the hunt is held back and the player is warned, so there is time to drop food near them
-    /// or move the animals away. After the grace period the hunt goes ahead. A dweller who joins the colony is no
-    /// longer a dweller, and vanilla already stops colony predators hunting colony pawns.
+    /// or move the animals away. The hunt stays held back while the dweller is only hungry, and goes ahead once they
+    /// are urgently hungry. Reading the food need is a field lookup, so this costs nothing measurable. A dweller who
+    /// joins the colony is no longer a dweller, and vanilla already stops colony predators hunting colony pawns.
     /// </summary>
     [HarmonyPatch(typeof(FoodUtility), nameof(FoodUtility.IsAcceptablePreyFor))]
     public static class Patch_DwellerEyeingPrey
     {
-        const int GraceTicks = GenDate.TicksPerHour * 6;
-        // A dweller that has not eyed the party for a day (fed, say) is warned again next time
-        const int ForgetTicks = GenDate.TicksPerDay;
+        // A hungry pawn looks for food every little while, so a gap this long means they ate: the next hunger is a
+        // new one, and gets a new warning
+        const int ForgetTicks = GenDate.TicksPerHour * 4;
 
         static void Postfix(Pawn predator, Pawn prey, ref bool __result)
         {
@@ -142,18 +143,17 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonDwellerUtility.Comp(predator.Map);
             if (comp == null) return;
             int now = Find.TickManager.TicksGame;
-            bool known = comp.eyeingSince.TryGetValue(predator, out int since);
-            int last = comp.lastEyed.TryGetValue(predator, out int l) ? l : since;
+            bool newHunger = !comp.lastEyed.TryGetValue(predator, out int last) || now - last > ForgetTicks;
             comp.lastEyed[predator] = now;
-            if (!known || now - last > ForgetTicks)
+            if (newHunger)
             {
-                comp.eyeingSince[predator] = now;
                 Messages.Message("TUBAD_Dweller_EyeingPrey".Translate(predator.Named("PAWN"), prey.Named("PREY")),
                     new LookTargets(predator, prey), MessageTypeDefOf.ThreatSmall);
                 __result = false;
                 return;
             }
-            if (now - since < GraceTicks) __result = false;
+            var food = predator.needs?.food;
+            if (food != null && food.CurCategory < HungerCategory.UrgentlyHungry) __result = false;
         }
     }
 
@@ -246,7 +246,7 @@ namespace ThisUsedToBeAboutDungeons
             Pawn pawn = context.FirstSelectedPawn;
             if (!DungeonDwellerUtility.IsDweller(clickedPawn) || !clickedPawn.CanBeArrestedBy(pawn)) return null;
             if (RestUtility.FindBedFor(clickedPawn, pawn, checkSocialProperness: false, ignoreOtherReservations: true, GuestStatus.Prisoner) != null) return null;
-            string label = "TUBAD_ArrestHere".Translate(clickedPawn.LabelCap, clickedPawn, clickedPawn.GetAcceptArrestChance(pawn).ToStringPercent());
+            string label = "TUBAD_ArrestHere".Translate(clickedPawn.LabelShort, clickedPawn, clickedPawn.GetAcceptArrestChance(pawn).ToStringPercent());
             if (!pawn.CanReach(clickedPawn, PathEndMode.Touch, Danger.Deadly))
                 return new FloatMenuOption(label + ": " + "NoPath".Translate().CapitalizeFirst(), null);
             return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(label, () =>

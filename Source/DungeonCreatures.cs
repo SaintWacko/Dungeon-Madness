@@ -79,10 +79,8 @@ namespace ThisUsedToBeAboutDungeons
         /// <summary>Sane dwellers who said no; they cannot be asked again.</summary>
         public List<Pawn> refused = new List<Pawn>();
 
-        /// <summary>When each hungry dweller first eyed a player pawn as prey. Not saved: a reload only means a fresh
-        /// warning and a fresh grace period.</summary>
-        public Dictionary<Pawn, int> eyeingSince = new Dictionary<Pawn, int>();
-        /// <summary>The last tick each dweller eyed a player pawn, so the warning resets after a day of leaving them be.</summary>
+        /// <summary>The last tick each hungry dweller eyed a player pawn as prey, so each new hunger gets one warning.
+        /// Not saved: a reload only means a fresh warning.</summary>
         public Dictionary<Pawn, int> lastEyed = new Dictionary<Pawn, int>();
 
         public MapComponent_DungeonCreatures(Map map) : base(map)
@@ -91,7 +89,13 @@ namespace ThisUsedToBeAboutDungeons
 
         public override void MapComponentTick()
         {
-            if (packs.Count == 0 || !map.IsHashIntervalTick(60)) return;
+            // A fallback: reveals normally wake packs straight away through Patch_WakeOnUnfog
+            if (map.IsHashIntervalTick(60)) CheckReveals();
+        }
+
+        public void CheckReveals()
+        {
+            if (packs.Count == 0) return;
             for (int i = 0; i < packs.Count; i++)
             {
                 var pack = packs[i];
@@ -135,12 +139,14 @@ namespace ThisUsedToBeAboutDungeons
             }
             else if (pack.type != PackType.Animal)
             {
-                // Mechs and insects guard their chamber for their faction. Sane dwellers have no faction, but a lord
-                // keeps them home: without one, a factionless person's think tree keeps trying to walk off the map,
-                // and a dungeon's edge is solid wall.
+                // Mechs and insects guard their chamber for their faction until they engage the party, then hunt it
+                // through the dungeon. Sane dwellers have no faction, but a lord keeps them home: without one, a
+                // factionless person's think tree keeps trying to walk off the map, and a dungeon's edge is solid wall.
                 Faction faction = pawns[0].Faction;
-                var job = new LordJob_DefendPoint(pack.home, wanderRadius: Mathf.Max(3f, pack.radius * 0.7f), defendRadius: pack.radius + 8f,
-                    isCaravanSendable: false, addFleeToil: false);
+                float wander = Mathf.Max(3f, pack.radius * 0.7f), defend = pack.radius + 8f;
+                LordJob job = pack.type == PackType.Humanlike
+                    ? new LordJob_DefendPoint(pack.home, wanderRadius: wander, defendRadius: defend, isCaravanSendable: false, addFleeToil: false)
+                    : new LordJob_DungeonGuard(pack.home, wander, defend);
                 LordMaker.MakeNewLord(faction, job, map, pawns);
             }
             if (Prefs.DevMode) Log.Message($"[Dungeons] Woke {pack}");
@@ -171,6 +177,60 @@ namespace ThisUsedToBeAboutDungeons
                 followers.RemoveAll(p => p == null);
                 refused.RemoveAll(p => p == null);
             }
+        }
+    }
+
+    /// <summary>A pack that stays in its chamber until one of them is hurt or picks a target from the party, then
+    /// the whole pack hunts the party through the dungeon (vanilla's assault duty walks to the nearest hostile).</summary>
+    public class LordJob_DungeonGuard : LordJob
+    {
+        IntVec3 point;
+        float wanderRadius, defendRadius;
+
+        public LordJob_DungeonGuard()
+        {
+        }
+
+        public LordJob_DungeonGuard(IntVec3 point, float wanderRadius, float defendRadius)
+        {
+            this.point = point;
+            this.wanderRadius = wanderRadius;
+            this.defendRadius = defendRadius;
+        }
+
+        public override StateGraph CreateGraph()
+        {
+            var graph = new StateGraph();
+            var guard = new LordToil_DefendPoint(point, defendRadius, wanderRadius);
+            graph.StartingToil = guard;
+            var hunt = new LordToil_AssaultColony();
+            graph.AddToil(hunt);
+            var engage = new Transition(guard, hunt);
+            engage.AddTrigger(new Trigger_PawnHarmed());
+            engage.AddTrigger(new Trigger_TickCondition(() => lord.ownedPawns.Any(p =>
+                p.mindState.enemyTarget is Pawn t && t.Faction == Faction.OfPlayer), 30));
+            graph.AddTransition(engage);
+            return graph;
+        }
+
+        public override void ExposeData()
+        {
+            Scribe_Values.Look(ref point, "point");
+            Scribe_Values.Look(ref wanderRadius, "wanderRadius");
+            Scribe_Values.Look(ref defendRadius, "defendRadius");
+        }
+    }
+
+    /// <summary>Wakes packs in the same tick their chamber is revealed, so they are already there when the player
+    /// sees the room rather than appearing a moment later.</summary>
+    [HarmonyLib.HarmonyPatch(typeof(FloodFillerFog), nameof(FloodFillerFog.FloodUnfog))]
+    public static class Patch_WakeOnUnfog
+    {
+        static void Postfix(Map map)
+        {
+            // Mid-generation reveals are left to the tick fallback
+            if (Current.ProgramState != ProgramState.Playing || map == null || !Find.Maps.Contains(map)) return;
+            map.GetComponent<MapComponent_DungeonCreatures>()?.CheckReveals();
         }
     }
 
