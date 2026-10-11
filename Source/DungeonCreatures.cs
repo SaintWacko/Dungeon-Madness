@@ -206,7 +206,7 @@ namespace ThisUsedToBeAboutDungeons
             var hunt = new LordToil_AssaultColony();
             graph.AddToil(hunt);
             var engage = new Transition(guard, hunt);
-            engage.AddTrigger(new Trigger_PawnHarmed());
+            engage.AddTrigger(new Trigger_PawnHarmed(requireInstigatorWithSpecificFaction: Faction.OfPlayer));
             engage.AddTrigger(new Trigger_TickCondition(() => lord.ownedPawns.Any(p =>
                 p.mindState.enemyTarget is Pawn t && t.Faction == Faction.OfPlayer), 30));
             graph.AddTransition(engage);
@@ -229,7 +229,8 @@ namespace ThisUsedToBeAboutDungeons
         static void Postfix(Map map)
         {
             // Mid-generation reveals are left to the tick fallback
-            if (Current.ProgramState != ProgramState.Playing || map == null || !Find.Maps.Contains(map)) return;
+            if (Current.ProgramState != ProgramState.Playing || map == null || !Find.Maps.Contains(map)
+                || MapGenerator.mapBeingGenerated == map) return;
             map.GetComponent<MapComponent_DungeonCreatures>()?.CheckReveals();
         }
     }

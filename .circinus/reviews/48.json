@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "buildId": 48,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-11T05:46:16.857Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Patch_WakeOnUnfog (spawning pawns inside FloodUnfog callers), LordJob_DungeonGuard transition, hunger-based prey block",
+  "diffSource": "since build 47 (2026-10-11T00:47:09Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 0,
+    "should": 1,
+    "note": 3
+  },
+  "findings": [
+    {
+      "severity": "should",
+      "title": "Patch_WakeOnUnfog's 'mid-generation' guard does not exclude map generation",
+      "detail": "The postfix returns early only when ProgramState != Playing or the map is not in Find.Maps. A dungeon map is generated during play, and vanilla adds it to Find.Maps (MapGenerator.cs:146) before running gen steps (line 186). So GenStep_Fog's FloodUnfog calls (after TUBAD_DungeonLayout has already planned packs) wake and spawn packs during generation, before the map's final setup (FinalizeInit) and inside the seeded Rand. That contradicts the comment 'Mid-generation reveals are left to the tick fallback'. Add `|| MapGenerator.mapBeingGenerated == map` to the early return at Source/DungeonCreatures.cs:231. Not a must: vanilla gen steps also spawn pawns and make lords, so no exception is expected.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonCreatures.cs:231"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Packs can now spawn inside an arriving party pawn's spawn setup",
+      "detail": "Pawn.SpawnSetup calls FloodFillerFog.FloodUnfog for a player pawn spawned on a fogged cell. With this postfix, the entrance pack is spawned and given a lord partway through the first party member's spawn setup, before the rest of the party spawns. Nothing here looks like it throws; it is a reentrancy path the tick fallback did not have.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Assembly-CSharp/Verse/Pawn.cs:1426"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Trigger_PawnHarmed fires on harm from any source, not only the party",
+      "detail": "SignalIsHarm accepts PawnDamaged with external violence and PawnLost Killed/Incapped from any instigator, so a dungeon-mad pack hurting a mech or insect pack sends the whole pack to AssaultColony after the party. If the intent is 'until they engage the party', pass requireInstigatorWithSpecificFaction: Faction.OfPlayer.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Assembly-CSharp/Verse.AI.Group/Trigger_PawnHarmed.cs:57"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "A dweller already urgently hungry at its first eyeing gets almost no grace",
+      "detail": "Vanilla reaches BestPawnToHuntForPredator without gating on hunger category, so the warning blocks one search and the next search, possibly seconds later, hunts if CurCategory >= UrgentlyHungry. The summary's 'there is time to drop food' only holds when the first eyeing happens while merely Hungry.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonDwellers.cs:155"
+      }
+    }
+  ],
+  "checked": [
+    "verify_patches: all 16 targets bind, including the new FloodFillerFog.FloodUnfog postfix (the Map map parameter matches the static FloodUnfog(IntVec3, Map) signature)",
+    "precedents for FloodFillerFog.FloodUnfog: krkr.rule56 also postfixes it (void, wrapped in try); ours is a non-skipping void postfix, so no conflict",
+    "FloodUnfog's static cellsToUnfog / lordsToWakeOnPawnUnfogged are cleared and its deferred pawn wake has run before the postfix, so waking packs there does not corrupt its state",
+    "CheckReveals reentrancy: Wake sets pack.woken before spawning and does not change the packs list, so a nested unfog cannot double-wake or invalidate the loop",
+    "LordJob_DungeonGuard: parameterless ctor for load, graph is built the same way every time so the saved toil index restores, the tick-condition lambda reads lord when it runs, ExposeData covers point/…",
+    "LordToil_AssaultColony / LordToil_DefendPoint usage applies only to Insect and Mech packs (PackType enum); humanlike packs keep LordJob_DefendPoint; mad and animal packs get no lord",
+    "Patch_DwellerEyeingPrey: removing the unsaved eyeingSince dictionary has no save impact; HungerCategory comparison is correct (Fed/Hungry blocked, UrgentlyHungry/Starving allowed); a null food need f…",
+    "TUBAD_PartyLost_Text's new claim ('still there... find it changed') matches the code: the site is removed with its map and DungeonEntry gives the next entry a new layoutSeed",
+    "TUBAD_ArrestHere: {0} now LabelShort, {1} still the pawn for the pronoun, {2} percent; argument count matches the key",
+    "lint rules prefix-returns-void / patch-success-always: both changed patches are void postfixes",
+    "pyxis_mod_errors not available: no Pyxis token configured"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/DungeonCreatures.cs",
+    "Source/DungeonDwellers.cs",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 1,
+  "buildCommit": "74d7546cda8ef28978a9204bd9a0d1f9769c3055",
+  "partial": false
+}
