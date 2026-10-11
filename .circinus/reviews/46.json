@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "buildId": 46,
+  "buildIdNote": null,
+  "reviewedAt": "2026-10-11T00:46:53.123Z",
+  "conversationId": "01a11208-e979-747c-aab3-f77629d3d4fd",
+  "focus": "Patch_DwellerEyeingPrey postfix on IsAcceptablePreyFor, and animals walking out in Dialog_LeaveDungeon.TryAccept",
+  "diffSource": "since build 45 (2026-10-10T22:23:30Z), the last reviewed build, from the build log",
+  "parsed": true,
+  "problem": null,
+  "stoppedBecause": null,
+  "counts": {
+    "must": 1,
+    "should": 1,
+    "note": 4
+  },
+  "findings": [
+    {
+      "severity": "must",
+      "title": "Animals walking out are no longer waited for; the last colonist out closes the map and they are lost",
+      "detail": "TryAccept now leaves walking animals off exit.leftToLoad (Dialog_LeaveDungeon.cs:106) and gives them a bare EnterPortal job. The colonists' LoadAndEnterPortal duty only waits on leftToLoad (JobGiver_HaulToPortal, then JobGiver_EnterPortal), so a colonist with nothing to haul goes through at once. DungeonSite.ShouldRemoveMapNow only keeps the map for humanlike pawns or colony mechs. Notify_MyMapAboutToBeRemoved only rescues pawns already in DungeonExit.arrived. Any animal still walking, or whose job its think tree interrupted, goes through MapDeiniter.PassPawnsToWorld as lost. Before this change those animals stayed in leftToLoad and were carried out (EnterPortalUtility.cs:107). Single change: in DungeonSite.ShouldRemoveMapNow, also return false while any spawned player animal's CurJob is EnterPortal targeting the exit.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSite.cs ShouldRemoveMapNow (\"animals alone do not\")"
+      }
+    },
+    {
+      "severity": "should",
+      "title": "The one-day forget window counts from the first warning, so a persistent hunter is re-warned and held every 30 hours",
+      "detail": "eyeingSince[predator] is only written when warning (DungeonDwellers.cs:147); the check at :145 measures now - since > GraceTicks + ForgetTicks from that first write. A dweller that keeps eyeing player pawns after the grace period gets a fresh warning and a fresh 6h hold every 30h. The comment says the reset is for a dweller who left it alone for a day. To match it, record the last tick the dweller eyed prey (e.g. a second dictionary updated on every true result past grace) and measure ForgetTicks from that.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonDwellers.cs:145"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Warning and grace clock start before vanilla's CanReach/IsForbidden checks",
+      "detail": "BestPawnToHuntForPredator calls IsAcceptablePreyFor before predator.CanReach and IsForbidden (FoodUtility.cs:763). The warning can name an unreachable or forbidden animal: whichever player pawn comes first in scan order, not necessarily the one later hunted. The grace clock also starts for a hunt that could not have happened. Postfixing this method matches the corpus (anomalypatch.1trickpwnyta), so the approach is fine; the warning text may just name the wrong animal.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Assembly-CSharp/RimWorld/FoodUtility.cs:763"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Dev-mode debug inspector also calls IsAcceptablePreyFor",
+      "detail": "EditWindow_DebugInspector calls IsAcceptablePreyFor for pawn pairs, so with the inspector open the postfix can post the warning and start the grace clock outside any hunt. Dev mode only.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Assembly-CSharp/LudeonTK/EditWindow_DebugInspector.cs:486"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "Nothing indexed shows a dweller ever reaching the hunt path",
+      "detail": "Vanilla only looks for prey when getter.IsPotentiallyPredator() (FoodUtility.cs:279). Nothing in this mod sets dwellers as predators, and the indexed corpus has no Titan Framework code touching predation. Confirm in a live run that a hungry dweller actually triggers TUBAD_Dweller_EyeingPrey; otherwise the patch is dead code.",
+      "evidence": {
+        "kind": "opinion",
+        "ref": "FoodUtility.cs:279; no 'predator' in this mod's Source/Defs/Patches"
+      }
+    },
+    {
+      "severity": "note",
+      "title": "DefaultPointsPerLevel 0.3 -> 1 more than triples pack strength for everyone on the default",
+      "detail": "Scribe_Values.Look with a default (DungeonSettings.cs:121) does not write a value equal to the old default, so every player who never moved the slider gets 1.0 on the next dungeon. That is within the 0.05-2 clamp, but worth a changelog line.",
+      "evidence": {
+        "kind": "index",
+        "ref": "Source/DungeonSettings.cs:121"
+      }
+    }
+  ],
+  "checked": [
+    "Patch_DwellerEyeingPrey binds to FoodUtility.IsAcceptablePreyFor (verify_patches: 1 of 1 resolved)",
+    "Postfix parameter names predator/prey/__result match the vanilla signature (FoodUtility.cs:777)",
+    "Postfix returns void, satisfying lint prefix-returns-void; it only ever narrows __result to false",
+    "Coexistence with anomalypatch.1trickpwnyta's postfix on the same method: both only clear __result, on disjoint predators (ghouls vs factionless dwellers); order-independent",
+    "Postfix matches the corpus approach (precedents: postfix x1)",
+    "Vanilla IsAcceptablePreyFor lets a factionless dweller target player pawns, so the faction filter in the postfix is reachable",
+    "Comp(predator.Map) is null-safe (map?.GetComponent)",
+    "eyeingSince is deliberately unsaved; no Scribe change needed and no save-compat risk",
+    "TUBAD_Dweller_EyeingPrey keyed string uses PAWN/PREY names matching the Named() args",
+    "TryAccept: Spawned filter added; SendThroughExit already guarded unspawned/downed; TransferableOneWay never groups pawns so the followers.Contains(t.AnyThing) exclusion is per-pawn",
+    "DungeonExit.OnEntered -> Notify_ThingAdded on a pawn absent from leftToLoad is a no-op (MapPortal.SubtractFromToLoadList returns 0)",
+    "Animal arriving before any colonist waits in DungeonExit.arrived (TryMovePawnOut returns false) and is moved out later; MoveArrivedOut does not require it to stay on the exit cell",
+    "pointsPerLevel new default lies inside the slider/clamp range 0.05-2 (Mod.cs:130, DungeonSettings.cs:122)",
+    "pyxis_mod_errors could not run: no Pyxis token is configured (Settings -> Integrations)"
+  ],
+  "unreviewed": [],
+  "outOfScope": [],
+  "reviewed": [
+    "Source/Dialog_LeaveDungeon.cs",
+    "Source/DungeonCreatures.cs",
+    "Source/DungeonDwellers.cs",
+    "Source/DungeonSettings.cs",
+    "Languages/English/Keyed/TUBAD.xml",
+    "Assemblies/ThisUsedToBeAboutDungeons.dll",
+    "Assemblies/ThisUsedToBeAboutDungeons.pdb"
+  ],
+  "parts": 1,
+  "buildCommit": "8ff2c17afbc2e78aa191fbe80d45a18d644bd68e",
+  "partial": false
+}

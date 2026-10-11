@@ -164,6 +164,11 @@ namespace ThisUsedToBeAboutDungeons
                 if (p.Dead || p.Faction != Faction.OfPlayer) continue;
                 if (p.RaceProps.Humanlike || p.IsColonyMech) return false;
             }
+            // Animals and followers walk out on their own, after the colonists may already have gone: wait for them
+            foreach (var p in Map.mapPawns.AllPawnsSpawned)
+                if (p.CurJobDef == JobDefOf.EnterPortal && p.CurJob.targetA.Thing is DungeonExit && !p.Downed
+                    && (p.Faction == Faction.OfPlayer || DungeonDwellerUtility.IsFollower(p)))
+                    return false;
             return true;
         }
 

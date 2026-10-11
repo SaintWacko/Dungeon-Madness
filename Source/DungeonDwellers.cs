@@ -133,7 +133,7 @@ namespace ThisUsedToBeAboutDungeons
     public static class Patch_DwellerEyeingPrey
     {
         const int GraceTicks = GenDate.TicksPerHour * 6;
-        // A dweller that was warned and then left it alone for a day (fed, say) is warned again next time
+        // A dweller that has not eyed the party for a day (fed, say) is warned again next time
         const int ForgetTicks = GenDate.TicksPerDay;
 
         static void Postfix(Pawn predator, Pawn prey, ref bool __result)
@@ -142,7 +142,10 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonDwellerUtility.Comp(predator.Map);
             if (comp == null) return;
             int now = Find.TickManager.TicksGame;
-            if (!comp.eyeingSince.TryGetValue(predator, out int since) || now - since > GraceTicks + ForgetTicks)
+            bool known = comp.eyeingSince.TryGetValue(predator, out int since);
+            int last = comp.lastEyed.TryGetValue(predator, out int l) ? l : since;
+            comp.lastEyed[predator] = now;
+            if (!known || now - last > ForgetTicks)
             {
                 comp.eyeingSince[predator] = now;
                 Messages.Message("TUBAD_Dweller_EyeingPrey".Translate(predator.Named("PAWN"), prey.Named("PREY")),

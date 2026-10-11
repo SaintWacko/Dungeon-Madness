@@ -82,6 +82,8 @@ namespace ThisUsedToBeAboutDungeons
         /// <summary>When each hungry dweller first eyed a player pawn as prey. Not saved: a reload only means a fresh
         /// warning and a fresh grace period.</summary>
         public Dictionary<Pawn, int> eyeingSince = new Dictionary<Pawn, int>();
+        /// <summary>The last tick each dweller eyed a player pawn, so the warning resets after a day of leaving them be.</summary>
+        public Dictionary<Pawn, int> lastEyed = new Dictionary<Pawn, int>();
 
         public MapComponent_DungeonCreatures(Map map) : base(map)
         {
