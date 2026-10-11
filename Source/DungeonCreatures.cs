@@ -79,6 +79,10 @@ namespace ThisUsedToBeAboutDungeons
         /// <summary>Sane dwellers who said no; they cannot be asked again.</summary>
         public List<Pawn> refused = new List<Pawn>();
 
+        /// <summary>When each hungry dweller first eyed a player pawn as prey. Not saved: a reload only means a fresh
+        /// warning and a fresh grace period.</summary>
+        public Dictionary<Pawn, int> eyeingSince = new Dictionary<Pawn, int>();
+
         public MapComponent_DungeonCreatures(Map map) : base(map)
         {
         }

@@ -77,6 +77,7 @@
   <TUBAD_Arrested>{PAWN_nameDef} is now your prisoner. Choose {PAWN_objective} in the leave dialog to take {PAWN_objective} out.</TUBAD_Arrested>
   <TUBAD_Dweller_Joined_Label>{PAWN_nameDef} joins</TUBAD_Dweller_Joined_Label>
   <TUBAD_Dweller_Joined_Text>{PAWN_nameDef} came up out of the dungeon with the party and has decided to stay with you. {PAWN_pronoun} is now a member of your colony.</TUBAD_Dweller_Joined_Text>
+  <TUBAD_Dweller_EyeingPrey>{PAWN_nameDef} is eyeing {PREY_definite} hungrily. Bring {PAWN_objective} food or move {PREY_objective} away before {PAWN_pronoun} goes hunting.</TUBAD_Dweller_EyeingPrey>
   <TUBAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</TUBAD_Dweller_Left>
 
   <TUBAD_PartyLost_Label>Party lost</TUBAD_PartyLost_Label>

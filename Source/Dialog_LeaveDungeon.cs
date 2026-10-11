@@ -91,9 +91,10 @@ namespace ThisUsedToBeAboutDungeons
         private bool TryAccept()
         {
             var pawns = TransferableUtility.GetPawnsFromTransferables(transferables);
-            // Dwellers who agreed to come walk out on their own, with the party; nobody hauls them
-            // A downed follower is not among them: it is listed for capture and carried out like any downed person
-            var followers = pawns.Where(p => DungeonDwellerUtility.IsFollower(p) && !p.Downed && !p.InMentalState).ToList();
+            // Dwellers who agreed to come, and the party's healthy animals, walk out on their own; nobody hauls them.
+            // A downed follower or animal is not among them: it is carried out like any downed pawn
+            var followers = pawns.Where(p => p.Spawned && !p.Downed && !p.InMentalState
+                && (DungeonDwellerUtility.IsFollower(p) || (p.RaceProps.Animal && p.Faction == Faction.OfPlayer))).ToList();
             pawns.RemoveAll(followers.Contains);
             if (pawns.Count == 0)
             {

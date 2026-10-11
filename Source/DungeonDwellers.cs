@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -119,6 +120,37 @@ namespace ThisUsedToBeAboutDungeons
             }
             Messages.Message("TUBAD_Dweller_Left".Translate(dweller.Named("PAWN")), MessageTypeDefOf.NeutralEvent);
             return false;
+        }
+    }
+
+    /// <summary>
+    /// A hungry dweller (whose Titan diet made them a hunter) may pick one of the party's animals, or a colonist, as
+    /// prey. The first time, the hunt is held back and the player is warned, so there is time to drop food near them
+    /// or move the animals away. After the grace period the hunt goes ahead. A dweller who joins the colony is no
+    /// longer a dweller, and vanilla already stops colony predators hunting colony pawns.
+    /// </summary>
+    [HarmonyPatch(typeof(FoodUtility), nameof(FoodUtility.IsAcceptablePreyFor))]
+    public static class Patch_DwellerEyeingPrey
+    {
+        const int GraceTicks = GenDate.TicksPerHour * 6;
+        // A dweller that was warned and then left it alone for a day (fed, say) is warned again next time
+        const int ForgetTicks = GenDate.TicksPerDay;
+
+        static void Postfix(Pawn predator, Pawn prey, ref bool __result)
+        {
+            if (!__result || prey.Faction != Faction.OfPlayer || !DungeonDwellerUtility.IsDweller(predator)) return;
+            var comp = DungeonDwellerUtility.Comp(predator.Map);
+            if (comp == null) return;
+            int now = Find.TickManager.TicksGame;
+            if (!comp.eyeingSince.TryGetValue(predator, out int since) || now - since > GraceTicks + ForgetTicks)
+            {
+                comp.eyeingSince[predator] = now;
+                Messages.Message("TUBAD_Dweller_EyeingPrey".Translate(predator.Named("PAWN"), prey.Named("PREY")),
+                    new LookTargets(predator, prey), MessageTypeDefOf.ThreatSmall);
+                __result = false;
+                return;
+            }
+            if (now - since < GraceTicks) __result = false;
         }
     }
 
