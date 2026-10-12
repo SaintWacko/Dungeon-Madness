@@ -81,7 +81,7 @@
   <TUBAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</TUBAD_Dweller_Left>
 
   <TUBAD_PartyLost_Label>Party lost</TUBAD_PartyLost_Label>
-  <TUBAD_PartyLost_Text>Nobody from the party made it out of the level {0} dungeon. Everything they carried in is lost with them. The dungeon is still there, but the next party to go down will find it changed.</TUBAD_PartyLost_Text>
+  <TUBAD_PartyLost_Text>Noone returned from the level {0} dungeon. There's no way to know what went wrong, but maybe another party will have better luck.</TUBAD_PartyLost_Text>
 
   <!-- Settings -->
   <TUBAD_Tab_Parties>Parties</TUBAD_Tab_Parties>
