@@ -63,7 +63,8 @@ namespace ThisUsedToBeAboutDungeons
                 if (site != null && site.TryMovePawnOut(p))
                 {
                     arrived.RemoveAt(i);
-                    site.Notify_PawnLeft();
+                    // A dweller who went their own way is not the party leaving
+                    if (p.Faction == Faction.OfPlayer) site.Notify_PawnLeft();
                 }
             }
         }

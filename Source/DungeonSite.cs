@@ -107,6 +107,9 @@ namespace ThisUsedToBeAboutDungeons
         /// Returns false when the pawn cannot leave yet (an animal or prisoner with no caravan to join).</summary>
         public bool TryMovePawnOut(Pawn pawn)
         {
+            // A dweller who agreed to come: joins (and goes on below as a colonist) or goes their own way
+            if (DungeonDwellerUtility.TryResolveFollowerOut(pawn, this)) return true;
+
             // Pawn.ExitMap destroys a carried item, and a drafted pawn keeps carrying through the exit
             Thing carried = pawn.carryTracker?.CarriedThing;
             if (carried != null && !(carried is Pawn) && pawn.inventory != null)
@@ -141,6 +144,7 @@ namespace ThisUsedToBeAboutDungeons
                 // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
                 if (t is Pawn p)
                 {
+                    if (DungeonDwellerUtility.TryResolveCarriedFollower(p, this)) continue;
                     caravan.AddPawn(p, addCarriedPawnToWorldPawnsIfAny: true);
                     if (!p.Dead && !p.IsWorldPawn()) Find.WorldPawns.PassToWorld(p);
                     if (p.inventory != null) p.inventory.UnloadEverything = false;
@@ -160,6 +164,11 @@ namespace ThisUsedToBeAboutDungeons
                 if (p.Dead || p.Faction != Faction.OfPlayer) continue;
                 if (p.RaceProps.Humanlike || p.IsColonyMech) return false;
             }
+            // Animals and followers walk out on their own, after the colonists may already have gone: wait for them
+            foreach (var p in Map.mapPawns.AllPawnsSpawned)
+                if (p.CurJobDef == JobDefOf.EnterPortal && p.CurJob.targetA.Thing is DungeonExit && !p.Downed
+                    && (p.Faction == Faction.OfPlayer || DungeonDwellerUtility.IsFollower(p)))
+                    return false;
             return true;
         }
 
@@ -230,6 +239,8 @@ namespace ThisUsedToBeAboutDungeons
         public static DungeonThemeDef TUBAD_Cave;
         public static ThingDef TUBAD_TangleCore;
         public static ThingDef TUBAD_DungeonWallPowered;
+        public static HediffDef TUBAD_DungeonMad;
+        public static MentalStateDef TUBAD_DungeonMadness;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

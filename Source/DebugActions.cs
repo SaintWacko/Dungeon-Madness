@@ -20,6 +20,16 @@ namespace ThisUsedToBeAboutDungeons
             Messages.Message($"Force furnished rooms: {(forceFurnished ? "on" : "off")}. Applies to the next dungeon entered.", RimWorld.MessageTypeDefOf.NeutralEvent, false);
         }
 
+        // Pins as Actions\Wake all dungeon packs. Spawns every pack on the current dungeon map without waiting for
+        // its chamber to be seen, to look them all over at once.
+        [DebugAction("Dungeons", "Wake all dungeon packs", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void WakeAllPacks()
+        {
+            var comp = Find.CurrentMap?.GetComponent<MapComponent_DungeonCreatures>();
+            if (comp == null || comp.packs.Count == 0) { Messages.Message("No dungeon packs on this map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            comp.WakeAll();
+        }
+
         // Pins as Actions\Regenerate dungeons
         [DebugAction("Dungeons", "Regenerate dungeons", allowedGameStates = AllowedGameStates.Playing)]
         private static void RegenerateDungeons()

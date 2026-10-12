@@ -65,8 +65,23 @@
   <TUBAD_Leaving>Leaving the dungeon</TUBAD_Leaving>
   <TUBAD_LeaveThingCountTip>How many to carry out.</TUBAD_LeaveThingCountTip>
   <TUBAD_Leave_NoPawns>Choose at least one pawn to leave.</TUBAD_Leave_NoPawns>
+  <TUBAD_Leave_DwellersSection>Dwellers coming with you</TUBAD_Leave_DwellersSection>
+
+  <!-- Dungeon dwellers -->
+  <TUBAD_Invite>Invite {0} to leave with you</TUBAD_Invite>
+  <TUBAD_Invite_AlreadyRefused>already refused</TUBAD_Invite_AlreadyRefused>
+  <TUBAD_Invite_CannotTalk>{0} cannot talk</TUBAD_Invite_CannotTalk>
+  <TUBAD_Invite_Accepted>{PAWN_nameDef} agrees to leave with the party, and goes to wait by the entrance. Mark {PAWN_objective} in the leave dialog when the party goes.</TUBAD_Invite_Accepted>
+  <TUBAD_Invite_Refused>{PAWN_nameDef} would rather stay in the dungeon.</TUBAD_Invite_Refused>
+  <TUBAD_ArrestHere>Arrest {0} where {1_pronoun} stands ({2} chance)</TUBAD_ArrestHere>
+  <TUBAD_Arrested>{PAWN_nameDef} is now your prisoner. Choose {PAWN_objective} in the leave dialog to take {PAWN_objective} out.</TUBAD_Arrested>
+  <TUBAD_Dweller_Joined_Label>{PAWN_nameDef} joins</TUBAD_Dweller_Joined_Label>
+  <TUBAD_Dweller_Joined_Text>{PAWN_nameDef} came up out of the dungeon with the party and has decided to stay with you. {PAWN_pronoun} is now a member of your colony.</TUBAD_Dweller_Joined_Text>
+  <TUBAD_Dweller_EyeingPrey>{PAWN_nameDef} is eyeing {PREY_definite} hungrily. Bring {PAWN_objective} food or move {PREY_objective} away before {PAWN_pronoun} goes hunting.</TUBAD_Dweller_EyeingPrey>
+  <TUBAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</TUBAD_Dweller_Left>
+
   <TUBAD_PartyLost_Label>Party lost</TUBAD_PartyLost_Label>
-  <TUBAD_PartyLost_Text>Nobody from the party made it out of the level {0} dungeon. The dungeon is closed, and everything inside it is gone.</TUBAD_PartyLost_Text>
+  <TUBAD_PartyLost_Text>Noone returned from the level {0} dungeon. There's no way to know what went wrong, but maybe another party will have better luck.</TUBAD_PartyLost_Text>
 
   <!-- Settings -->
   <TUBAD_Tab_Parties>Parties</TUBAD_Tab_Parties>
@@ -93,4 +108,28 @@
   <TUBAD_Settings_Roughness_Desc>Levels rise and fall across the world like terrain. Higher values give more, smaller peaks and valleys; lower values give a few broad regions.</TUBAD_Settings_Roughness_Desc>
   <TUBAD_Settings_Ocean>Ocean dungeons with Vehicle Framework</TUBAD_Settings_Ocean>
   <TUBAD_Settings_Ocean_Tip>When Vehicle Framework is active, dungeons are also placed on water tiles, reachable by boat.</TUBAD_Settings_Ocean_Tip>
+
+  <TUBAD_Tab_Creatures>Creatures</TUBAD_Tab_Creatures>
+  <TUBAD_Settings_Creatures_Desc>Every creature in a dungeon is a titan. Each chamber may hold one pack, which wakes the first time any of the chamber is seen. These settings apply to dungeons entered from now on.</TUBAD_Settings_Creatures_Desc>
+  <TUBAD_Settings_Packs>Packs</TUBAD_Settings_Packs>
+  <TUBAD_Settings_Occupancy>Chance a chamber has a pack: {0}</TUBAD_Settings_Occupancy>
+  <TUBAD_Settings_EntranceChance>Chance the entrance chamber has a pack: {0}</TUBAD_Settings_EntranceChance>
+  <TUBAD_Settings_MaxPackSize>Largest pack: {0}</TUBAD_Settings_MaxPackSize>
+  <TUBAD_Settings_MaxPackSize_Desc>Animals come in their species' usual group size, up to this. Insects come 2 to 4 at a time, mechanoids 1 to 3, people 1 to 4.</TUBAD_Settings_MaxPackSize_Desc>
+  <TUBAD_Settings_MadChance>Chance a pack is dungeon-mad: {0}</TUBAD_Settings_MadChance>
+  <TUBAD_Settings_MadChance_Desc>Animals and people only. Dungeon-mad creatures attack anything that is not also mad, never recover, and cannot be captured or tamed. The rest are wild animals that can be tamed and people who keep to their rooms. Insects and mechanoids are always hostile.</TUBAD_Settings_MadChance_Desc>
+  <TUBAD_Settings_StoneChance>Chance a pack is made of stone: {0}</TUBAD_Settings_StoneChance>
+  <TUBAD_Settings_StoneChance_Desc>Usually the dungeon's own rock, otherwise a random metal, stone or wood. Not mechanoids. The material comes on top of the pack's titan points.</TUBAD_Settings_StoneChance_Desc>
+  <TUBAD_Settings_Dwellers>Dwellers</TUBAD_Settings_Dwellers>
+  <TUBAD_Settings_InviteChance>Chance a dweller agrees to leave: {0}</TUBAD_Settings_InviteChance>
+  <TUBAD_Settings_InviteChance_Desc>Multiplied by the inviting colonist's social impact. A dweller who refuses cannot be asked again, but can be arrested where they stand and taken out as a prisoner.</TUBAD_Settings_InviteChance_Desc>
+  <TUBAD_Settings_JoinChance>Chance a dweller joins the colony: {0}</TUBAD_Settings_JoinChance>
+  <TUBAD_Settings_JoinChance_Desc>Rolled when a dweller comes out of the dungeon with the party. Otherwise they go their own way.</TUBAD_Settings_JoinChance_Desc>
+  <TUBAD_Settings_Strength>Strength</TUBAD_Settings_Strength>
+  <TUBAD_Settings_PointsPerLevel>Titan points per level: {0}</TUBAD_Settings_PointsPerLevel>
+  <TUBAD_Settings_PointsPerLevel_Desc>A pack's titan points average this times the effective level, and are split between its members, rounded up. All members share the same traits. Example: at effective level 10 a pack averages {0} points, so each wolf in a pack of 4 gets {1}.</TUBAD_Settings_PointsPerLevel_Desc>
+  <TUBAD_Settings_PointNoise>Point variation: up to {0} either way</TUBAD_Settings_PointNoise>
+  <TUBAD_Settings_PowerBase>Strongest species at level 0: {0} combat power</TUBAD_Settings_PowerBase>
+  <TUBAD_Settings_PowerPerLevel>Added per level: {0} combat power</TUBAD_Settings_PowerPerLevel>
+  <TUBAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more titan points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</TUBAD_Settings_Power_Desc>
 </LanguageData>

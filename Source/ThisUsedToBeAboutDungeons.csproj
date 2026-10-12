@@ -32,6 +32,12 @@
       <HintPath>/Users/tirrella/Library/Application Support/Steam/steamapps/common/RimWorld/RimWorldMac.app/Contents/Resources/Data/Managed/UnityEngine.IMGUIModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <!-- Hard dependency, loaded before this mod by About.xml. Never copied into our Assemblies/: the game loads
+         Titan's own copy, and a second one would split its types in two. -->
+    <Reference Include="TitanFramework">
+      <HintPath>../../87257f378d52/Assemblies/TitanFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>/Users/tirrella/Library/Application Support/Steam/steamapps/common/RimWorld/RimWorldMac.app/Contents/Resources/Data/Managed/UnityEngine.dll</HintPath>
       <Private>false</Private>

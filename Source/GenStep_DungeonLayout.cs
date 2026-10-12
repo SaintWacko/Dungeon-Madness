@@ -160,6 +160,7 @@ namespace ThisUsedToBeAboutDungeons
                 else if (ch.Furnished) FurnishRoom(map, layout, ch, blocks);
             }
             CaveLife(map, layout, theme, biome, rocks);
+            DungeonCreatureGen.Plan(map, layout, theme, blocks);
         }
 
         /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at
@@ -417,12 +418,14 @@ namespace ThisUsedToBeAboutDungeons
                 shelves.Add(c);
             }
             if (shelves.Count == 0) return;
-            float value = Mathf.Min(shelves.Count * 60f, 900f);
+            // At most one stack per shelf tile, and usually fewer: a dungeon storeroom is picked over, not stocked
+            int count = Rand.RangeInclusive(Mathf.Max(1, shelves.Count / 3), Mathf.Max(1, shelves.Count * 2 / 3));
+            float value = Mathf.Min(count * 40f, 600f);
             var parms = new ThingSetMakerParams
             {
                 techLevel = TechLevel.Undefined,
                 totalMarketValueRange = new FloatRange(value, value),
-                countRange = new IntRange(shelves.Count, shelves.Count * 2),
+                countRange = new IntRange(count, count),
             };
             var goods = ThingSetMakerDefOf.MapGen_DefaultStockpile.root.Generate(parms);
             shelves.Shuffle();
@@ -434,7 +437,7 @@ namespace ThisUsedToBeAboutDungeons
                 {
                     // Direct placement ignores a full shelf for unstackable goods, so check capacity first
                     IntVec3 s = shelves[i % shelves.Count];
-                    if (s.GetItemCount(map) >= s.GetMaxItemsAllowedInCell(map)) continue;
+                    if (s.GetItemCount(map) > 0) continue;
                     placed = GenPlace.TryPlaceThing(t, s, map, ThingPlaceMode.Direct, (put, n) => put.SetForbidden(true, false));
                 }
                 if (!placed && !t.Destroyed && !t.Spawned) t.Destroy();
