@@ -107,6 +107,7 @@ namespace DungeonMadness
                 float value = ordinary * valuePerSlot;
                 var parms = new ThingSetMakerParams
                 {
+                    techLevel = ColonyTech,
                     totalMarketValueRange = new FloatRange(value * 0.8f, value * 1.2f),
                     countRange = new IntRange(1, ordinary),
                 };

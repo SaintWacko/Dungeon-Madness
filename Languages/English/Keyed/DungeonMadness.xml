@@ -142,7 +142,7 @@
   <DMAD_Settings_PowerBase>Strongest species at level 0: {0} combat power</DMAD_Settings_PowerBase>
   <DMAD_Settings_PowerPerLevel>Added per level: {0} combat power</DMAD_Settings_PowerPerLevel>
   <DMAD_Tab_Loot>Loot</DMAD_Tab_Loot>
-  <DMAD_Settings_Loot_Desc>Loot lies in piles around the dungeon and on storeroom shelves. Some of it is entads, made at the colony's tech level or lower. Entad furniture only appears in dungeons with furnished rooms, already set up in the room that suits it, and only if it can be uninstalled and carried out. These settings apply to dungeons entered from now on.</DMAD_Settings_Loot_Desc>
+  <DMAD_Settings_Loot_Desc>Loot lies in piles around the dungeon and on storeroom shelves. All of it, entads included, is at the colony's tech level or lower. Entad furniture only appears in dungeons with furnished rooms, already set up in the room that suits it, and only if it can be uninstalled and carried out. These settings apply to dungeons entered from now on.</DMAD_Settings_Loot_Desc>
   <DMAD_Settings_LootPiles>Loot piles</DMAD_Settings_LootPiles>
   <DMAD_Settings_LootChance>Chance a chamber has a loot pile: {0}</DMAD_Settings_LootChance>
   <DMAD_Settings_LootValue>Pile value per level: {0}</DMAD_Settings_LootValue>
