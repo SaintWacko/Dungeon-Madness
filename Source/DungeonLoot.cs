@@ -48,7 +48,19 @@ namespace DungeonMadness
             this.furnitureAllowed = furnitureAllowed;
         }
 
-        public static TechLevel ColonyTech => Faction.OfPlayer?.def?.techLevel ?? TechLevel.Industrial;
+        /// <summary>The colony's current tech level: the highest tech level among finished research projects,
+        /// never below the player faction's own (a tribe starts Neolithic and climbs as it researches; the faction
+        /// def alone never changes).</summary>
+        public static TechLevel ColonyTech
+        {
+            get
+            {
+                TechLevel tech = Faction.OfPlayerSilentFail?.def?.techLevel ?? TechLevel.Industrial;
+                foreach (var r in DefDatabase<ResearchProjectDef>.AllDefsListForReading)
+                    if (r.techLevel > tech && r.IsFinished) tech = r.techLevel;
+                return tech;
+            }
+        }
 
         /// <summary>Furniture a party can take home: whatever is minifiable right now, which already includes what
         /// Minify Everything (or a mod like it) made minifiable and leaves out what its player switched off.</summary>
