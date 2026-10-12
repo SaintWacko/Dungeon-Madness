@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <DMAD_ModName>Dungeon Madness</DMAD_ModName>
+
+  <!-- World map -->
+  <DMAD_ToggleIcons>Show dungeon icons.</DMAD_ToggleIcons>
+  <DMAD_TileDungeon>Dungeon: level {0}</DMAD_TileDungeon>
+  <DMAD_SearchLabel>Dungeon (level {0})</DMAD_SearchLabel>
+  <DMAD_River>river</DMAD_River>
+  <DMAD_Coastal>coastal</DMAD_Coastal>
+
+  <!-- Dungeon finder -->
+  <DMAD_Finder_Open>Find dungeons by level, distance and party.</DMAD_Finder_Open>
+  <DMAD_Finder_Title>Dungeon finder</DMAD_Finder_Title>
+  <DMAD_Finder_Party>party</DMAD_Finder_Party>
+  <DMAD_Finder_PartyHint>Hides dungeons any ticked pawn has entered. Untick retainers who won't go in.</DMAD_Finder_PartyHint>
+  <DMAD_Finder_LoadCaravan>Load selected caravan</DMAD_Finder_LoadCaravan>
+  <DMAD_Finder_LoadCaravan_Disabled>Select one of your caravans on the world map first.</DMAD_Finder_LoadCaravan_Disabled>
+  <DMAD_Finder_PartyCount>Party: {0} / {1}</DMAD_Finder_PartyCount>
+  <DMAD_Finder_Level>level</DMAD_Finder_Level>
+  <DMAD_Finder_Distance>distance</DMAD_Finder_Distance>
+  <DMAD_Finder_From>From: {0}</DMAD_Finder_From>
+  <DMAD_Finder_NoOrigins>No colonies or caravans</DMAD_Finder_NoOrigins>
+  <DMAD_Finder_Within>Within {0} tiles</DMAD_Finder_Within>
+  <DMAD_Finder_AnyDistance>Any distance</DMAD_Finder_AnyDistance>
+  <DMAD_Finder_Matches>Matching dungeons: {0}</DMAD_Finder_Matches>
+  <DMAD_Finder_LevelShort>Lv {0}</DMAD_Finder_LevelShort>
+  <DMAD_Finder_Tiles>{0} tiles</DMAD_Finder_Tiles>
+
+  <!-- Entering -->
+  <DMAD_SiteLabel>dungeon (level {0})</DMAD_SiteLabel>
+  <DMAD_EnterDungeon>Enter dungeon</DMAD_EnterDungeon>
+  <DMAD_EnterDungeonLevel>Enter dungeon (level {0})</DMAD_EnterDungeonLevel>
+  <DMAD_EnterDungeon_Desc>Choose up to {0} people, plus any animals and mechs, and the items and supplies they take in. Each person can enter a given dungeon only once. Everyone not chosen waits here with the caravan.</DMAD_EnterDungeon_Desc>
+  <DMAD_PartyInside>a party is inside</DMAD_PartyInside>
+  <DMAD_CaravanMoving>The caravan must stop on this tile first.</DMAD_CaravanMoving>
+  <DMAD_TravellingToDungeon>travelling to a dungeon</DMAD_TravellingToDungeon>
+  <DMAD_EnterDungeon_Title>Enter dungeon (level {0})</DMAD_EnterDungeon_Title>
+  <DMAD_EnterThingCountTip>How many to take into the dungeon.</DMAD_EnterThingCountTip>
+  <DMAD_EnterButton>Enter</DMAD_EnterButton>
+  <DMAD_Enter_RowOutside>Staying outside</DMAD_Enter_RowOutside>
+  <DMAD_Enter_RowParty>Entering</DMAD_Enter_RowParty>
+  <DMAD_Enter_People>Party</DMAD_Enter_People>
+  <DMAD_Enter_People_Tip>People going in, out of at most {0}. Animals and mechs do not count.</DMAD_Enter_People_Tip>
+  <DMAD_Enter_Wealth>Party wealth</DMAD_Enter_Wealth>
+  <DMAD_Enter_Wealth_Tip>Market value of the pawns going in and what they wear and wield. Items carried in do not count. Raises the effective level.</DMAD_Enter_Wealth_Tip>
+  <DMAD_Enter_Effective>Effective level</DMAD_Enter_Effective>
+  <DMAD_Enter_Effective_Tip>The dungeon is generated for the party that enters it. Level {0}, multiplied by 1 + party wealth / {3}.\n\nParty wealth counts the pawns going in and what they wear and wield: {1}. Items carried in do not count.\n\nMultiplier: x{2}</DMAD_Enter_Effective_Tip>
+  <DMAD_Enter_AlreadyEntered>Already entered this dungeon, and cannot go in again: {0}.</DMAD_Enter_AlreadyEntered>
+  <DMAD_Enter_EnteredShort>entered</DMAD_Enter_EnteredShort>
+  <DMAD_Enter_EnteredTip>Has already entered this dungeon, and cannot go in again.</DMAD_Enter_EnteredTip>
+  <DMAD_Enter_EnteredStuck>Already entered this dungeon, and cannot stay outside on their own: {0}. Leave a non-downed colonist outside with them.</DMAD_Enter_EnteredStuck>
+  <DMAD_Enter_LockedTip>Cannot stay outside on their own. Leave a non-downed colonist with them to allow them to stay outside.</DMAD_Enter_LockedTip>
+  <DMAD_Enter_Everyone>No caravan left outside. Only the items and supplies you select enter the dungeon; the rest wait at the entrance and are lost if the whole party dies.</DMAD_Enter_Everyone>
+  <DMAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</DMAD_Enter_NeedColonist>
+  <DMAD_Enter_TooMany>At most {0} people can enter a dungeon. Animals and mechs do not count.</DMAD_Enter_TooMany>
+  <DMAD_Enter_TooManyEveryone>At most {0} people can enter a dungeon. Nobody would stay with the caravan, so everyone in it would go in: leave a colonist outside, or take fewer people.</DMAD_Enter_TooManyEveryone>
+  <DMAD_Entered_Label>Dungeon entered</DMAD_Entered_Label>
+  <DMAD_Entered_Text>The party has entered a level {0} dungeon, generated at effective level {1} for them.\n\nTo leave, select the exit at the entrance and choose who leaves and what they carry out. If everyone in the party dies, the dungeon and anything left in it are gone.</DMAD_Entered_Text>
+
+  <!-- Leaving -->
+  <DMAD_LeaveDungeon>Leave dungeon</DMAD_LeaveDungeon>
+  <DMAD_LeaveDungeon_Desc>Choose who leaves and which items they carry out. They fetch the items, bring them here and rejoin the caravan outside.</DMAD_LeaveDungeon_Desc>
+  <DMAD_CancelLeave>Cancel leaving</DMAD_CancelLeave>
+  <DMAD_Leaving>Leaving the dungeon</DMAD_Leaving>
+  <DMAD_LeaveThingCountTip>How many to carry out.</DMAD_LeaveThingCountTip>
+  <DMAD_Leave_NoPawns>Choose at least one pawn to leave.</DMAD_Leave_NoPawns>
+  <DMAD_Leave_DwellersSection>Dwellers coming with you</DMAD_Leave_DwellersSection>
+
+  <!-- Dungeon dwellers -->
+  <DMAD_Invite>Invite {0} to leave with you</DMAD_Invite>
+  <DMAD_Invite_AlreadyRefused>already refused</DMAD_Invite_AlreadyRefused>
+  <DMAD_Invite_CannotTalk>{0} cannot talk</DMAD_Invite_CannotTalk>
+  <DMAD_Invite_Accepted>{PAWN_nameDef} agrees to leave with the party, and goes to wait by the entrance. Mark {PAWN_objective} in the leave dialog when the party goes.</DMAD_Invite_Accepted>
+  <DMAD_Invite_Refused>{PAWN_nameDef} would rather stay in the dungeon.</DMAD_Invite_Refused>
+  <DMAD_ArrestHere>Arrest {0} where {1_pronoun} stands ({2} chance)</DMAD_ArrestHere>
+  <DMAD_Arrested>{PAWN_nameDef} is now your prisoner. Choose {PAWN_objective} in the leave dialog to take {PAWN_objective} out.</DMAD_Arrested>
+  <DMAD_Dweller_Joined_Label>{PAWN_nameDef} joins</DMAD_Dweller_Joined_Label>
+  <DMAD_Dweller_Joined_Text>{PAWN_nameDef} came up out of the dungeon with the party and has decided to stay with you. {PAWN_pronoun} is now a member of your colony.</DMAD_Dweller_Joined_Text>
+  <DMAD_Dweller_EyeingPrey>{PAWN_nameDef} is eyeing {PREY_definite} hungrily. Bring {PAWN_objective} food or move {PREY_objective} away before {PAWN_pronoun} goes hunting.</DMAD_Dweller_EyeingPrey>
+  <DMAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</DMAD_Dweller_Left>
+
+  <DMAD_PartyLost_Label>Party lost</DMAD_PartyLost_Label>
+  <DMAD_PartyLost_Text>Noone returned from the level {0} dungeon. There's no way to know what went wrong, but maybe another party will have better luck.</DMAD_PartyLost_Text>
+
+  <!-- Settings -->
+  <DMAD_Tab_Parties>Parties</DMAD_Tab_Parties>
+  <DMAD_Settings_PartySize>Maximum party size: {0}</DMAD_Settings_PartySize>
+  <DMAD_Settings_PartySize_Desc>Counts people only. Animals and mechs can go in on top of this.</DMAD_Settings_PartySize_Desc>
+  <DMAD_Settings_WealthToDouble>Wealth that doubles the level: {0}</DMAD_Settings_WealthToDouble>
+  <DMAD_Settings_WealthToDouble_Desc>A dungeon is generated at its level times 1 + party wealth / this value. Party wealth is the pawns going in plus what they wear and wield. Example: a party worth {0} entering a level 10 dungeon meets effective level {1}.</DMAD_Settings_WealthToDouble_Desc>
+  <DMAD_Tab_World>World</DMAD_Tab_World>
+  <DMAD_Settings_Reset>Reset to defaults</DMAD_Settings_Reset>
+  <DMAD_Settings_Display>Display</DMAD_Settings_Display>
+  <DMAD_Settings_ShowIcons>Show dungeon icons on the world map</DMAD_Settings_ShowIcons>
+  <DMAD_Settings_ShowIcons_Tip>Also toggled by the dungeon button with the other world map toggles in the bottom right.</DMAD_Settings_ShowIcons_Tip>
+  <DMAD_Settings_IconOpacity>Icon opacity: {0}</DMAD_Settings_IconOpacity>
+  <DMAD_Settings_TintByLevel>Tint icons by level</DMAD_Settings_TintByLevel>
+  <DMAD_Settings_TintByLevel_Tip>Colours dungeon icons from green at level 1, through yellow and red, to purple at the maximum level.</DMAD_Settings_TintByLevel_Tip>
+  <DMAD_Settings_Generation>Generation</DMAD_Settings_Generation>
+  <DMAD_Settings_Generation_Desc>These settings apply when a world's dungeons are generated: new worlds, and existing saves that have never had dungeons. Worlds that already have dungeons keep them.</DMAD_Settings_Generation_Desc>
+  <DMAD_Settings_Spacing>Dungeon spacing: {0} tiles</DMAD_Settings_Spacing>
+  <DMAD_Settings_Spacing_Desc>Minimum distance between two dungeons. Each step up roughly halves to thirds how many dungeons a world gets.</DMAD_Settings_Spacing_Desc>
+  <DMAD_Settings_MaxLevel>Maximum dungeon level: {0}</DMAD_Settings_MaxLevel>
+  <DMAD_Settings_Skew>Low level bias: {0}</DMAD_Settings_Skew>
+  <DMAD_Settings_Skew_Desc>At 1 every level is equally common; higher values make low levels more common. Now about {1} of dungeons are level {0} or lower, and {3} are level {2}.</DMAD_Settings_Skew_Desc>
+  <DMAD_Settings_Roughness>Level landscape roughness: {0}</DMAD_Settings_Roughness>
+  <DMAD_Settings_Roughness_Desc>Levels rise and fall across the world like terrain. Higher values give more, smaller peaks and valleys; lower values give a few broad regions.</DMAD_Settings_Roughness_Desc>
+  <DMAD_Settings_Ocean>Ocean dungeons with Vehicle Framework</DMAD_Settings_Ocean>
+  <DMAD_Settings_Ocean_Tip>When Vehicle Framework is active, dungeons are also placed on water tiles, reachable by boat.</DMAD_Settings_Ocean_Tip>
+
+  <DMAD_Tab_Creatures>Creatures</DMAD_Tab_Creatures>
+  <DMAD_Settings_Creatures_Desc>Every creature in a dungeon is a bastle. Each chamber may hold one pack, which wakes the first time any of the chamber is seen. These settings apply to dungeons entered from now on.</DMAD_Settings_Creatures_Desc>
+  <DMAD_Settings_Packs>Packs</DMAD_Settings_Packs>
+  <DMAD_Settings_Occupancy>Chance a chamber has a pack: {0}</DMAD_Settings_Occupancy>
+  <DMAD_Settings_EntranceChance>Chance the entrance chamber has a pack: {0}</DMAD_Settings_EntranceChance>
+  <DMAD_Settings_MaxPackSize>Largest pack: {0}</DMAD_Settings_MaxPackSize>
+  <DMAD_Settings_MaxPackSize_Desc>Animals come in their species' usual group size, up to this. Insects come 2 to 4 at a time, mechanoids 1 to 3, people 1 to 4.</DMAD_Settings_MaxPackSize_Desc>
+  <DMAD_Settings_MadChance>Chance a pack is dungeon-mad: {0}</DMAD_Settings_MadChance>
+  <DMAD_Settings_MadChance_Desc>Animals and people only. Dungeon-mad creatures attack anything that is not also mad, never recover, and cannot be captured or tamed. The rest are wild animals that can be tamed and people who keep to their rooms. Insects and mechanoids are always hostile.</DMAD_Settings_MadChance_Desc>
+  <DMAD_Settings_StoneChance>Chance a pack is made of stone: {0}</DMAD_Settings_StoneChance>
+  <DMAD_Settings_StoneChance_Desc>Usually the dungeon's own rock, otherwise a random metal, stone or wood. Not mechanoids. The material comes on top of the pack's bastle points.</DMAD_Settings_StoneChance_Desc>
+  <DMAD_Settings_Dwellers>Dwellers</DMAD_Settings_Dwellers>
+  <DMAD_Settings_InviteChance>Chance a dweller agrees to leave: {0}</DMAD_Settings_InviteChance>
+  <DMAD_Settings_InviteChance_Desc>Multiplied by the inviting colonist's social impact. A dweller who refuses cannot be asked again, but can be arrested where they stand and taken out as a prisoner.</DMAD_Settings_InviteChance_Desc>
+  <DMAD_Settings_JoinChance>Chance a dweller joins the colony: {0}</DMAD_Settings_JoinChance>
+  <DMAD_Settings_JoinChance_Desc>Rolled when a dweller comes out of the dungeon with the party. Otherwise they go their own way.</DMAD_Settings_JoinChance_Desc>
+  <DMAD_Settings_Strength>Strength</DMAD_Settings_Strength>
+  <DMAD_Settings_PointsPerLevel>Bastle points per level: {0}</DMAD_Settings_PointsPerLevel>
+  <DMAD_Settings_PointsPerLevel_Desc>A pack's bastle points average this times the effective level, and are split between its members, rounded up. All members share the same traits. Example: at effective level 10 a pack averages {0} points, so each wolf in a pack of 4 gets {1}.</DMAD_Settings_PointsPerLevel_Desc>
+  <DMAD_Settings_PointNoise>Point variation: up to {0} either way</DMAD_Settings_PointNoise>
+  <DMAD_Settings_PowerBase>Strongest species at level 0: {0} combat power</DMAD_Settings_PowerBase>
+  <DMAD_Settings_PowerPerLevel>Added per level: {0} combat power</DMAD_Settings_PowerPerLevel>
+  <DMAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more bastle points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</DMAD_Settings_Power_Desc>
+</LanguageData>

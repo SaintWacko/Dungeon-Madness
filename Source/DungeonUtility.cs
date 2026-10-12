@@ -4,7 +4,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public static class DungeonUtility
     {
@@ -23,8 +23,8 @@ namespace ThisUsedToBeAboutDungeons
             var parts = new List<string> { t.PrimaryBiome.LabelCap };
             if (!t.WaterCovered && t.hilliness != Hilliness.Undefined && t.hilliness != Hilliness.Flat)
                 parts.Add(t.hilliness.GetLabel());
-            if (t is SurfaceTile st && st.Rivers != null && st.Rivers.Count > 0) parts.Add("TUBAD_River".Translate());
-            if (!t.WaterCovered && t.IsCoastal) parts.Add("TUBAD_Coastal".Translate());
+            if (t is SurfaceTile st && st.Rivers != null && st.Rivers.Count > 0) parts.Add("DMAD_River".Translate());
+            if (!t.WaterCovered && t.IsCoastal) parts.Add("DMAD_Coastal".Translate());
             if (t.Landmark != null) parts.Add(t.Landmark.name);
             return string.Join(", ", parts);
         }

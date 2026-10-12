@@ -4,7 +4,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// The way out, at the dungeon's entrance. Built on vanilla's MapPortal so the leave dialog, the haul-to-portal
@@ -22,9 +22,9 @@ namespace ThisUsedToBeAboutDungeons
 
         public DungeonSite Site => Map?.Parent as DungeonSite;
 
-        public override string EnterString => "TUBAD_LeaveDungeon".Translate();
-        public override string CancelEnterString => "TUBAD_CancelLeave".Translate();
-        public override string EnteringString => "TUBAD_Leaving".Translate();
+        public override string EnterString => "DMAD_LeaveDungeon".Translate();
+        public override string CancelEnterString => "DMAD_CancelLeave".Translate();
+        public override string EnteringString => "DMAD_Leaving".Translate();
         protected override Texture2D EnterTex => LeaveTex;
 
         public override void SpawnSetup(Map map, bool respawningAfterLoad)
@@ -81,7 +81,7 @@ namespace ThisUsedToBeAboutDungeons
             yield return new Command_Action
             {
                 defaultLabel = EnterString + "...",
-                defaultDesc = "TUBAD_LeaveDungeon_Desc".Translate(),
+                defaultDesc = "DMAD_LeaveDungeon_Desc".Translate(),
                 icon = LeaveTex,
                 action = () => Find.WindowStack.Add(new Dialog_LeaveDungeon(this)),
             };

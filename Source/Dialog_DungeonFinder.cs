@@ -5,7 +5,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Lists dungeons by level range and distance, hiding any that a ticked pawn has already entered. Stays open
@@ -14,7 +14,7 @@ namespace ThisUsedToBeAboutDungeons
     [StaticConstructorOnStartup]
     public class Dialog_DungeonFinder : Window
     {
-        private static readonly Material HighlightMat = MaterialPool.MatFrom("World/TUBAD_Highlight", ShaderDatabase.WorldOverlayTransparent, new Color(1f, 0.95f, 0.6f, 0.9f), 3560);
+        private static readonly Material HighlightMat = MaterialPool.MatFrom("World/DMAD_Highlight", ShaderDatabase.WorldOverlayTransparent, new Color(1f, 0.95f, 0.6f, 0.9f), 3560);
         private const int MaxHighlights = 400;
         private const float RowHeight = 26f;
         private const int AnyDistance = 1000;
@@ -101,7 +101,7 @@ namespace ThisUsedToBeAboutDungeons
         {
             if (dirty) Recalculate();
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(inRect.x, inRect.y, inRect.width, 34f), "TUBAD_Finder_Title".Translate());
+            Widgets.Label(new Rect(inRect.x, inRect.y, inRect.width, 34f), "DMAD_Finder_Title".Translate());
             Text.Font = GameFont.Small;
             var body = new Rect(inRect.x, inRect.y + 40f, inRect.width, inRect.height - 40f);
             var left = new Rect(body.x, body.y, 230f, body.height);
@@ -113,22 +113,22 @@ namespace ThisUsedToBeAboutDungeons
         private void DoFilters(Rect rect)
         {
             float y = rect.y;
-            Header(rect, ref y, "TUBAD_Finder_Party");
-            float hintH = Text.CalcHeight("TUBAD_Finder_PartyHint".Translate(), rect.width);
+            Header(rect, ref y, "DMAD_Finder_Party");
+            float hintH = Text.CalcHeight("DMAD_Finder_PartyHint".Translate(), rect.width);
             GUI.color = ColoredText.SubtleGrayColor;
-            Widgets.Label(new Rect(rect.x, y, rect.width, hintH), "TUBAD_Finder_PartyHint".Translate());
+            Widgets.Label(new Rect(rect.x, y, rect.width, hintH), "DMAD_Finder_PartyHint".Translate());
             GUI.color = Color.white;
             y += hintH + 4f;
 
             var caravan = Find.WorldSelector.FirstSelectedObject as Caravan;
             bool canLoad = caravan != null && caravan.IsPlayerControlled;
             var btn = new Rect(rect.x, y, rect.width, 28f);
-            if (Widgets.ButtonText(btn, "TUBAD_Finder_LoadCaravan".Translate(), active: canLoad) && canLoad)
+            if (Widgets.ButtonText(btn, "DMAD_Finder_LoadCaravan".Translate(), active: canLoad) && canLoad)
             {
                 RefreshCandidates();
                 LoadCaravan(caravan);
             }
-            if (!canLoad) TooltipHandler.TipRegion(btn, "TUBAD_Finder_LoadCaravan_Disabled".Translate());
+            if (!canLoad) TooltipHandler.TipRegion(btn, "DMAD_Finder_LoadCaravan_Disabled".Translate());
             y += 32f;
 
             var outRect = new Rect(rect.x, y, rect.width, 150f);
@@ -155,11 +155,11 @@ namespace ThisUsedToBeAboutDungeons
 
             int count = ticked.Count;
             GUI.color = count > DungeonUtility.MaxPartyHumanlikes ? ColorLibrary.RedReadable : Color.white;
-            Widgets.Label(new Rect(rect.x, y, rect.width, 24f), "TUBAD_Finder_PartyCount".Translate(count, DungeonUtility.MaxPartyHumanlikes));
+            Widgets.Label(new Rect(rect.x, y, rect.width, 24f), "DMAD_Finder_PartyCount".Translate(count, DungeonUtility.MaxPartyHumanlikes));
             GUI.color = Color.white;
             y += 30f;
 
-            Header(rect, ref y, "TUBAD_Finder_Level");
+            Header(rect, ref y, "DMAD_Finder_Level");
             int maxLevel = DungeonWorldComponent.Instance?.MaxLevel ?? DungeonsMod.Settings.maxLevel;
             var before = levelRange;
             levelRange.min = Mathf.Clamp(levelRange.min, 1, maxLevel);
@@ -168,12 +168,12 @@ namespace ThisUsedToBeAboutDungeons
             if (levelRange != before) dirty = true;
             y += 40f;
 
-            Header(rect, ref y, "TUBAD_Finder_Distance");
+            Header(rect, ref y, "DMAD_Finder_Distance");
             var fromRect = new Rect(rect.x, y, rect.width, 28f);
-            if (Widgets.ButtonText(fromRect, "TUBAD_Finder_From".Translate(originLabel ?? "-")))
+            if (Widgets.ButtonText(fromRect, "DMAD_Finder_From".Translate(originLabel ?? "-")))
                 Find.WindowStack.Add(new FloatMenu(OriginOptions()));
             y += 32f;
-            string within = maxDistance >= AnyDistance ? "TUBAD_Finder_AnyDistance".Translate().ToString() : "TUBAD_Finder_Within".Translate(maxDistance).ToString();
+            string within = maxDistance >= AnyDistance ? "DMAD_Finder_AnyDistance".Translate().ToString() : "DMAD_Finder_Within".Translate(maxDistance).ToString();
             Widgets.Label(new Rect(rect.x, y, rect.width, 24f), within);
             y += 24f;
             int newDist = Mathf.RoundToInt(Widgets.HorizontalSlider(new Rect(rect.x, y, rect.width, 20f), maxDistance, 5f, AnyDistance, roundTo: 5f));
@@ -197,7 +197,7 @@ namespace ThisUsedToBeAboutDungeons
                 var cv = c;
                 opts.Add(new FloatMenuOption(cv.LabelCap, () => SetOrigin(cv.Tile, cv.LabelCap)));
             }
-            if (opts.Count == 0) opts.Add(new FloatMenuOption("TUBAD_Finder_NoOrigins".Translate(), null));
+            if (opts.Count == 0) opts.Add(new FloatMenuOption("DMAD_Finder_NoOrigins".Translate(), null));
             return opts;
         }
 
@@ -209,7 +209,7 @@ namespace ThisUsedToBeAboutDungeons
 
         private void DoResults(Rect rect)
         {
-            Widgets.Label(new Rect(rect.x, rect.y, rect.width, 24f), "TUBAD_Finder_Matches".Translate(results.Count));
+            Widgets.Label(new Rect(rect.x, rect.y, rect.width, 24f), "DMAD_Finder_Matches".Translate(results.Count));
             var outRect = new Rect(rect.x, rect.y + 28f, rect.width, rect.height - 28f);
             Widgets.DrawMenuSection(outRect);
             var inner = outRect.ContractedBy(4f);
@@ -226,10 +226,10 @@ namespace ThisUsedToBeAboutDungeons
                 if (i % 2 == 1) Widgets.DrawLightHighlight(row);
                 Widgets.DrawBoxSolid(new Rect(row.x + 4f, row.y + 8f, 10f, 10f), DungeonUtility.LevelColor(r.level, maxLevel));
                 Text.Anchor = TextAnchor.MiddleLeft;
-                Widgets.Label(new Rect(row.x + 20f, row.y, 70f, row.height), "TUBAD_Finder_LevelShort".Translate(r.level));
+                Widgets.Label(new Rect(row.x + 20f, row.y, 70f, row.height), "DMAD_Finder_LevelShort".Translate(r.level));
                 Widgets.Label(new Rect(row.x + 92f, row.y, row.width - 92f - 80f, row.height), r.desc.Truncate(row.width - 172f));
                 Text.Anchor = TextAnchor.MiddleRight;
-                string dist = origin.Valid ? "TUBAD_Finder_Tiles".Translate(Mathf.RoundToInt(r.dist)).ToString() : "";
+                string dist = origin.Valid ? "DMAD_Finder_Tiles".Translate(Mathf.RoundToInt(r.dist)).ToString() : "";
                 Widgets.Label(new Rect(row.xMax - 80f, row.y, 76f, row.height), dist);
                 Text.Anchor = TextAnchor.UpperLeft;
                 if (Mouse.IsOver(row))

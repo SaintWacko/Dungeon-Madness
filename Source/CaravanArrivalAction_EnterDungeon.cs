@@ -3,7 +3,7 @@ using RimWorld;
 using RimWorld.Planet;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>Travel to a dungeon and open the party dialog on arrival.</summary>
     public class CaravanArrivalAction_EnterDungeon : CaravanArrivalAction
@@ -13,8 +13,8 @@ namespace ThisUsedToBeAboutDungeons
         public CaravanArrivalAction_EnterDungeon() { }
         public CaravanArrivalAction_EnterDungeon(PlanetTile tile) { this.tile = tile; }
 
-        public override string Label => "TUBAD_EnterDungeon".Translate();
-        public override string ReportString => "TUBAD_TravellingToDungeon".Translate();
+        public override string Label => "DMAD_EnterDungeon".Translate();
+        public override string ReportString => "DMAD_TravellingToDungeon".Translate();
 
         public override FloatMenuAcceptanceReport StillValid(Caravan caravan, PlanetTile destinationTile)
         {
@@ -39,7 +39,7 @@ namespace ThisUsedToBeAboutDungeons
         public static IEnumerable<FloatMenuOption> GetFloatMenuOptions(Caravan caravan, PlanetTile tile)
         {
             if (!DungeonEntry.CanEnterAt(tile, out int level).Accepted) yield break;
-            string label = "TUBAD_EnterDungeonLevel".Translate(level);
+            string label = "DMAD_EnterDungeonLevel".Translate(level);
             if (caravan.Tile == tile && !caravan.pather.Moving)
             {
                 yield return new FloatMenuOption(label, () => OpenDialog(caravan));

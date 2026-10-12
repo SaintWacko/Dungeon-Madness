@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
-using TitanFramework;
+using BastleFramework;
 using UnityEngine;
 using Verse;
 using Verse.AI.Group;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public enum PackType : byte
     {
@@ -33,7 +33,7 @@ namespace ThisUsedToBeAboutDungeons
         public PackType type;
         public PawnKindDef kind;
         public int count;
-        /// <summary>Titan points each member gets: the pack's total split between them, rounded up.</summary>
+        /// <summary>Bastle points each member gets: the pack's total split between them, rounded up.</summary>
         public float points;
         public bool mad;
         public bool stone;
@@ -118,7 +118,7 @@ namespace ThisUsedToBeAboutDungeons
             try { pawns = DungeonCreatureGen.Make(pack, map); }
             catch (System.Exception e)
             {
-                Log.Error($"[Dungeons] Could not make pack {pack}: {e}");
+                Log.Error($"[Dungeon Madness] Could not make pack {pack}: {e}");
                 return;
             }
             if (pawns.Count == 0) return;
@@ -135,7 +135,7 @@ namespace ThisUsedToBeAboutDungeons
 
             if (pack.mad)
             {
-                foreach (var p in pawns) p.health.AddHediff(DungeonDefOf.TUBAD_DungeonMad);
+                foreach (var p in pawns) p.health.AddHediff(DungeonDefOf.DMAD_DungeonMad);
             }
             else if (pack.type != PackType.Animal)
             {
@@ -149,7 +149,7 @@ namespace ThisUsedToBeAboutDungeons
                     : new LordJob_DungeonGuard(pack.home, wander, defend);
                 LordMaker.MakeNewLord(faction, job, map, pawns);
             }
-            if (Prefs.DevMode) Log.Message($"[Dungeons] Woke {pack}");
+            if (Prefs.DevMode) Log.Message($"[Dungeon Madness] Woke {pack}");
         }
 
         public void WakeAll()
@@ -296,7 +296,7 @@ namespace ThisUsedToBeAboutDungeons
                 });
             }
             if (Prefs.DevMode)
-                Log.Message($"[Dungeons] Effective level {level:0.#}: {average:0.##} points per pack, species up to {ceiling:0} combat power. " +
+                Log.Message($"[Dungeon Madness] Effective level {level:0.#}: {average:0.##} points per pack, species up to {ceiling:0} combat power. " +
                     $"{comp.packs.Count} packs: {string.Join("; ", comp.packs)}");
         }
 
@@ -349,8 +349,8 @@ namespace ThisUsedToBeAboutDungeons
             return fits.TryRandomElementByWeight(k => Mathf.Max(0.001f, weight(k)), out var pick) ? pick : fits.RandomElement();
         }
 
-        /// <summary>Makes the pack's pawns, unspawned. The first is rolled as a titan; the rest are copies of its
-        /// titan (same traits at the same rarities, same material) on their own bodies, so sex, age and colouring
+        /// <summary>Makes the pack's pawns, unspawned. The first is rolled as a bastle; the rest are copies of its
+        /// bastle (same traits at the same rarities, same material) on their own bodies, so sex, age and colouring
         /// still vary.</summary>
         public static List<Pawn> Make(DungeonPack pack, Map map)
         {
@@ -374,11 +374,11 @@ namespace ThisUsedToBeAboutDungeons
                     {
                         leader = p;
                         // Material first: rolling then skips traits a construct cannot have
-                        if (pack.stone && !(pack.rock != null && Rand.Chance(0.75f) && TitanUtility.SetMaterial(p, pack.rock)))
-                            TitanUtility.RollMaterial(p);
-                        TitanUtility.RollTraits(p, pack.points);
+                        if (pack.stone && !(pack.rock != null && Rand.Chance(0.75f) && BastleUtility.SetMaterial(p, pack.rock)))
+                            BastleUtility.RollMaterial(p);
+                        BastleUtility.RollTraits(p, pack.points);
                     }
-                    else TitanUtility.CopyTitan(leader, p);
+                    else BastleUtility.CopyBastle(leader, p);
                     pawns.Add(p);
                 }
             }

@@ -4,11 +4,11 @@ using RimWorld.Planet;
 using Verse;
 using Verse.AI;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public static class DungeonMadUtility
     {
-        public static bool IsMad(Pawn p) => p?.health?.hediffSet != null && p.health.hediffSet.HasHediff(DungeonDefOf.TUBAD_DungeonMad);
+        public static bool IsMad(Pawn p) => p?.health?.hediffSet != null && p.health.hediffSet.HasHediff(DungeonDefOf.DMAD_DungeonMad);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ namespace ThisUsedToBeAboutDungeons
         void Ensure()
         {
             if (!pawn.Spawned || pawn.Dead || pawn.Downed) return;
-            MentalStateDef want = pawn.RaceProps.Humanlike ? DungeonDefOf.TUBAD_DungeonMadness : MentalStateDefOf.ManhunterPermanent;
+            MentalStateDef want = pawn.RaceProps.Humanlike ? DungeonDefOf.DMAD_DungeonMadness : MentalStateDefOf.ManhunterPermanent;
             if (pawn.MentalStateDef == want) return;
             pawn.mindState.mentalStateHandler.TryStartMentalState(want, null, forced: true, forceWake: true, causedByMood: false, otherPawn: null, transitionSilently: true);
         }

@@ -5,14 +5,14 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     [StaticConstructorOnStartup]
     public static class DungeonTextures
     {
-        public static readonly Texture2D ShowDungeons = ContentFinder<Texture2D>.Get("UI/TUBAD_ShowDungeons");
-        public static readonly Texture2D FindDungeons = ContentFinder<Texture2D>.Get("UI/TUBAD_FindDungeons");
-        public static readonly Texture2D WorldIcon = ContentFinder<Texture2D>.Get("World/TUBAD_Dungeon");
+        public static readonly Texture2D ShowDungeons = ContentFinder<Texture2D>.Get("UI/DMAD_ShowDungeons");
+        public static readonly Texture2D FindDungeons = ContentFinder<Texture2D>.Get("UI/DMAD_FindDungeons");
+        public static readonly Texture2D WorldIcon = ContentFinder<Texture2D>.Get("World/DMAD_Dungeon");
         public static readonly Texture2D EnterDungeon = ContentFinder<Texture2D>.Get("UI/Commands/EnterCave");
     }
 
@@ -24,10 +24,10 @@ namespace ThisUsedToBeAboutDungeons
         {
             var s = DungeonsMod.Settings;
             bool was = s.showIcons;
-            row.ToggleableIcon(ref s.showIcons, DungeonTextures.ShowDungeons, "TUBAD_ToggleIcons".Translate(), SoundDefOf.Mouseover_ButtonToggle);
+            row.ToggleableIcon(ref s.showIcons, DungeonTextures.ShowDungeons, "DMAD_ToggleIcons".Translate(), SoundDefOf.Mouseover_ButtonToggle);
             if (was != s.showIcons) DungeonsMod.Instance.WriteSettings();
             if (Current.ProgramState == ProgramState.Playing
-                && row.ButtonIcon(DungeonTextures.FindDungeons, "TUBAD_Finder_Open".Translate()))
+                && row.ButtonIcon(DungeonTextures.FindDungeons, "DMAD_Finder_Open".Translate()))
             {
                 var open = Find.WindowStack.WindowOfType<Dialog_DungeonFinder>();
                 if (open != null) open.Close();
@@ -75,12 +75,12 @@ namespace ThisUsedToBeAboutDungeons
             var report = DungeonEntry.CanEnterAt(__instance.Tile, out _);
             var cmd = new Command_Action
             {
-                defaultLabel = "TUBAD_EnterDungeonLevel".Translate(level),
-                defaultDesc = "TUBAD_EnterDungeon_Desc".Translate(DungeonsMod.Settings.maxPartySize),
+                defaultLabel = "DMAD_EnterDungeonLevel".Translate(level),
+                defaultDesc = "DMAD_EnterDungeon_Desc".Translate(DungeonsMod.Settings.maxPartySize),
                 icon = DungeonTextures.EnterDungeon,
                 action = () => CaravanArrivalAction_EnterDungeon.OpenDialog(__instance),
             };
-            if (__instance.pather.Moving) cmd.Disable("TUBAD_CaravanMoving".Translate());
+            if (__instance.pather.Moving) cmd.Disable("DMAD_CaravanMoving".Translate());
             else if (!report.Accepted) cmd.Disable(report.Reason);
             yield return cmd;
         }
@@ -104,13 +104,13 @@ namespace ThisUsedToBeAboutDungeons
                 using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
                 {
                     GUI.color = ColorLibrary.RedReadable;
-                    Widgets.Label(label, "TUBAD_Enter_EnteredShort".Translate());
+                    Widgets.Label(label, "DMAD_Enter_EnteredShort".Translate());
                     GUI.color = Color.white;
                 }
-                TooltipHandler.TipRegion(rect, "TUBAD_Enter_EnteredTip".Translate());
+                TooltipHandler.TipRegion(rect, "DMAD_Enter_EnteredTip".Translate());
             }
             else if (Dialog_EnterDungeon.Locked.Contains(tr))
-                TooltipHandler.TipRegion(rect, "TUBAD_Enter_LockedTip".Translate());
+                TooltipHandler.TipRegion(rect, "DMAD_Enter_LockedTip".Translate());
         }
     }
 
@@ -140,7 +140,7 @@ namespace ThisUsedToBeAboutDungeons
                 {
                     tile = new PlanetTile(id, surface),
                     level = level,
-                    label = "TUBAD_SearchLabel".Translate(level),
+                    label = "DMAD_SearchLabel".Translate(level),
                 });
             }
         }
@@ -190,7 +190,7 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonWorldComponent.Instance;
             PlanetTile tile = Find.WorldSelector.SelectedTile;
             if (comp == null || !comp.TryGetLevel(tile, out int level) || comp.IsBlocked(tile)) return;
-            __result += "\n" + "TUBAD_TileDungeon".Translate(level);
+            __result += "\n" + "DMAD_TileDungeon".Translate(level);
         }
     }
 }

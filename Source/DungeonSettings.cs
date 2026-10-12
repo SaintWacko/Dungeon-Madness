@@ -1,7 +1,7 @@
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public class DungeonSettings : ModSettings
     {
@@ -36,7 +36,7 @@ namespace ThisUsedToBeAboutDungeons
         public float wealthToDouble = DefaultWealthToDouble;
 
         // ---- Creatures: read when a dungeon map is generated, so changes reach the next party to enter
-        // Average titan points a pack gets per effective level; the pack's total is split between its members
+        // Average bastle points a pack gets per effective level; the pack's total is split between its members
         public const float DefaultPointsPerLevel = 1f;
         public float pointsPerLevel = DefaultPointsPerLevel;
         // A pack's total is the average times 1 +/- this

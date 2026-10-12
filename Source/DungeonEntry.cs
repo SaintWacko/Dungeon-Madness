@@ -5,7 +5,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public static class DungeonEntry
     {
@@ -38,7 +38,7 @@ namespace ThisUsedToBeAboutDungeons
             {
                 // A site without a map is left over from a generation that failed; it must not lock the dungeon
                 if (!site.HasMap) site.Destroy();
-                else return "TUBAD_PartyInside".Translate();
+                else return "DMAD_PartyInside".Translate();
             }
             return true;
         }
@@ -85,7 +85,7 @@ namespace ThisUsedToBeAboutDungeons
 
             LongEventHandler.QueueLongEvent(() =>
             {
-                var site = (DungeonSite)WorldObjectMaker.MakeWorldObject(DungeonDefOf.TUBAD_DungeonSite);
+                var site = (DungeonSite)WorldObjectMaker.MakeWorldObject(DungeonDefOf.DMAD_DungeonSite);
                 site.Tile = tile;
                 site.SetFaction(null);
                 site.level = level;
@@ -139,11 +139,11 @@ namespace ThisUsedToBeAboutDungeons
                 foreach (var p in party)
                     if (p.RaceProps.Humanlike) comp.MarkEntered(tile.tileId, p);
 
-                IntVec3 entrance = (map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit).FirstOrDefault() as DungeonExit)?.InsideCell ?? map.Center;
+                IntVec3 entrance = (map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).FirstOrDefault() as DungeonExit)?.InsideCell ?? map.Center;
                 CaravanEnterMapUtility.Enter(partyCaravan, map, p => CellFinder.RandomClosewalkCellNear(entrance, map, 4),
                     CaravanDropInventoryMode.DoNotDrop, draftColonists: false);
                 CameraJumper.TryJump(entrance, map);
-                Find.LetterStack.ReceiveLetter("TUBAD_Entered_Label".Translate(), "TUBAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#")),
+                Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#")),
                     LetterDefOf.NeutralEvent, new LookTargets(entrance, map));
             }, "GeneratingMapForNewEncounter", false, null);
         }

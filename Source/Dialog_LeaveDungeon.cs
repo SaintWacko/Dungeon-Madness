@@ -6,7 +6,7 @@ using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Vanilla Dialog_EnterPortal with a dungeon's item list: every item on the map the party can reach, not just
@@ -98,7 +98,7 @@ namespace ThisUsedToBeAboutDungeons
             pawns.RemoveAll(followers.Contains);
             if (pawns.Count == 0)
             {
-                Messages.Message("TUBAD_Leave_NoPawns".Translate(), MessageTypeDefOf.RejectInput, false);
+                Messages.Message("DMAD_Leave_NoPawns".Translate(), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             exit.leftToLoad = new List<TransferableOneWay>();
@@ -127,14 +127,14 @@ namespace ThisUsedToBeAboutDungeons
                 Add(t);
             foreach (var t in EnterPortalUtility.ThingsBeingHauledTo(exit)) Add(t);
 
-            pawnsTransfer = new TransferableOneWayWidget(null, null, null, "TUBAD_LeaveThingCountTip".Translate(), drawMass: true,
+            pawnsTransfer = new TransferableOneWayWidget(null, null, null, "DMAD_LeaveThingCountTip".Translate(), drawMass: true,
                 IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload, includePawnsMassInMassUsage: true, () => float.MaxValue, 0f,
                 ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile, drawMarketValue: false, drawEquippedWeapon: true);
             CaravanUIUtility.AddPawnsSections(pawnsTransfer, transferables);
-            pawnsTransfer.AddSection("TUBAD_Leave_DwellersSection".Translate(),
+            pawnsTransfer.AddSection("DMAD_Leave_DwellersSection".Translate(),
                 transferables.Where(x => x.AnyThing is Pawn p && DungeonDwellerUtility.IsFollower(p) && !p.Downed && !p.InMentalState));
             itemsTransfer = new TransferableOneWayWidget(transferables.Where(x => x.ThingDef.category != ThingCategory.Pawn), null, null,
-                "TUBAD_LeaveThingCountTip".Translate(), drawMass: true, IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
+                "DMAD_LeaveThingCountTip".Translate(), drawMass: true, IgnorePawnsInventoryMode.IgnoreIfAssignedToUnload,
                 includePawnsMassInMassUsage: true, () => float.MaxValue, 0f, ignoreSpawnedCorpseGearAndInventoryMass: false, map.Tile);
         }
 

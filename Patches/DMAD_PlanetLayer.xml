@@ -5,7 +5,7 @@
   <Operation Class="PatchOperationAdd">
     <xpath>Defs/PlanetLayerDef[defName="Surface"]/worldDrawLayers</xpath>
     <value>
-      <li>ThisUsedToBeAboutDungeons.WorldDrawLayer_Dungeons</li>
+      <li>DungeonMadness.WorldDrawLayer_Dungeons</li>
     </value>
   </Operation>
 </Patch>
