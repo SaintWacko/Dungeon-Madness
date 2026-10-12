@@ -155,8 +155,6 @@ namespace DungeonMadness
             for (int i = 0; i < tiles.Length; i++) indexByTile[tiles[i]] = i;
         }
 
-        public static bool VehicleFrameworkActive => ModsConfig.IsActive("SmashPhil.VehicleFramework");
-
         /// <summary>Places dungeons over the surface layer and assigns their levels. Replaces any existing ones.</summary>
         public void Generate()
         {
@@ -164,7 +162,6 @@ namespace DungeonMadness
             var layer = world.grid.Surface;
             int n = layer.TilesCount;
             int seed = Gen.HashCombineInt(world.info.Seed, 0x7D0A6E5);
-            bool allowWater = settings.oceanDungeons && VehicleFrameworkActive;
 
             // Poisson-disk placement: visit tiles in random order and take each eligible tile that no earlier
             // dungeon is within `spacing` tiles of. The random order keeps it from lining up into rows.
@@ -192,7 +189,7 @@ namespace DungeonMadness
 
             foreach (int t in order)
             {
-                if (blocked[t] || occupied.Contains(t) || !Eligible(layer, t, allowWater)) continue;
+                if (blocked[t] || occupied.Contains(t) || !Eligible(layer, t)) continue;
                 chosen.Add(t);
                 stamp++;
                 blocked[t] = true;
@@ -231,16 +228,11 @@ namespace DungeonMadness
             Log.Message($"[Dungeon Madness] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, max level {settings.maxLevel}).");
         }
 
-        private bool Eligible(PlanetLayer layer, int t, bool allowWater)
+        // Land only: there is no way to explore under water
+        private bool Eligible(PlanetLayer layer, int t)
         {
-            var tile = layer[t];
-            var pt = new PlanetTile(t, layer);
-            if (tile.WaterCovered)
-            {
-                if (!allowWater) return false;
-            }
-            else if (world.Impassable(pt)) return false;
-            return true;
+            if (layer[t].WaterCovered) return false;
+            return !world.Impassable(new PlanetTile(t, layer));
         }
 
         // Smooth noise over the globe gives connected valleys and peaks. Ranking the values turns them into an even

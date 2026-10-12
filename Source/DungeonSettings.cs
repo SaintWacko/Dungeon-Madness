@@ -23,9 +23,6 @@ namespace DungeonMadness
         public const float DefaultRoughness = 7f;
         public float roughness = DefaultRoughness;
 
-        // Dungeons on water tiles while Vehicle Framework is active
-        public bool oceanDungeons = true;
-
         // ---- Parties
         public const int DefaultMaxPartySize = 5;
         // Humanlikes only; animals and mechs do not count
@@ -102,7 +99,6 @@ namespace DungeonMadness
             maxLevel = DefaultMaxLevel;
             levelSkew = DefaultLevelSkew;
             roughness = DefaultRoughness;
-            oceanDungeons = true;
             maxPartySize = DefaultMaxPartySize;
             wealthToDouble = DefaultWealthToDouble;
             pointsPerLevel = DefaultPointsPerLevel;
@@ -138,7 +134,6 @@ namespace DungeonMadness
             levelSkew = Mathf.Clamp(levelSkew, 0.5f, 4f);
             Scribe_Values.Look(ref roughness, "roughness", DefaultRoughness);
             roughness = Mathf.Clamp(roughness, 0.5f, 15f);
-            Scribe_Values.Look(ref oceanDungeons, "oceanDungeons", true);
             Scribe_Values.Look(ref maxPartySize, "maxPartySize", DefaultMaxPartySize);
             maxPartySize = Mathf.Clamp(maxPartySize, 1, 20);
             Scribe_Values.Look(ref wealthToDouble, "wealthToDouble", DefaultWealthToDouble);
