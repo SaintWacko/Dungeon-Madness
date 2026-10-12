@@ -144,10 +144,11 @@ namespace DungeonMadness
         public void RegisterEntad(Thing t) => pendingEntads.Add(t.thingIDNumber);
         public void UnregisterEntad(Thing t) => pendingEntads.Remove(t.thingIDNumber);
 
-        /// <summary>Binds one of this dungeon's entads as it leaves, by the settings' odds: to one pawn (whoever
-        /// carries it out, or a random member of the party when nobody does), to the whole party, or to nobody.
+        /// <summary>Binds one of this dungeon's entads as it leaves, by the settings' odds: to one pawn (the holder,
+        /// meaning whoever has it equipped, worn or in their inventory; a random member of the party when it was only
+        /// hauled or carried in hand, so holder is null), to the whole party, or to nobody.
         /// Anything else, or an entad already resolved, is ignored.</summary>
-        public void ResolveEntad(Thing thing, Pawn carrier)
+        public void ResolveEntad(Thing thing, Pawn holder)
         {
             Thing inner = thing is MinifiedThing m ? m.InnerThing : thing;
             if (inner == null || !pendingEntads.Remove(inner.thingIDNumber)) return;
@@ -157,7 +158,7 @@ namespace DungeonMadness
             string how = "DMAD_Bind_None".Translate();
             if (roll < s.bindSingleChance)
             {
-                Pawn who = carrier != null && carrier.RaceProps.Humanlike && !carrier.Dead ? carrier : living.RandomElementWithFallback();
+                Pawn who = holder != null && holder.RaceProps.Humanlike && !holder.Dead ? holder : living.RandomElementWithFallback();
                 if (who != null && EntadFramework.EntadApi.Bind(inner, new[] { who }))
                     how = "DMAD_Bind_Single".Translate(who.Named("PAWN"));
             }
@@ -169,7 +170,8 @@ namespace DungeonMadness
             bindReport.Add("DMAD_Bind_Line".Translate(inner.LabelCap, how));
         }
 
-        /// <summary>Everything a pawn has on them as they leave: equipment, apparel, inventory and what they carry.</summary>
+        /// <summary>Everything a pawn has on them as they leave. Equipment, apparel and inventory count as theirs for a
+        /// single bind; a thing merely carried in hand is treated like a hauled one (a random party member).</summary>
         public void ResolveHeldBy(Pawn p)
         {
             if (pendingEntads.Count == 0 || p == null) return;
@@ -177,8 +179,8 @@ namespace DungeonMadness
             if (p.equipment != null) held.AddRange(p.equipment.AllEquipmentListForReading);
             if (p.apparel != null) held.AddRange(p.apparel.WornApparel);
             if (p.inventory != null) held.AddRange(p.inventory.innerContainer);
-            if (p.carryTracker?.CarriedThing is Thing c && !(c is Pawn)) held.Add(c);
             foreach (var t in held) ResolveEntad(t, p);
+            if (p.carryTracker?.CarriedThing is Thing c && !(c is Pawn)) ResolveEntad(c, null);
         }
 
         public void FlushStash(Caravan caravan)

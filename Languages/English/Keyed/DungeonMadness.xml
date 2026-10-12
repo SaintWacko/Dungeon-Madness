@@ -156,7 +156,7 @@
   <DMAD_Settings_BindSingle>Bound to one pawn: {0}</DMAD_Settings_BindSingle>
   <DMAD_Settings_BindParty>Bound to the party: {0}</DMAD_Settings_BindParty>
   <DMAD_Settings_BindNone>Unbound: {0}</DMAD_Settings_BindNone>
-  <DMAD_Settings_Binding_Desc>Rolled when an entad leaves the dungeon. One pawn means whoever carries it out, or a random member of the party if nobody does. The party is the people who entered together, not dwellers who joined later. A letter lists every entad and its binding when the visit ends.</DMAD_Settings_Binding_Desc>
+  <DMAD_Settings_Binding_Desc>Rolled when an entad leaves the dungeon. One pawn means whoever has it equipped, worn or in their inventory as they leave. An entad that is only hauled out binds to a random member of the party. The party is the people who entered together, not dwellers who joined later. A letter lists every entad and its binding when the visit ends.</DMAD_Settings_Binding_Desc>
 
   <DMAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more bastle points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</DMAD_Settings_Power_Desc>
 </LanguageData>
