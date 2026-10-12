@@ -457,7 +457,7 @@ namespace DungeonMadness
                     if (s.GetItemCount(map) > 0) continue;
                     placed = GenPlace.TryPlaceThing(t, s, map, ThingPlaceMode.Direct, (put, n) => put.SetForbidden(true, false));
                 }
-                if (!placed && !t.Destroyed && !t.Spawned) t.Destroy();
+                if (!placed && !t.Destroyed && !t.Spawned) loot.Discard(t);
             }
         }
 

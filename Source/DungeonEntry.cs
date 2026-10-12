@@ -135,7 +135,7 @@ namespace DungeonMadness
                     }
                 }
 
-                site.party = party.Where(p => p.RaceProps.Humanlike).ToList();
+                site.party = party.Where(p => p.IsColonist).ToList();
                 var comp = DungeonWorldComponent.Instance;
                 foreach (var p in party)
                     if (p.RaceProps.Humanlike) comp.MarkEntered(tile.tileId, p);

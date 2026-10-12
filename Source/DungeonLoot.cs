@@ -34,6 +34,8 @@ namespace DungeonMadness
         // Entad furniture made while rooms were still being furnished, set up once they all are
         private readonly List<Thing> furnitureQueue = new List<Thing>();
         private EntadItemRequest request;
+        // Every entad made here, so setting up furniture never replaces or wipes one
+        private readonly HashSet<Thing> entads = new HashSet<Thing>();
 
         // Rooms are at least 5 cells on a side; a piece needs space around it for its interaction cell and a way past
         const int MaxFurnitureSide = 3;
@@ -77,7 +79,11 @@ namespace DungeonMadness
         public Thing MakeEntad()
         {
             Thing t = EntadApi.GenerateEntadItem(DungeonsMod.Settings.entadPointsPerLevel * level, Request());
-            if (t != null) site?.RegisterEntad(t);
+            if (t != null)
+            {
+                site?.RegisterEntad(t);
+                entads.Add(t);
+            }
             return t;
         }
 
@@ -139,9 +145,16 @@ namespace DungeonMadness
                     bool placed = false;
                     while (!placed && i < spots.Count)
                         placed = GenPlace.TryPlaceThing(t, spots[i++], map, ThingPlaceMode.Direct, (put, _) => put.SetForbidden(true, false));
-                    if (!placed && !t.Spawned && !t.Destroyed) t.Destroy();
+                    if (!placed && !t.Spawned && !t.Destroyed) Discard(t);
                 }
             }
+        }
+
+        /// <summary>Destroys loot that found no place, forgetting it as a pending entad.</summary>
+        public void Discard(Thing t)
+        {
+            site?.UnregisterEntad(t);
+            if (!t.Destroyed) t.Destroy();
         }
 
         /// <summary>Sets up every queued piece of entad furniture in the room that suits it best. One that fits
@@ -210,8 +223,8 @@ namespace DungeonMadness
                     }
                     // Something else whose interaction cell this would cover goes too
                     foreach (var b in RoomBuildings(room))
-                        if (!remove.Contains(b) && b.def.hasInteractionCell && occ.Contains(b.InteractionCell)) { remove.Add(b); cost += 3f; }
-                    if (cost >= bestCost) continue;
+                        if (!remove.Contains(b) && b.def.hasInteractionCell && occ.Contains(b.InteractionCell)) { remove.Add(b); cost += entads.Contains(b) ? 1000f : 3f; }
+                    if (cost >= 1000f || cost >= bestCost) continue;
                     if (def.PlaceWorkers != null && !def.PlaceWorkers.All(pw => pw.AllowsPlacing(def, c, rot, map).Accepted)) continue;
                     bestCost = cost;
                     bestCell = c;
@@ -228,6 +241,7 @@ namespace DungeonMadness
                 foreach (var item in o.GetThingList(map).Where(x => x.def.category == ThingCategory.Item).ToList())
                     item.Destroy();
             GenSpawn.Spawn(t, bestCell, map, bestRot, WipeMode.Vanish);
+            roomBuildingsCache = null;
             return true;
         }
 
@@ -251,6 +265,7 @@ namespace DungeonMadness
             float cost = 0f;
             foreach (var x in c.GetThingList(map))
             {
+                if (entads.Contains(x)) return 1000f;
                 if (x.def.category == ThingCategory.Item) { cost += 1f; continue; }
                 if (x.def.category != ThingCategory.Building || x.def.building == null) continue;
                 if (!IsFurniture(x)) return 1000f;
