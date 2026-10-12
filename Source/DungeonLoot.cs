@@ -48,16 +48,24 @@ namespace DungeonMadness
             this.furnitureAllowed = furnitureAllowed;
         }
 
-        /// <summary>The colony's current tech level: the highest tech level among finished research projects,
-        /// never below the player faction's own (a tribe starts Neolithic and climbs as it researches; the faction
-        /// def alone never changes).</summary>
+        /// <summary>The colony's current tech level: the highest tech level with at least half of its research
+        /// projects finished, never below the player faction's own. A tribe starts Neolithic and climbs as it
+        /// researches (the faction def alone never changes); one techprint project does not lift the whole colony.</summary>
         public static TechLevel ColonyTech
         {
             get
             {
                 TechLevel tech = Faction.OfPlayerSilentFail?.def?.techLevel ?? TechLevel.Industrial;
+                var total = new Dictionary<TechLevel, int>();
+                var done = new Dictionary<TechLevel, int>();
                 foreach (var r in DefDatabase<ResearchProjectDef>.AllDefsListForReading)
-                    if (r.techLevel > tech && r.IsFinished) tech = r.techLevel;
+                {
+                    if (r.techLevel <= tech) continue;
+                    total[r.techLevel] = total.TryGetValue(r.techLevel) + 1;
+                    if (r.IsFinished) done[r.techLevel] = done.TryGetValue(r.techLevel) + 1;
+                }
+                foreach (var kv in total)
+                    if (kv.Key > tech && done.TryGetValue(kv.Key) * 2 >= kv.Value) tech = kv.Key;
                 return tech;
             }
         }
