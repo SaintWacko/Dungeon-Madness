@@ -4,7 +4,7 @@ using LudeonTK;
 using RimWorld.Planet;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public static class DungeonDebugActions
     {
@@ -48,7 +48,7 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonWorldComponent.Instance;
             if (comp == null) return;
             var surface = Find.WorldGrid.Surface;
-            var sb = new StringBuilder($"[Dungeons] {comp.Count} dungeons by theme:");
+            var sb = new StringBuilder($"[Dungeon Madness] {comp.Count} dungeons by theme:");
             var picks = Enumerable.Range(0, comp.Count).Select(i => DungeonThemeUtility.ThemeFor(new PlanetTile(comp.GetTile(i), surface))).ToList();
             foreach (var g in picks.GroupBy(t => t.defName).OrderByDescending(g => g.Count())) sb.Append($"\n  {g.Key}: {g.Count()}");
             for (int i = 0; i < System.Math.Min(5, comp.Count); i++)
@@ -67,7 +67,7 @@ namespace ThisUsedToBeAboutDungeons
             var comp = DungeonWorldComponent.Instance;
             if (comp == null) return;
             var counts = Enumerable.Range(0, comp.Count).GroupBy(comp.GetLevel).OrderBy(g => g.Key);
-            var sb = new StringBuilder($"[Dungeons] {comp.Count} dungeons by level:");
+            var sb = new StringBuilder($"[Dungeon Madness] {comp.Count} dungeons by level:");
             foreach (var g in counts) sb.Append($"\n  level {g.Key}: {g.Count()}");
             Log.Message(sb.ToString());
         }

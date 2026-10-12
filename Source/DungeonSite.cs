@@ -5,7 +5,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// The world object for one dungeon instance: made when a party enters, destroyed with its map when the party
@@ -38,7 +38,7 @@ namespace ThisUsedToBeAboutDungeons
             stash = new ThingOwner<Thing>(this);
         }
 
-        public override MapGeneratorDef MapGeneratorDef => DungeonDefOf.TUBAD_Dungeon;
+        public override MapGeneratorDef MapGeneratorDef => DungeonDefOf.DMAD_Dungeon;
 
         // Vanilla's generic "Enter" would walk a second caravan in from the map edge, which is solid wall, with no
         // party checks. The only way in is the mod's own entry.
@@ -55,7 +55,7 @@ namespace ThisUsedToBeAboutDungeons
             yield break;
         }
 
-        public override string Label => "TUBAD_SiteLabel".Translate(level);
+        public override string Label => "DMAD_SiteLabel".Translate(level);
 
         static readonly MaterialPropertyBlock drawBlock = new MaterialPropertyBlock();
 
@@ -186,7 +186,7 @@ namespace ThisUsedToBeAboutDungeons
             bool anyCorpse = Map.listerThings.ThingsInGroup(ThingRequestGroup.Corpse)
                 .OfType<Corpse>().Any(c => c.InnerPawn.Faction == Faction.OfPlayer && c.InnerPawn.RaceProps.Humanlike);
             // Animals waiting on the exit for a caravan that only formed this tick would otherwise be left behind
-            foreach (var exit in Map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit))
+            foreach (var exit in Map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit))
                 (exit as DungeonExit)?.MoveArrivedOut();
             var caravan = WaitingCaravan();
             // A colonist carried out (downed) with nobody outside would vanish with the site: they form a caravan
@@ -202,7 +202,7 @@ namespace ThisUsedToBeAboutDungeons
             }
             FlushStash(caravan);
             if (!everyoneLeft || (anyCorpse && caravan == null))
-                Find.LetterStack.ReceiveLetter("TUBAD_PartyLost_Label".Translate(), "TUBAD_PartyLost_Text".Translate(level),
+                Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
         }
 
@@ -210,7 +210,7 @@ namespace ThisUsedToBeAboutDungeons
         {
             foreach (var o in base.GetFloatMenuOptions(caravan)) yield return o;
             // A party is inside: other caravans can travel here and wait, but not enter
-            yield return new FloatMenuOption("TUBAD_EnterDungeon".Translate() + " (" + "TUBAD_PartyInside".Translate() + ")", null);
+            yield return new FloatMenuOption("DMAD_EnterDungeon".Translate() + " (" + "DMAD_PartyInside".Translate() + ")", null);
         }
 
         public override void ExposeData()
@@ -231,16 +231,16 @@ namespace ThisUsedToBeAboutDungeons
     [DefOf]
     public static class DungeonDefOf
     {
-        public static WorldObjectDef TUBAD_DungeonSite;
-        public static MapGeneratorDef TUBAD_Dungeon;
-        public static ThingDef TUBAD_DungeonWall;
-        public static ThingDef TUBAD_DungeonRubble;
-        public static ThingDef TUBAD_DungeonExit;
-        public static DungeonThemeDef TUBAD_Cave;
-        public static ThingDef TUBAD_TangleCore;
-        public static ThingDef TUBAD_DungeonWallPowered;
-        public static HediffDef TUBAD_DungeonMad;
-        public static MentalStateDef TUBAD_DungeonMadness;
+        public static WorldObjectDef DMAD_DungeonSite;
+        public static MapGeneratorDef DMAD_Dungeon;
+        public static ThingDef DMAD_DungeonWall;
+        public static ThingDef DMAD_DungeonRubble;
+        public static ThingDef DMAD_DungeonExit;
+        public static DungeonThemeDef DMAD_Cave;
+        public static ThingDef DMAD_TangleCore;
+        public static ThingDef DMAD_DungeonWallPowered;
+        public static HediffDef DMAD_DungeonMad;
+        public static MentalStateDef DMAD_DungeonMadness;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

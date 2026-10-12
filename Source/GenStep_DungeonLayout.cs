@@ -7,7 +7,7 @@ using RimWorld.SketchGen;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Builds a dungeon map from a fresh layout, dressed by the dungeon's theme and its tile.
@@ -63,7 +63,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (site != null) site.layout = layout.data;
                 Dress(map, layout, theme, rocks, info);
                 if (Prefs.DevMode)
-                    Log.Message($"[Dungeons] Tile {tile.tileId} layer {tile.Layer?.LayerID}, level {site?.level}, {theme.defName} in {rocks[0].label} ({map.Biome.defName}): " +
+                    Log.Message($"[Dungeon Madness] Tile {tile.tileId} layer {tile.Layer?.LayerID}, level {site?.level}, {theme.defName} in {rocks[0].label} ({map.Biome.defName}): " +
                         $"{layout.data.chambers.Count} chambers ({layout.data.chambers.Count(c => !c.Cave)} built, {layout.data.chambers.Count(c => c.skylight)} open to the sky), " +
                         $"{layout.data.chambers.Count(c => c.Furnished)} furnished ({string.Join(", ", layout.data.chambers.Where(c => c.Furnished).Select(c => $"{c.use} at {c.center}"))}), " +
                         $"{layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
@@ -126,30 +126,30 @@ namespace ThisUsedToBeAboutDungeons
             // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
             var furnishedIds = AssignUses(layout, theme);
             IntVec3 exitCell = data.exitCell;
-            var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.TUBAD_DungeonExit.size);
+            var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.DMAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
                 for (int x = 0; x < n; x++)
                 {
                     var c = new IntVec3(x, 0, z);
                     if (open[z * n + x] || exitRect.Contains(c)) continue;
-                    ThingDef wall = furnishedIds.Count > 0 && Touches(layout, x, z, furnishedIds) ? DungeonDefOf.TUBAD_DungeonWallPowered : DungeonDefOf.TUBAD_DungeonWall;
+                    ThingDef wall = furnishedIds.Count > 0 && Touches(layout, x, z, furnishedIds) ? DungeonDefOf.DMAD_DungeonWallPowered : DungeonDefOf.DMAD_DungeonWall;
                     GenSpawn.Spawn(ThingMaker.MakeThing(wall, blocks), c, map);
                 }
             foreach (var d in data.dividers)
                 foreach (var c in d.cells)
                 {
-                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? DungeonDefOf.TUBAD_DungeonRubble);
+                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? DungeonDefOf.DMAD_DungeonRubble);
                     // A plant plug (root tangle) spawns at its starting growth, which would draw it tiny and
                     // halve its wood; it never grows underground, so set it mature here. Its fog-holding core goes
                     // in first: a new plant never wipes an edifice, the other way round it would.
                     if (thing is Plant plant)
                     {
                         plant.Growth = 1f;
-                        if (thing is Plant_RootTangle) GenSpawn.Spawn(DungeonDefOf.TUBAD_TangleCore, c, map);
+                        if (thing is Plant_RootTangle) GenSpawn.Spawn(DungeonDefOf.DMAD_TangleCore, c, map);
                     }
                     GenSpawn.Spawn(thing, c, map);
                 }
-            GenSpawn.Spawn(DungeonDefOf.TUBAD_DungeonExit, exitCell, map);
+            GenSpawn.Spawn(DungeonDefOf.DMAD_DungeonExit, exitCell, map);
             MapGenerator.PlayerStartSpot = DungeonExit.InsideCellFor(exitCell);
 
             Skylights(map, layout, theme, biome);
@@ -295,11 +295,11 @@ namespace ThisUsedToBeAboutDungeons
                 {
                     if (!BaseGenUtility.AnyDoorAdjacentCardinalTo(c, map)) continue;
                     var b = c.GetEdifice(map);
-                    if (b != null && !(b is Building_Door) && b.def != DungeonDefOf.TUBAD_DungeonWallPowered) b.Destroy();
+                    if (b != null && !(b is Building_Door) && b.def != DungeonDefOf.DMAD_DungeonWallPowered) b.Destroy();
                 }
             }
             if (Prefs.DevMode && ch.use == RoomUse.Suite)
-                Log.Message($"[Dungeons] Suite at {ch.center}: {string.Join(", ", uses)}");
+                Log.Message($"[Dungeon Madness] Suite at {ch.center}: {string.Join(", ", uses)}");
         }
 
         /// <summary>Cuts a rect along its longer side with a powered wall and one door, until every part is at most
@@ -320,7 +320,7 @@ namespace ThisUsedToBeAboutDungeons
                 IntVec3 door = cells[Rand.RangeInclusive(1, cells.Count - 2)];
                 foreach (var c in cells)
                 {
-                    Thing t = c == door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(DungeonDefOf.TUBAD_DungeonWallPowered, blocks);
+                    Thing t = c == door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(DungeonDefOf.DMAD_DungeonWallPowered, blocks);
                     GenSpawn.Spawn(t, c, map, WipeMode.Vanish);
                 }
                 foreach (var a in GenAdj.CellsAdjacentCardinal(door, Rot4.North, IntVec2.One)) keepOpen.Add(a);
@@ -512,7 +512,7 @@ namespace ThisUsedToBeAboutDungeons
         {
             var chunk = rock?.building?.mineableThing;
             var blocks = chunk?.butcherProducts?.FirstOrDefault()?.thingDef;
-            return blocks != null && blocks.IsStuff && blocks.stuffProps.CanMake(DungeonDefOf.TUBAD_DungeonWall) ? blocks : null;
+            return blocks != null && blocks.IsStuff && blocks.stuffProps.CanMake(DungeonDefOf.DMAD_DungeonWall) ? blocks : null;
         }
 
         static bool Natural(DungeonLayoutResult layout, int k) => layout.open[k] && layout.built[k] < 0 && layout.feature[k] == CellFeature.None;

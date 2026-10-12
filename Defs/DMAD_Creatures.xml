@@ -3,11 +3,11 @@
 
   <!-- ===== Dungeon-mad ===== -->
 
-  <!-- Added to every member of a mad pack when it wakes. Keeps a person berserk (TUBAD_DungeonMadness) and an animal
+  <!-- Added to every member of a mad pack when it wakes. Keeps a person berserk (DMAD_DungeonMadness) and an animal
        manhunting for good; rules out capture and taming (DungeonMadness.cs). -->
   <HediffDef>
-    <defName>TUBAD_DungeonMad</defName>
-    <hediffClass>ThisUsedToBeAboutDungeons.Hediff_DungeonMad</hediffClass>
+    <defName>DMAD_DungeonMad</defName>
+    <hediffClass>DungeonMadness.Hediff_DungeonMad</hediffClass>
     <label>dungeon-mad</label>
     <description>The dungeon has its hooks in this creature's mind, and they never come out. It attacks anything that is not also dungeon-mad, and it fights on even after being downed. It cannot be captured, recruited or tamed.</description>
     <defaultLabelColor>(0.9, 0.2, 0.5)</defaultLabelColor>
@@ -17,10 +17,10 @@
   </HediffDef>
 
   <!-- Berserk that never ends, survives being downed and ignores other dungeon-mad creatures. Its think-tree branch is
-       added by Patches/TUBAD_ThinkTree.xml. -->
+       added by Patches/DMAD_ThinkTree.xml. -->
   <MentalStateDef ParentName="BaseMentalState">
-    <defName>TUBAD_DungeonMadness</defName>
-    <stateClass>ThisUsedToBeAboutDungeons.MentalState_DungeonMad</stateClass>
+    <defName>DMAD_DungeonMadness</defName>
+    <stateClass>DungeonMadness.MentalState_DungeonMad</stateClass>
     <label>dungeon-mad</label>
     <category>Aggro</category>
     <blockInteractionInitiationExcept>
@@ -43,20 +43,20 @@
   <!-- ===== Dungeon dwellers: the people found in furnished rooms. No faction. -->
 
   <JobDef>
-    <defName>TUBAD_InviteDweller</defName>
-    <driverClass>ThisUsedToBeAboutDungeons.JobDriver_InviteDweller</driverClass>
+    <defName>DMAD_InviteDweller</defName>
+    <driverClass>DungeonMadness.JobDriver_InviteDweller</driverClass>
     <reportString>inviting TargetA to leave with the party.</reportString>
     <casualInterruptible>false</casualInterruptible>
   </JobDef>
 
   <JobDef>
-    <defName>TUBAD_ArrestInPlace</defName>
-    <driverClass>ThisUsedToBeAboutDungeons.JobDriver_ArrestInPlace</driverClass>
+    <defName>DMAD_ArrestInPlace</defName>
+    <driverClass>DungeonMadness.JobDriver_ArrestInPlace</driverClass>
     <reportString>arresting TargetA.</reportString>
     <casualInterruptible>false</casualInterruptible>
   </JobDef>
 
-  <PawnKindDef Name="TUBAD_DwellerBase" Abstract="True">
+  <PawnKindDef Name="DMAD_DwellerBase" Abstract="True">
     <race>Human</race>
     <isFighter>true</isFighter>
     <chemicalAddictionChance>0</chemicalAddictionChance>
@@ -78,12 +78,12 @@
     <initialWillRange>0~1</initialWillRange>
     <initialResistanceRange>6~12</initialResistanceRange>
     <modExtensions>
-      <li Class="ThisUsedToBeAboutDungeons.DungeonDweller" />
+      <li Class="DungeonMadness.DungeonDweller" />
     </modExtensions>
   </PawnKindDef>
 
-  <PawnKindDef ParentName="TUBAD_DwellerBase">
-    <defName>TUBAD_DwellerScavenger</defName>
+  <PawnKindDef ParentName="DMAD_DwellerBase">
+    <defName>DMAD_DwellerScavenger</defName>
     <label>dungeon scavenger</label>
     <combatPower>35</combatPower>
     <apparelMoney>80~250</apparelMoney>
@@ -98,8 +98,8 @@
     </weaponTags>
   </PawnKindDef>
 
-  <PawnKindDef ParentName="TUBAD_DwellerBase">
-    <defName>TUBAD_DwellerHunter</defName>
+  <PawnKindDef ParentName="DMAD_DwellerBase">
+    <defName>DMAD_DwellerHunter</defName>
     <label>dungeon hunter</label>
     <combatPower>55</combatPower>
     <apparelMoney>150~400</apparelMoney>
@@ -114,8 +114,8 @@
     </weaponTags>
   </PawnKindDef>
 
-  <PawnKindDef ParentName="TUBAD_DwellerBase">
-    <defName>TUBAD_DwellerVeteran</defName>
+  <PawnKindDef ParentName="DMAD_DwellerBase">
+    <defName>DMAD_DwellerVeteran</defName>
     <label>dungeon veteran</label>
     <combatPower>90</combatPower>
     <itemQuality>Normal</itemQuality>

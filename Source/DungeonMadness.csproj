@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>ThisUsedToBeAboutDungeons</AssemblyName>
-    <RootNamespace>ThisUsedToBeAboutDungeons</RootNamespace>
+    <AssemblyName>DungeonMadness</AssemblyName>
+    <RootNamespace>DungeonMadness</RootNamespace>
     <OutputPath>..\Assemblies\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
@@ -33,9 +33,9 @@
       <Private>false</Private>
     </Reference>
     <!-- Hard dependency, loaded before this mod by About.xml. Never copied into our Assemblies/: the game loads
-         Titan's own copy, and a second one would split its types in two. -->
-    <Reference Include="TitanFramework">
-      <HintPath>../../87257f378d52/Assemblies/TitanFramework.dll</HintPath>
+         Bastle's own copy, and a second one would split its types in two. -->
+    <Reference Include="BastleFramework">
+      <HintPath>../../87257f378d52/Assemblies/BastleFramework.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">

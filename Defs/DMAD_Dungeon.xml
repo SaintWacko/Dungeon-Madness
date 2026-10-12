@@ -3,40 +3,40 @@
 
   <!-- One per party inside a dungeon; destroyed with its map -->
   <WorldObjectDef ParentName="StaticWorldObjectBase">
-    <defName>TUBAD_DungeonSite</defName>
+    <defName>DMAD_DungeonSite</defName>
     <label>dungeon</label>
     <description>A dungeon with a party inside.</description>
-    <worldObjectClass>ThisUsedToBeAboutDungeons.DungeonSite</worldObjectClass>
-    <texture>World/TUBAD_Dungeon</texture>
+    <worldObjectClass>DungeonMadness.DungeonSite</worldObjectClass>
+    <texture>World/DMAD_Dungeon</texture>
     <expandingIcon>true</expandingIcon>
-    <expandingIconTexture>World/TUBAD_Dungeon</expandingIconTexture>
+    <expandingIconTexture>World/DMAD_Dungeon</expandingIconTexture>
     <expandingIconPriority>70</expandingIconPriority>
     <useDynamicDrawer>true</useDynamicDrawer>
     <isTempIncidentMapOwner>true</isTempIncidentMapOwner>
   </WorldObjectDef>
 
   <MapGeneratorDef>
-    <defName>TUBAD_Dungeon</defName>
+    <defName>DMAD_Dungeon</defName>
     <label>dungeon</label>
     <isUnderground>true</isUnderground>
     <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
     <disableCallAid>true</disableCallAid>
     <genSteps>
-      <li>TUBAD_DungeonLayout</li>
+      <li>DMAD_DungeonLayout</li>
       <li>Fog</li>
     </genSteps>
   </MapGeneratorDef>
 
   <GenStepDef>
-    <defName>TUBAD_DungeonLayout</defName>
+    <defName>DMAD_DungeonLayout</defName>
     <order>100</order>
-    <genStep Class="ThisUsedToBeAboutDungeons.GenStep_DungeonLayout" />
+    <genStep Class="DungeonMadness.GenStep_DungeonLayout" />
   </GenStepDef>
 
   <!-- Unbreakable: no hit points, cannot be destroyed, mined, deconstructed or targeted. Made from the tile's
        primary stone blocks only so it takes that rock's colour and name. -->
-  <ThingDef Name="TUBAD_DungeonWallBase" ParentName="BuildingNaturalBase">
-    <defName>TUBAD_DungeonWall</defName>
+  <ThingDef Name="DMAD_DungeonWallBase" ParentName="BuildingNaturalBase">
+    <defName>DMAD_DungeonWall</defName>
     <label>dungeon wall</label>
     <description>Stone that is not quite stone. Nothing scratches it: not picks, not explosives, not time.</description>
     <thingClass>Building</thingClass>
@@ -87,8 +87,8 @@
 
   <!-- The walls of a furnished room. Each one feeds a little power into whatever is connected to it, and passes
        power along like a conduit, so the room's lights and heaters run. Nothing moved away from them keeps it. -->
-  <ThingDef ParentName="TUBAD_DungeonWallBase">
-    <defName>TUBAD_DungeonWallPowered</defName>
+  <ThingDef ParentName="DMAD_DungeonWallBase">
+    <defName>DMAD_DungeonWallPowered</defName>
     <label>humming dungeon wall</label>
     <description>Dressed stone, laid by someone, with a faint warmth to it. Nothing scratches it, and anything wired to it gets power from nowhere anyone can find.</description>
     <!-- Looks built (vanilla's wall atlas in the tile's stone bricks) and still links with the rock around it -->
@@ -112,7 +112,7 @@
   </ThingDef>
 
   <!-- Fills a passage between chambers. Full fill blocks sight, so the next chamber stays fogged until it is mined out. -->
-  <ThingDef Name="TUBAD_PlugBase" ParentName="BuildingNaturalBase" Abstract="True">
+  <ThingDef Name="DMAD_PlugBase" ParentName="BuildingNaturalBase" Abstract="True">
     <thingClass>Mineable</thingClass>
     <altitudeLayer>Building</altitudeLayer>
     <passability>Impassable</passability>
@@ -142,22 +142,22 @@
     </building>
   </ThingDef>
 
-  <ThingDef ParentName="TUBAD_PlugBase">
-    <defName>TUBAD_DungeonRubble</defName>
+  <ThingDef ParentName="DMAD_PlugBase">
+    <defName>DMAD_DungeonRubble</defName>
     <label>rubble</label>
     <description>Fallen stone packed into a squeeze between caverns. It can be mined out.</description>
     <graphicData>
-      <texPath>Things/Building/TUBAD_Rubble</texPath>
+      <texPath>Things/Building/DMAD_Rubble</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
   </ThingDef>
 
-  <ThingDef ParentName="TUBAD_PlugBase">
-    <defName>TUBAD_IcePlug</defName>
+  <ThingDef ParentName="DMAD_PlugBase">
+    <defName>DMAD_IcePlug</defName>
     <label>ice plug</label>
     <description>Water that seeped into a squeeze and froze solid. It can be mined out.</description>
     <graphicData>
-      <texPath>Things/Building/TUBAD_IcePlug</texPath>
+      <texPath>Things/Building/DMAD_IcePlug</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <statBases>
@@ -169,18 +169,18 @@
        little wood. It never grows, ages, spreads, blights or dies of darkness: the generator spawns it fully grown
        and it stays until cut or burned. Impassable like the other plugs. -->
   <ThingDef ParentName="PlantBaseNonEdible">
-    <defName>TUBAD_RootTangle</defName>
-    <thingClass>ThisUsedToBeAboutDungeons.Plant_RootTangle</thingClass>
+    <defName>DMAD_RootTangle</defName>
+    <thingClass>DungeonMadness.Plant_RootTangle</thingClass>
     <label>root tangle</label>
     <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be chopped out for a little wood, or burned.</description>
     <graphicData>
-      <texPath>Things/Building/TUBAD_RootTangle</texPath>
+      <texPath>Things/Building/DMAD_RootTangle</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <altitudeLayer>Building</altitudeLayer>
     <selectable>true</selectable>
     <passability>Impassable</passability>
-    <!-- Below full: only an edifice may give full cover. The TUBAD_TangleCore under it blocks fog, sight and shots. -->
+    <!-- Below full: only an edifice may give full cover. The DMAD_TangleCore under it blocks fog, sight and shots. -->
     <fillPercent>0.75</fillPercent>
     <blockWind>true</blockWind>
     <rotatable>false</rotatable>
@@ -216,13 +216,13 @@
        and line of sight, so this holds the cavern behind fogged until the tangle is cleared. The tangle destroys it
        on despawn (Plant_RootTangle). Not targetable, no hit points, nothing to select. -->
   <ThingDef ParentName="BuildingNaturalBase">
-    <defName>TUBAD_TangleCore</defName>
+    <defName>DMAD_TangleCore</defName>
     <label>root tangle</label>
     <description>The heart of a root tangle.</description>
     <thingClass>Building</thingClass>
     <drawerType>None</drawerType>
     <graphicData>
-      <texPath>Things/Building/TUBAD_RootTangle</texPath>
+      <texPath>Things/Building/DMAD_RootTangle</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <altitudeLayer>Building</altitudeLayer>
@@ -246,12 +246,12 @@
     </building>
   </ThingDef>
 
-  <ThingDef ParentName="TUBAD_PlugBase">
-    <defName>TUBAD_SandDrift</defName>
+  <ThingDef ParentName="DMAD_PlugBase">
+    <defName>DMAD_SandDrift</defName>
     <label>sand drift</label>
     <description>Sand that has poured in from above and choked a squeeze between caverns. It can be dug out.</description>
     <graphicData>
-      <texPath>Things/Building/TUBAD_SandDrift</texPath>
+      <texPath>Things/Building/DMAD_SandDrift</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <filthLeaving IsNull="True" />
@@ -261,15 +261,15 @@
   </ThingDef>
 
   <ThingDef ParentName="PocketMapExit">
-    <defName>TUBAD_DungeonExit</defName>
+    <defName>DMAD_DungeonExit</defName>
     <label>dungeon exit</label>
     <description>Stairs cut into the wall, leading back up to the world. Pawns leaving climb them and rejoin the caravan waiting outside, carrying whatever they bring here.</description>
-    <thingClass>ThisUsedToBeAboutDungeons.DungeonExit</thingClass>
+    <thingClass>DungeonMadness.DungeonExit</thingClass>
     <size>(3,1)</size>
     <drawerType>MapMeshAndRealTime</drawerType>
     <graphicData>
       <graphicClass>Graphic_Single</graphicClass>
-      <texPath>Things/Building/TUBAD_DungeonExit</texPath>
+      <texPath>Things/Building/DMAD_DungeonExit</texPath>
       <drawSize>(3,1)</drawSize>
     </graphicData>
     <!-- Part of the wall: pawns walk up to it rather than onto it -->

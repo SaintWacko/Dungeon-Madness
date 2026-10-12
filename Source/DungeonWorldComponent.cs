@@ -6,7 +6,7 @@ using UnityEngine;
 using Verse;
 using Verse.Noise;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Every dungeon in the world, as plain data: a surface tile id and a level. Dungeons are deliberately not
@@ -117,7 +117,7 @@ namespace ThisUsedToBeAboutDungeons
                 if (levels.Length > 0) Buffer.BlockCopy(levelBytes, 0, levels, 0, levels.Length * sizeof(ushort));
                 if (levels.Length != tiles.Length)
                 {
-                    Log.Error($"[Dungeons] Saved dungeon data is inconsistent ({tiles.Length} tiles, {levels.Length} levels); regenerating.");
+                    Log.Error($"[Dungeon Madness] Saved dungeon data is inconsistent ({tiles.Length} tiles, {levels.Length} levels); regenerating.");
                     genVersion = 0;
                 }
             }
@@ -228,7 +228,7 @@ namespace ThisUsedToBeAboutDungeons
             generatedMaxLevel = settings.maxLevel;
             RebuildIndex();
             SetLayerDirty();
-            Log.Message($"[Dungeons] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, max level {settings.maxLevel}).");
+            Log.Message($"[Dungeon Madness] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, max level {settings.maxLevel}).");
         }
 
         private bool Eligible(PlanetLayer layer, int t, bool allowWater)

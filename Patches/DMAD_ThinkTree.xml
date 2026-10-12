@@ -7,11 +7,11 @@
     <order>Prepend</order>
     <value>
       <li Class="ThinkNode_ConditionalMentalState">
-        <state>TUBAD_DungeonMadness</state>
+        <state>DMAD_DungeonMadness</state>
         <subNodes>
           <li Class="ThinkNode_Priority">
             <subNodes>
-              <li Class="ThisUsedToBeAboutDungeons.JobGiver_DungeonMad" />
+              <li Class="DungeonMadness.JobGiver_DungeonMad" />
               <li Class="JobGiver_WanderAnywhere">
                 <maxDanger>Deadly</maxDanger>
               </li>

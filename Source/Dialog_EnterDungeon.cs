@@ -6,7 +6,7 @@ using UnityEngine;
 using Verse;
 using Verse.Sound;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Pick who and what goes into the dungeon from a caravan on its tile. Laid out like vanilla's split caravan
@@ -81,7 +81,7 @@ namespace ThisUsedToBeAboutDungeons
             foreach (var p in caravan.PawnsListForReading) Add(p);
             foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) Add(t);
             CaravanUIUtility.CreateCaravanTransferableWidgets(transferables, out pawnsTransfer, out itemsTransfer, out suppliesTransfer,
-                "TUBAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => partyInfo.massCapacity - partyInfo.massUsage,
+                "DMAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => partyInfo.massCapacity - partyInfo.massUsage,
                 ignoreSpawnedCorpsesGearAndInventoryMass: false, caravan.Tile);
             // Anyone who has been in this dungeon before cannot go again: shown unticked and locked, with a marker
             foreach (var tr in transferables)
@@ -180,7 +180,7 @@ namespace ThisUsedToBeAboutDungeons
         public override void DoWindowContents(Rect inRect)
         {
             using (new TextBlock(GameFont.Medium, TextAnchor.MiddleCenter))
-                Widgets.Label(new Rect(0f, 0f, inRect.width, TitleHeight), "TUBAD_EnterDungeon_Title".Translate(level));
+                Widgets.Label(new Rect(0f, 0f, inRect.width, TitleHeight), "DMAD_EnterDungeon_Title".Translate(level));
             DoHeader(new Rect(17f, TitleHeight, inRect.width - 34f, HeaderHeight));
 
             tabs.Clear();
@@ -225,8 +225,8 @@ namespace ThisUsedToBeAboutDungeons
             using (new TextBlock(GameFont.Small, TextAnchor.MiddleLeft))
             {
                 GUI.color = ColoredText.SubtleGrayColor;
-                Widgets.Label(new Rect(rect.x, outsideRow.y, RowLabelWidth, RowHeight), "TUBAD_Enter_RowOutside".Translate());
-                Widgets.Label(new Rect(rect.x, partyRow.y, RowLabelWidth, RowHeight), "TUBAD_Enter_RowParty".Translate());
+                Widgets.Label(new Rect(rect.x, outsideRow.y, RowLabelWidth, RowHeight), "DMAD_Enter_RowOutside".Translate());
+                Widgets.Label(new Rect(rect.x, partyRow.y, RowLabelWidth, RowHeight), "DMAD_Enter_RowParty".Translate());
                 GUI.color = Color.white;
                 Widgets.DrawLineHorizontal(rect.x, partyRow.y - RowGap / 2f, rect.width, ColoredText.SubtleGrayColor.ToTransparent(0.3f));
             }
@@ -236,7 +236,7 @@ namespace ThisUsedToBeAboutDungeons
                 using (new TextBlock(GameFont.Small, TextAnchor.MiddleCenter))
                 {
                     GUI.color = ColoredText.WarningColor;
-                    Widgets.Label(outsideRow, "TUBAD_Enter_Everyone".Translate());
+                    Widgets.Label(outsideRow, "DMAD_Enter_Everyone".Translate());
                     GUI.color = Color.white;
                 }
             }
@@ -249,13 +249,13 @@ namespace ThisUsedToBeAboutDungeons
             int people = DungeonEntry.HumanlikeCount(party);
             float mult = DungeonEntry.WealthMultiplier(wealth);
             partyExtra.Clear();
-            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_People".Translate(), people + " / " + cap,
-                people > cap ? ColorLibrary.RedReadable : Color.white, "TUBAD_Enter_People_Tip".Translate(cap)));
-            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_Wealth".Translate(), wealth.ToStringMoney(), Color.white,
-                "TUBAD_Enter_Wealth_Tip".Translate()));
-            partyExtra.Add(new TransferableUIUtility.ExtraInfo("TUBAD_Enter_Effective".Translate(),
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_People".Translate(), people + " / " + cap,
+                people > cap ? ColorLibrary.RedReadable : Color.white, "DMAD_Enter_People_Tip".Translate(cap)));
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_Wealth".Translate(), wealth.ToStringMoney(), Color.white,
+                "DMAD_Enter_Wealth_Tip".Translate()));
+            partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_Effective".Translate(),
                 (level * mult).ToString("0.#") + " (x" + mult.ToString("0.00") + ")", Color.white,
-                "TUBAD_Enter_Effective_Tip".Translate(level, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney())));
+                "DMAD_Enter_Effective_Tip".Translate(level, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney())));
             TransferableUIUtility.DrawExtraInfo(partyExtra, new Rect(partyRow.x + col * 2f, partyRow.y, col * 3f, RowHeight));
             GenUI.ResetLabelAlign();
             GUI.color = Color.white;
@@ -269,7 +269,7 @@ namespace ThisUsedToBeAboutDungeons
                 {
                     GUI.color = ColorLibrary.RedReadable;
                     Widgets.Label(new Rect(rect.x, partyRow.yMax + 4f, rect.width, NoteHeight),
-                        "TUBAD_Enter_EnteredStuck".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
+                        "DMAD_Enter_EnteredStuck".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
                     GUI.color = Color.white;
                 }
             }
@@ -278,7 +278,7 @@ namespace ThisUsedToBeAboutDungeons
         private void DoButtons(Rect rect)
         {
             var accept = new Rect(rect.width / 2f - ButtonSize.x / 2f, rect.height - 55f, ButtonSize.x, ButtonSize.y);
-            if (Widgets.ButtonText(accept, "TUBAD_EnterButton".Translate()) && TryAccept())
+            if (Widgets.ButtonText(accept, "DMAD_EnterButton".Translate()) && TryAccept())
             {
                 SoundDefOf.Tick_High.PlayOneShotOnCamera();
                 Close(doCloseSound: false);
@@ -297,26 +297,26 @@ namespace ThisUsedToBeAboutDungeons
             SelectionChanged();
             if (!party.Any(p => p.RaceProps.Humanlike && CaravanUtility.IsOwner(p, Faction.OfPlayer) && !p.Downed))
             {
-                Messages.Message("TUBAD_Enter_NeedColonist".Translate(), MessageTypeDefOf.RejectInput, false);
+                Messages.Message("DMAD_Enter_NeedColonist".Translate(), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             var going = party; // already every pawn when everyone goes in
             int cap = DungeonsMod.Settings.maxPartySize;
             if (DungeonEntry.HumanlikeCount(going) > cap)
             {
-                Messages.Message((everyone ? "TUBAD_Enter_TooManyEveryone" : "TUBAD_Enter_TooMany").Translate(cap), MessageTypeDefOf.RejectInput, false);
+                Messages.Message((everyone ? "DMAD_Enter_TooManyEveryone" : "DMAD_Enter_TooMany").Translate(cap), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             if (stuckEntered.Any())
             {
-                Messages.Message("TUBAD_Enter_EnteredStuck".Translate(stuckEntered.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
+                Messages.Message("DMAD_Enter_EnteredStuck".Translate(stuckEntered.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             // Safety net: the locked rows should already keep these out of the party
             var entered = DungeonEntry.AlreadyEntered(caravan.Tile, going).ToList();
             if (entered.Any())
             {
-                Messages.Message("TUBAD_Enter_AlreadyEntered".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
+                Messages.Message("DMAD_Enter_AlreadyEntered".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             var report = DungeonEntry.CanEnterAt(caravan.Tile, out _);

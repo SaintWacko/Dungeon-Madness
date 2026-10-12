@@ -5,18 +5,18 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Draws every dungeon icon on the surface in one batched mesh (one sub-mesh per tint), the way hills and
-    /// landmarks are drawn. Added to the Surface PlanetLayerDef by Patches/TUBAD_PlanetLayer.xml.
+    /// landmarks are drawn. Added to the Surface PlanetLayerDef by Patches/DMAD_PlanetLayer.xml.
     /// </summary>
     // StaticConstructorOnStartup only silences vanilla's check for static Material fields: the materials themselves
     // are made lazily in Regenerate, which always runs on the main thread.
     [StaticConstructorOnStartup]
     public class WorldDrawLayer_Dungeons : WorldDrawLayer
     {
-        public const string IconPath = "World/TUBAD_Dungeon";
+        public const string IconPath = "World/DMAD_Dungeon";
         private const int TintSteps = 12;
         private const float IconScale = 0.75f;
 

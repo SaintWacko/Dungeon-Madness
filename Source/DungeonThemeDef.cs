@@ -5,7 +5,7 @@ using RimWorld.Planet;
 using UnityEngine;
 using Verse;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     public enum FloorMode
     {
@@ -111,9 +111,9 @@ namespace ThisUsedToBeAboutDungeons
 
         public ThingDef RandomDivider()
         {
-            if (dividers.NullOrEmpty()) return DungeonDefOf.TUBAD_DungeonRubble;
+            if (dividers.NullOrEmpty()) return DungeonDefOf.DMAD_DungeonRubble;
             return dividers.Where(d => d.thing != null).RandomElementByWeightWithFallback(d => d.weight)?.thing
-                ?? DungeonDefOf.TUBAD_DungeonRubble;
+                ?? DungeonDefOf.DMAD_DungeonRubble;
         }
 
         public override IEnumerable<string> ConfigErrors()
@@ -142,7 +142,7 @@ namespace ThisUsedToBeAboutDungeons
 
                 var named = all.Where(t => t.rareChance <= 0f && !t.biomes.NullOrEmpty() && t.Matches(info)).ToList();
                 var pool = named.Count > 0 ? named : all.Where(t => t.rareChance <= 0f && t.Matches(info)).ToList();
-                if (pool.Count == 0) return DungeonDefOf.TUBAD_Cave;
+                if (pool.Count == 0) return DungeonDefOf.DMAD_Cave;
                 int top = pool.Max(t => t.priority);
                 return pool.Where(t => t.priority == top).OrderBy(t => t.defName).RandomElementByWeight(t => t.commonality);
             }

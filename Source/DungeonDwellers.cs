@@ -8,7 +8,7 @@ using Verse;
 using Verse.AI;
 using Verse.AI.Group;
 
-namespace ThisUsedToBeAboutDungeons
+namespace DungeonMadness
 {
     /// <summary>
     /// Sane dungeon dwellers and the party. A colonist can invite one to leave with them: if they agree, they go and
@@ -45,12 +45,12 @@ namespace ThisUsedToBeAboutDungeons
             {
                 comp.followers.Add(dweller);
                 SendToWait(dweller);
-                Messages.Message("TUBAD_Invite_Accepted".Translate(dweller.Named("PAWN")), dweller, MessageTypeDefOf.PositiveEvent);
+                Messages.Message("DMAD_Invite_Accepted".Translate(dweller.Named("PAWN")), dweller, MessageTypeDefOf.PositiveEvent);
             }
             else
             {
                 comp.refused.Add(dweller);
-                Messages.Message("TUBAD_Invite_Refused".Translate(dweller.Named("PAWN")), dweller, MessageTypeDefOf.NeutralEvent);
+                Messages.Message("DMAD_Invite_Refused".Translate(dweller.Named("PAWN")), dweller, MessageTypeDefOf.NeutralEvent);
             }
         }
 
@@ -58,7 +58,7 @@ namespace ThisUsedToBeAboutDungeons
         static void SendToWait(Pawn dweller)
         {
             Map map = dweller.Map;
-            var exit = map.listerThings.ThingsOfDef(DungeonDefOf.TUBAD_DungeonExit).FirstOrDefault() as DungeonExit;
+            var exit = map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).FirstOrDefault() as DungeonExit;
             if (exit == null) return;
             Lord lord = map.lordManager.lords.Find(l => l.LordJob is LordJob_DwellersWait);
             if (lord == null)
@@ -114,17 +114,17 @@ namespace ThisUsedToBeAboutDungeons
             if (Rand.Chance(DungeonsMod.Settings.joinChance))
             {
                 dweller.SetFaction(Faction.OfPlayer);
-                Find.LetterStack.ReceiveLetter("TUBAD_Dweller_Joined_Label".Translate(dweller.Named("PAWN")),
-                    "TUBAD_Dweller_Joined_Text".Translate(dweller.Named("PAWN")), LetterDefOf.PositiveEvent, new LookTargets(site));
+                Find.LetterStack.ReceiveLetter("DMAD_Dweller_Joined_Label".Translate(dweller.Named("PAWN")),
+                    "DMAD_Dweller_Joined_Text".Translate(dweller.Named("PAWN")), LetterDefOf.PositiveEvent, new LookTargets(site));
                 return true;
             }
-            Messages.Message("TUBAD_Dweller_Left".Translate(dweller.Named("PAWN")), MessageTypeDefOf.NeutralEvent);
+            Messages.Message("DMAD_Dweller_Left".Translate(dweller.Named("PAWN")), MessageTypeDefOf.NeutralEvent);
             return false;
         }
     }
 
     /// <summary>
-    /// A hungry dweller (whose Titan diet made them a hunter) may pick one of the party's animals, or a colonist, as
+    /// A hungry dweller (whose Bastle diet made them a hunter) may pick one of the party's animals, or a colonist, as
     /// prey. The first time, the hunt is held back and the player is warned, so there is time to drop food near them
     /// or move the animals away. The hunt stays held back while the dweller is only hungry, and goes ahead once they
     /// are urgently hungry. Reading the food need is a field lookup, so this costs nothing measurable. A dweller who
@@ -147,7 +147,7 @@ namespace ThisUsedToBeAboutDungeons
             comp.lastEyed[predator] = now;
             if (newHunger)
             {
-                Messages.Message("TUBAD_Dweller_EyeingPrey".Translate(predator.Named("PAWN"), prey.Named("PREY")),
+                Messages.Message("DMAD_Dweller_EyeingPrey".Translate(predator.Named("PAWN"), prey.Named("PREY")),
                     new LookTargets(predator, prey), MessageTypeDefOf.ThreatSmall);
                 __result = false;
                 return;
@@ -186,18 +186,18 @@ namespace ThisUsedToBeAboutDungeons
             if (!DungeonDwellerUtility.IsDweller(clickedPawn) || !pawn.IsColonistPlayerControlled) return null;
             var comp = DungeonDwellerUtility.Comp(clickedPawn.Map);
             if (comp == null || comp.followers.Contains(clickedPawn)) return null;
-            string label = "TUBAD_Invite".Translate(clickedPawn.LabelShort, clickedPawn);
+            string label = "DMAD_Invite".Translate(clickedPawn.LabelShort, clickedPawn);
             if (comp.refused.Contains(clickedPawn))
-                return new FloatMenuOption(label + ": " + "TUBAD_Invite_AlreadyRefused".Translate(), null);
+                return new FloatMenuOption(label + ": " + "DMAD_Invite_AlreadyRefused".Translate(), null);
             if (!DungeonDwellerUtility.CanInvite(clickedPawn)) return null;
             if (!pawn.health.capacities.CapableOf(PawnCapacityDefOf.Talking))
-                return new FloatMenuOption(label + ": " + "TUBAD_Invite_CannotTalk".Translate(pawn.LabelShort, pawn), null);
+                return new FloatMenuOption(label + ": " + "DMAD_Invite_CannotTalk".Translate(pawn.LabelShort, pawn), null);
             if (!pawn.CanReach(clickedPawn, PathEndMode.Touch, Danger.Deadly))
                 return new FloatMenuOption(label + ": " + "NoPath".Translate().CapitalizeFirst(), null);
             label += " (" + DungeonDwellerUtility.InviteChance(pawn).ToStringPercent() + ")";
             return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(label, () =>
             {
-                pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(DungeonDwellerDefOf.TUBAD_InviteDweller, clickedPawn), JobTag.Misc);
+                pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(DungeonDwellerDefOf.DMAD_InviteDweller, clickedPawn), JobTag.Misc);
             }, MenuOptionPriority.Default, null, clickedPawn), pawn, clickedPawn);
         }
     }
@@ -220,7 +220,7 @@ namespace ThisUsedToBeAboutDungeons
             talk.tickIntervalAction = delta => pawn.rotationTracker.FaceTarget(Dweller);
             talk.handlingFacing = true;
             yield return talk;
-            Toil ask = ToilMaker.MakeToil("TUBAD_Ask");
+            Toil ask = ToilMaker.MakeToil("DMAD_Ask");
             ask.initAction = () => DungeonDwellerUtility.ResolveInvite(Dweller, pawn);
             ask.defaultCompleteMode = ToilCompleteMode.Instant;
             yield return ask;
@@ -246,12 +246,12 @@ namespace ThisUsedToBeAboutDungeons
             Pawn pawn = context.FirstSelectedPawn;
             if (!DungeonDwellerUtility.IsDweller(clickedPawn) || !clickedPawn.CanBeArrestedBy(pawn)) return null;
             if (RestUtility.FindBedFor(clickedPawn, pawn, checkSocialProperness: false, ignoreOtherReservations: true, GuestStatus.Prisoner) != null) return null;
-            string label = "TUBAD_ArrestHere".Translate(clickedPawn.LabelShort, clickedPawn, clickedPawn.GetAcceptArrestChance(pawn).ToStringPercent());
+            string label = "DMAD_ArrestHere".Translate(clickedPawn.LabelShort, clickedPawn, clickedPawn.GetAcceptArrestChance(pawn).ToStringPercent());
             if (!pawn.CanReach(clickedPawn, PathEndMode.Touch, Danger.Deadly))
                 return new FloatMenuOption(label + ": " + "NoPath".Translate().CapitalizeFirst(), null);
             return FloatMenuUtility.DecoratePrioritizedTask(new FloatMenuOption(label, () =>
             {
-                pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(DungeonDwellerDefOf.TUBAD_ArrestInPlace, clickedPawn), JobTag.Misc);
+                pawn.jobs.TryTakeOrderedJob(JobMaker.MakeJob(DungeonDwellerDefOf.DMAD_ArrestInPlace, clickedPawn), JobTag.Misc);
             }, MenuOptionPriority.High, null, clickedPawn), pawn, clickedPawn);
         }
     }
@@ -267,7 +267,7 @@ namespace ThisUsedToBeAboutDungeons
             this.FailOnDespawnedOrNull(TargetIndex.A);
             this.FailOn(() => !DungeonDwellerUtility.IsDweller(Takee));
             yield return Toils_Goto.GotoThing(TargetIndex.A, PathEndMode.Touch);
-            Toil arrest = ToilMaker.MakeToil("TUBAD_Arrest");
+            Toil arrest = ToilMaker.MakeToil("DMAD_Arrest");
             arrest.initAction = () =>
             {
                 if (!Takee.CheckAcceptArrest(pawn))
@@ -281,7 +281,7 @@ namespace ThisUsedToBeAboutDungeons
                 Takee.GetLord()?.Notify_PawnLost(Takee, PawnLostCondition.MadePrisoner);
                 Takee.guest.CapturedBy(Faction.OfPlayer, pawn);
                 Takee.jobs?.EndCurrentJob(JobCondition.InterruptForced);
-                Messages.Message("TUBAD_Arrested".Translate(Takee.Named("PAWN")), Takee, MessageTypeDefOf.NeutralEvent);
+                Messages.Message("DMAD_Arrested".Translate(Takee.Named("PAWN")), Takee, MessageTypeDefOf.NeutralEvent);
             };
             arrest.defaultCompleteMode = ToilCompleteMode.Instant;
             yield return arrest;
@@ -291,8 +291,8 @@ namespace ThisUsedToBeAboutDungeons
     [DefOf]
     public static class DungeonDwellerDefOf
     {
-        public static JobDef TUBAD_InviteDweller;
-        public static JobDef TUBAD_ArrestInPlace;
+        public static JobDef DMAD_InviteDweller;
+        public static JobDef DMAD_ArrestInPlace;
         static DungeonDwellerDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDwellerDefOf));
     }
 }
