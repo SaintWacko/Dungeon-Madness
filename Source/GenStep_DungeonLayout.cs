@@ -154,7 +154,7 @@ namespace DungeonMadness
 
             Skylights(map, layout, theme, biome);
             Furnish(map, layout, theme, blocks, rocks);
-            var loot = new DungeonLootContext(map, furnishedIds.Count > 0);
+            var loot = new DungeonLootContext(map, furnishedIds.Count > 0) { tomeChance = theme.tomeChance };
             foreach (var ch in data.chambers)
             {
                 if (ch.use == RoomUse.Ruin) Ruin(map, layout, ch, blocks);
@@ -300,6 +300,7 @@ namespace DungeonMadness
                     var b = c.GetEdifice(map);
                     if (b != null && !(b is Building_Door) && b.def != DungeonDefOf.DMAD_DungeonWallPowered) b.Destroy();
                 }
+                loot.StockBookcases(leaf);
                 loot.rooms.Add(new FurnishedRoom(leaf, use));
             }
             if (Prefs.DevMode && ch.use == RoomUse.Suite)

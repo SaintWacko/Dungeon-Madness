@@ -130,6 +130,7 @@
     <builtChance>0.6</builtChance>
     <pinchChance>0.8</pinchChance>
     <cryptRooms>true</cryptRooms>
+    <tomeChance>0.15</tomeChance>
     <tiledBuiltFloor>true</tiledBuiltFloor>
     <dividers>
       <li><thing>DMAD_DungeonRubble</thing></li>

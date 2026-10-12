@@ -74,6 +74,9 @@ namespace DungeonMadness
         public float pinchChance = 0.75f;
         /// <summary>Built rooms favour halls and plain rooms filled with sarcophagi.</summary>
         public bool cryptRooms;
+        /// <summary>Chance each book in a library is one that can cause a mental break (an Anomaly tome). Zero keeps
+        /// them out of this theme's libraries.</summary>
+        public float tomeChance;
 
         // ---- Look
         public List<FloorPatch> floors = new List<FloorPatch>();
