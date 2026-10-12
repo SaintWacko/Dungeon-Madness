@@ -13,7 +13,7 @@ namespace DungeonMadness
         public static bool forceFurnished;
 
         // Pins as Actions\Force furnished rooms
-        [DebugAction("Dungeons", "Force furnished rooms", allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("Dungeon Madness", "Force furnished rooms", allowedGameStates = AllowedGameStates.Playing)]
         private static void ToggleForceFurnished()
         {
             forceFurnished = !forceFurnished;
@@ -22,7 +22,7 @@ namespace DungeonMadness
 
         // Pins as Actions\Wake all dungeon packs. Spawns every pack on the current dungeon map without waiting for
         // its chamber to be seen, to look them all over at once.
-        [DebugAction("Dungeons", "Wake all dungeon packs", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        [DebugAction("Dungeon Madness", "Wake all dungeon packs", allowedGameStates = AllowedGameStates.PlayingOnMap)]
         private static void WakeAllPacks()
         {
             var comp = Find.CurrentMap?.GetComponent<MapComponent_DungeonCreatures>();
@@ -31,7 +31,7 @@ namespace DungeonMadness
         }
 
         // Pins as Actions\Regenerate dungeons
-        [DebugAction("Dungeons", "Regenerate dungeons", allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("Dungeon Madness", "Regenerate dungeons", allowedGameStates = AllowedGameStates.Playing)]
         private static void RegenerateDungeons()
         {
             var comp = DungeonWorldComponent.Instance;
@@ -42,7 +42,7 @@ namespace DungeonMadness
 
         // Pins as Actions\Log dungeon themes. Tallies the theme every dungeon on the world would get, plus the
         // rare-roll value of the first few, to check the per-tile theme pick is spread the way the defs intend
-        [DebugAction("Dungeons", "Log dungeon themes", allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("Dungeon Madness", "Log dungeon themes", allowedGameStates = AllowedGameStates.Playing)]
         private static void LogThemes()
         {
             var comp = DungeonWorldComponent.Instance;
@@ -61,7 +61,7 @@ namespace DungeonMadness
         }
 
         // Pins as Actions\Log dungeon levels
-        [DebugAction("Dungeons", "Log dungeon levels", allowedGameStates = AllowedGameStates.Playing)]
+        [DebugAction("Dungeon Madness", "Log dungeon levels", allowedGameStates = AllowedGameStates.Playing)]
         private static void LogLevels()
         {
             var comp = DungeonWorldComponent.Instance;
