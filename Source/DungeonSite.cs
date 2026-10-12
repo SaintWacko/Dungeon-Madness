@@ -116,6 +116,9 @@ namespace DungeonMadness
         {
             // A dweller who agreed to come: joins (and goes on below as a colonist) or goes their own way
             if (DungeonDwellerUtility.TryResolveFollowerOut(pawn, this)) return true;
+            // Refuse before binding anything, so a pack animal still waiting for a caravan has nothing reported yet
+            if (WaitingCaravan() == null && !pawn.IsColonist && !pawn.IsColonySubhumanPlayerControlled
+                && !pawn.IsColonyMechPlayerControlled) return false;
             ResolveHeldBy(pawn);
 
             // Pawn.ExitMap destroys a carried item, and a drafted pawn keeps carrying through the exit
@@ -180,7 +183,10 @@ namespace DungeonMadness
             if (p.apparel != null) held.AddRange(p.apparel.WornApparel);
             if (p.inventory != null) held.AddRange(p.inventory.innerContainer);
             foreach (var t in held) ResolveEntad(t, p);
-            if (p.carryTracker?.CarriedThing is Thing c && !(c is Pawn)) ResolveEntad(c, null);
+            // A downed pawn carried out on someone's shoulder takes what they have on them, like one hauled through
+            // the exit; any other thing in hand is treated as hauled
+            if (p.carryTracker?.CarriedThing is Pawn carriedPawn) ResolveHeldBy(carriedPawn);
+            else if (p.carryTracker?.CarriedThing is Thing c) ResolveEntad(c, null);
         }
 
         public void FlushStash(Caravan caravan)

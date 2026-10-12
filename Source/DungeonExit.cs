@@ -110,8 +110,10 @@ namespace DungeonMadness
             if (site == null) return false;
             // Binding only cares about who has an entad equipped, worn or in their inventory: a hauled entad belongs
             // to nobody in particular, so a single bind goes to a random party member. A pawn carried out takes what
-            // they have on them.
+            // they have on them, and so does a corpse (its dead owner fails the holder check, so a single bind goes to
+            // a living party member).
             if (item is Pawn p) site.ResolveHeldBy(p);
+            else if (item is Corpse corpse) site.ResolveHeldBy(corpse.InnerPawn);
             else site.ResolveEntad(item, null);
             site.AddToStash(item);
             site.FlushStash(site.WaitingCaravan());
