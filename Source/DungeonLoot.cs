@@ -142,12 +142,13 @@ namespace DungeonMadness
         /// with the effective level, within the colony's tech cap. These are the only books the mod adds; vanilla's
         /// reward maker (the loot piles) already rolls an occasional book of its own. Books that do nothing but start a
         /// quest (Odyssey maps) are left out, since a shelf of them would be a shelf of quests. Books that can cause a
-        /// mental break (Anomaly tomes) only appear at the theme's tome chance. Entad bookcases stay empty.</summary>
+        /// mental break (Anomaly tomes) only appear at the theme's tome chance. Runs while rooms are furnished, before
+        /// PlaceFurniture spawns any entad furniture, so an entad bookcase stays empty.</summary>
         public void StockBookcases(CellRect rect)
         {
             var cases = new List<Building_Bookcase>();
             foreach (var c in rect)
-                if (c.GetEdifice(map) is Building_Bookcase b && !entads.Contains(b) && !cases.Contains(b)) cases.Add(b);
+                if (c.GetEdifice(map) is Building_Bookcase b && !cases.Contains(b)) cases.Add(b);
             if (cases.Count == 0) return;
 
             TechLevel tech = ColonyTech;
@@ -157,6 +158,9 @@ namespace DungeonMadness
             {
                 var props = d.GetCompProperties<CompProperties_Book>();
                 if (props == null || props.pickWeight <= 0f || d.thingClass == null || !typeof(Book).IsAssignableFrom(d.thingClass)) continue;
+                // Only what a bookcase would take and can draw: vanilla bookcases hold the Books category and draw
+                // each book's vertical graphic
+                if (props.verticalGraphic == null || cases[0].GetParentStoreSettings()?.AllowedToAccept(d) == false) continue;
                 if (d.techLevel != TechLevel.Undefined && d.techLevel > tech) continue;
                 var doers = props.doers;
                 if (doers != null && doers.Count > 0 && doers.All(o => o is BookOutcomeProperties_GiveQuest)) continue;
@@ -308,8 +312,13 @@ namespace DungeonMadness
                 if (bestCost == 0f) break;
             }
             if (!bestCell.IsValid) return false;
+            // A replaced bookcase takes its books with it: books only ever turn up on shelves, never loose
             foreach (var b in bestRemove)
-                if (!b.Destroyed) b.Destroy();
+            {
+                if (b.Destroyed) continue;
+                if (b is Building_Bookcase shelf) shelf.GetDirectlyHeldThings().ClearAndDestroyContents();
+                b.Destroy();
+            }
             foreach (var o in GenAdj.OccupiedRect(bestCell, bestRot, def.size))
                 foreach (var item in o.GetThingList(map).Where(x => x.def.category == ThingCategory.Item).ToList())
                     item.Destroy();
