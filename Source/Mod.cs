@@ -26,7 +26,7 @@ namespace DungeonMadness
             DungeonWorldComponent.SetLayerDirty();
         }
 
-        private enum Tab { World, Parties, Creatures }
+        private enum Tab { World, Parties, Creatures, Loot }
         private Tab tab;
         private Vector2 scroll;
         private float viewHeight = 900f;
@@ -41,6 +41,7 @@ namespace DungeonMadness
                 new TabRecord("DMAD_Tab_World".Translate(), () => SetTab(Tab.World), tab == Tab.World),
                 new TabRecord("DMAD_Tab_Parties".Translate(), () => SetTab(Tab.Parties), tab == Tab.Parties),
                 new TabRecord("DMAD_Tab_Creatures".Translate(), () => SetTab(Tab.Creatures), tab == Tab.Creatures),
+                new TabRecord("DMAD_Tab_Loot".Translate(), () => SetTab(Tab.Loot), tab == Tab.Loot),
             };
             Widgets.DrawMenuSection(body);
             TabDrawer.DrawTabs(body, tabs);
@@ -55,7 +56,8 @@ namespace DungeonMadness
             list.Begin(view);
             if (tab == Tab.World) DoWorld(list);
             else if (tab == Tab.Parties) DoParties(list);
-            else DoCreatures(list);
+            else if (tab == Tab.Creatures) DoCreatures(list);
+            else DoLoot(list);
             viewHeight = list.CurHeight + 20f;
             list.End();
             Widgets.EndScrollView();
@@ -138,6 +140,40 @@ namespace DungeonMadness
             list.Label("DMAD_Settings_PowerPerLevel".Translate(s.powerPerLevel.ToString("0.#")));
             s.powerPerLevel = Mathf.Round(list.Slider(s.powerPerLevel, 0f, 50f) * 2f) / 2f;
             list.Label("DMAD_Settings_Power_Desc".Translate(s.PowerCeiling(1f).ToString("0"), s.PowerCeiling(10f).ToString("0"), s.PowerCeiling(30f).ToString("0")));
+        }
+
+        private static void DoLoot(Listing_Standard list)
+        {
+            var s = Settings;
+            list.Label("DMAD_Settings_Loot_Desc".Translate());
+            list.Gap();
+
+            Section(list, "DMAD_Settings_LootPiles");
+            list.Label("DMAD_Settings_LootChance".Translate(s.lootChance.ToStringPercent()));
+            s.lootChance = Mathf.Round(list.Slider(s.lootChance, 0f, 1f) * 20f) / 20f;
+            list.Label("DMAD_Settings_LootValue".Translate(s.lootValuePerLevel.ToStringMoney()));
+            s.lootValuePerLevel = Mathf.Round(list.Slider(s.lootValuePerLevel, 0f, 500f) / 5f) * 5f;
+            list.Label("DMAD_Settings_LootValue_Desc".Translate((10f * s.lootValuePerLevel).ToStringMoney()));
+            list.Gap();
+
+            Section(list, "DMAD_Settings_Entads");
+            list.Label("DMAD_Settings_EntadChance".Translate(s.entadChance.ToStringPercent()));
+            s.entadChance = Mathf.Round(list.Slider(s.entadChance, 0f, 1f) * 60f) / 60f;
+            list.Label("DMAD_Settings_EntadChance_Desc".Translate());
+            list.Gap();
+            list.Label("DMAD_Settings_EntadPoints".Translate(s.entadPointsPerLevel.ToString("0.##")));
+            s.entadPointsPerLevel = Mathf.Round(list.Slider(s.entadPointsPerLevel, 0.05f, 2f) * 20f) / 20f;
+            list.Label("DMAD_Settings_EntadPoints_Desc".Translate((10f * s.entadPointsPerLevel).ToString("0.#")));
+            list.Gap();
+
+            Section(list, "DMAD_Settings_Binding");
+            list.Label("DMAD_Settings_BindSingle".Translate(s.bindSingleChance.ToStringPercent()));
+            s.bindSingleChance = Mathf.Round(list.Slider(s.bindSingleChance, 0f, 1f) * 20f) / 20f;
+            list.Label("DMAD_Settings_BindParty".Translate(s.bindPartyChance.ToStringPercent()));
+            s.bindPartyChance = Mathf.Round(list.Slider(s.bindPartyChance, 0f, 1f) * 20f) / 20f;
+            s.bindPartyChance = Mathf.Min(s.bindPartyChance, 1f - s.bindSingleChance);
+            list.Label("DMAD_Settings_BindNone".Translate((1f - s.bindSingleChance - s.bindPartyChance).ToStringPercent()));
+            list.Label("DMAD_Settings_Binding_Desc".Translate());
         }
 
         private static void DoWorld(Listing_Standard list)

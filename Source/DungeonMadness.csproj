@@ -38,6 +38,10 @@
       <HintPath>../../87257f378d52/Assemblies/BastleFramework.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="EntadFramework">
+      <HintPath>../../EntadFramework/Assemblies/EntadFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>/Users/tirrella/Library/Application Support/Steam/steamapps/common/RimWorld/RimWorldMac.app/Contents/Resources/Data/Managed/UnityEngine.dll</HintPath>
       <Private>false</Private>

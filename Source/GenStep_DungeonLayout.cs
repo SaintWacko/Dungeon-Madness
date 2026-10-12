@@ -154,12 +154,15 @@ namespace DungeonMadness
 
             Skylights(map, layout, theme, biome);
             Furnish(map, layout, theme, blocks, rocks);
+            var loot = new DungeonLootContext(map, furnishedIds.Count > 0);
             foreach (var ch in data.chambers)
             {
                 if (ch.use == RoomUse.Ruin) Ruin(map, layout, ch, blocks);
-                else if (ch.Furnished) FurnishRoom(map, layout, ch, blocks);
+                else if (ch.Furnished) FurnishRoom(map, layout, ch, blocks, loot);
             }
             CaveLife(map, layout, theme, biome, rocks);
+            loot.PlaceCaches(layout);
+            loot.PlaceFurniture();
             DungeonCreatureGen.Plan(map, layout, theme, blocks);
         }
 
@@ -258,7 +261,7 @@ namespace DungeonMadness
         /// <summary>A room left as it was. A room over MaxLeaf on a side is first cut by powered inner walls, each
         /// with a stone door, into smaller rooms of different uses. Each room gets its own laid floor and is filled
         /// by vanilla's settlement room fillers or a short list of furniture, with no faction.</summary>
-        static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch, ThingDef blocks)
+        static void FurnishRoom(Map map, DungeonLayoutResult layout, DungeonChamber ch, ThingDef blocks, DungeonLootContext loot)
         {
             if (!Interior(layout, ch, out var rect)) return;
             // Cells in front of a door must stay open, or a split wall could seal it
@@ -283,7 +286,7 @@ namespace DungeonMadness
                 BaseGen.globalSettings.map = map;
                 if (PushRoom(use, leaf, blocks)) BaseGen.Generate();
                 else BaseGen.symbolStack.Clear();
-                if (use == RoomUse.Storage) StockRoom(map, leaf, blocks);
+                if (use == RoomUse.Storage) StockRoom(map, leaf, blocks, loot);
                 // Floor last, so nothing BaseGen clears can take it. A proper laid floor, one a builder needs skill
                 // for: stone or fine tile, carpet, parquet and so on. Doors on the edge take the floor too.
                 if (floors.TryRandomElement(out var family) && family.TryRandomElement(out var floor))
@@ -297,6 +300,7 @@ namespace DungeonMadness
                     var b = c.GetEdifice(map);
                     if (b != null && !(b is Building_Door) && b.def != DungeonDefOf.DMAD_DungeonWallPowered) b.Destroy();
                 }
+                loot.rooms.Add(new FurnishedRoom(leaf, use));
             }
             if (Prefs.DevMode && ch.use == RoomUse.Suite)
                 Log.Message($"[Dungeon Madness] Suite at {ch.center}: {string.Join(", ", uses)}");
@@ -402,9 +406,9 @@ namespace DungeonMadness
             return slash >= 0 && p.IndexOf('_', slash) >= 0 ? p.Substring(0, slash) : p;
         }
 
-        /// <summary>Small shelves along the walls, facing in, then ordinary goods placed onto them; whatever does not
-        /// fit on a shelf is not spawned. Phase 5 swaps the goods for the dungeon's own loot.</summary>
-        static void StockRoom(Map map, CellRect rect, ThingDef blocks)
+        /// <summary>Small shelves along the walls, facing in, then the dungeon's loot placed onto them (ordinary goods,
+        /// with an entad at the loot chance per stack); whatever does not fit on a shelf is not spawned.</summary>
+        static void StockRoom(Map map, CellRect rect, ThingDef blocks, DungeonLootContext loot)
         {
             ThingDef shelfDef = ThingDefOf.ShelfSmall ?? Named("ShelfSmall");
             if (shelfDef == null) return;
@@ -420,14 +424,27 @@ namespace DungeonMadness
             if (shelves.Count == 0) return;
             // At most one stack per shelf tile, and usually fewer: a dungeon storeroom is picked over, not stocked
             int count = Rand.RangeInclusive(Mathf.Max(1, shelves.Count / 3), Mathf.Max(1, shelves.Count * 2 / 3));
-            float value = Mathf.Min(count * 40f, 600f);
-            var parms = new ThingSetMakerParams
+            // Entads by the loot chance per stack; the rest ordinary stockpile goods, about 40 silver a stack
+            var goods = new List<Thing>();
+            int ordinary = 0;
+            for (int k = 0; k < count; k++)
             {
-                techLevel = TechLevel.Undefined,
-                totalMarketValueRange = new FloatRange(value, value),
-                countRange = new IntRange(count, count),
-            };
-            var goods = ThingSetMakerDefOf.MapGen_DefaultStockpile.root.Generate(parms);
+                Thing entad = Rand.Chance(DungeonsMod.Settings.entadChance) ? loot.MakeEntad() : null;
+                if (entad == null) ordinary++;
+                else if (entad.def.category == ThingCategory.Building) loot.QueueFurniture(entad);
+                else goods.Add(entad);
+            }
+            if (ordinary > 0)
+            {
+                float value = Mathf.Min(ordinary * 40f, 600f);
+                var parms = new ThingSetMakerParams
+                {
+                    techLevel = TechLevel.Undefined,
+                    totalMarketValueRange = new FloatRange(value, value),
+                    countRange = new IntRange(ordinary, ordinary),
+                };
+                goods.AddRange(ThingSetMakerDefOf.MapGen_DefaultStockpile.root.Generate(parms));
+            }
             shelves.Shuffle();
             int i = 0;
             foreach (var t in goods)

@@ -107,6 +107,10 @@ namespace DungeonMadness
             portal.Notify_ThingAdded(item);
             var site = (portal as DungeonExit)?.Site;
             if (site == null) return false;
+            // An entad hauled to the exit counts as carried out by whoever hauled it; a pawn carried out takes
+            // what they have on them
+            if (item is Pawn p) site.ResolveHeldBy(p);
+            else site.ResolveEntad(item, (item.ParentHolder as Pawn_CarryTracker)?.pawn);
             site.AddToStash(item);
             site.FlushStash(site.WaitingCaravan());
             return true;
