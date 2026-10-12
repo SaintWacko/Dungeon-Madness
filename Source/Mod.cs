@@ -172,7 +172,7 @@ namespace DungeonMadness
             list.Label("DMAD_Settings_BindParty".Translate(s.bindPartyChance.ToStringPercent()));
             s.bindPartyChance = Mathf.Round(list.Slider(s.bindPartyChance, 0f, 1f) * 20f) / 20f;
             s.bindPartyChance = Mathf.Min(s.bindPartyChance, 1f - s.bindSingleChance);
-            list.Label("DMAD_Settings_BindNone".Translate((1f - s.bindSingleChance - s.bindPartyChance).ToStringPercent()));
+            list.Label("DMAD_Settings_BindNone".Translate(Mathf.Max(0f, 1f - s.bindSingleChance - s.bindPartyChance).ToStringPercent()));
             list.Label("DMAD_Settings_Binding_Desc".Translate());
         }
 
