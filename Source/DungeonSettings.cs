@@ -70,6 +70,25 @@ namespace DungeonMadness
         public const float DefaultJoinChance = 0.5f;
         public float joinChance = DefaultJoinChance;
 
+        // ---- Loot: read when a dungeon map is generated (binding odds: when an entad leaves the dungeon)
+        // Chance a chamber other than the entrance has a loot pile
+        public const float DefaultLootChance = 0.4f;
+        public float lootChance = DefaultLootChance;
+        // A pile's market value per effective level
+        public const float DefaultLootValuePerLevel = 60f;
+        public float lootValuePerLevel = DefaultLootValuePerLevel;
+        // Chance each loot slot (in a pile or on a storeroom shelf) is an entad
+        public const float DefaultEntadChance = 1f / 3f;
+        public float entadChance = DefaultEntadChance;
+        // Entad trait points per effective level
+        public const float DefaultEntadPointsPerLevel = 1f;
+        public float entadPointsPerLevel = DefaultEntadPointsPerLevel;
+        // Binding odds when an entad leaves; the rest is unbound
+        public const float DefaultBindSingleChance = 0.2f;
+        public float bindSingleChance = DefaultBindSingleChance;
+        public const float DefaultBindPartyChance = 0.4f;
+        public float bindPartyChance = DefaultBindPartyChance;
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -97,6 +116,12 @@ namespace DungeonMadness
             powerPerLevel = DefaultPowerPerLevel;
             inviteChance = DefaultInviteChance;
             joinChance = DefaultJoinChance;
+            lootChance = DefaultLootChance;
+            lootValuePerLevel = DefaultLootValuePerLevel;
+            entadChance = DefaultEntadChance;
+            entadPointsPerLevel = DefaultEntadPointsPerLevel;
+            bindSingleChance = DefaultBindSingleChance;
+            bindPartyChance = DefaultBindPartyChance;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -140,6 +165,18 @@ namespace DungeonMadness
             inviteChance = Mathf.Clamp01(inviteChance);
             Scribe_Values.Look(ref joinChance, "joinChance", DefaultJoinChance);
             joinChance = Mathf.Clamp01(joinChance);
+            Scribe_Values.Look(ref lootChance, "lootChance", DefaultLootChance);
+            lootChance = Mathf.Clamp01(lootChance);
+            Scribe_Values.Look(ref lootValuePerLevel, "lootValuePerLevel", DefaultLootValuePerLevel);
+            lootValuePerLevel = Mathf.Clamp(lootValuePerLevel, 0f, 500f);
+            Scribe_Values.Look(ref entadChance, "entadChance", DefaultEntadChance);
+            entadChance = Mathf.Clamp01(entadChance);
+            Scribe_Values.Look(ref entadPointsPerLevel, "entadPointsPerLevel", DefaultEntadPointsPerLevel);
+            entadPointsPerLevel = Mathf.Clamp(entadPointsPerLevel, 0.05f, 2f);
+            Scribe_Values.Look(ref bindSingleChance, "bindSingleChance", DefaultBindSingleChance);
+            bindSingleChance = Mathf.Clamp01(bindSingleChance);
+            Scribe_Values.Look(ref bindPartyChance, "bindPartyChance", DefaultBindPartyChance);
+            bindPartyChance = Mathf.Clamp(bindPartyChance, 0f, 1f - bindSingleChance);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

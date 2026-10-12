@@ -102,11 +102,28 @@ namespace DungeonMadness
     /// <summary>Items hauled into the exit go to the site's stash, then to the caravan outside.</summary>
     public class DungeonExitProxy : PortalContainerProxy
     {
+        // By the time the item reaches us it has already left the hauler's hands (TryTransferToContainer splits it
+        // off first), so the hauler is found by job: the pawn hauling this very thing to this exit
+        private Pawn HaulerOf(Thing item)
+        {
+            var pawns = portal.Map?.mapPawns.AllPawnsSpawned;
+            if (pawns == null) return null;
+            foreach (var p in pawns)
+                if (p.CurJobDef == JobDefOf.HaulToPortal && p.jobs.curDriver is JobDriver_HaulToPortal d
+                    && d.MapPortal == portal && d.ThingToCarry == item)
+                    return p;
+            return null;
+        }
+
         public override bool TryAdd(Thing item, bool canMergeWithExistingStacks = true)
         {
             portal.Notify_ThingAdded(item);
             var site = (portal as DungeonExit)?.Site;
             if (site == null) return false;
+            // An entad hauled to the exit counts as carried out by whoever hauled it; a pawn carried out takes
+            // what they have on them
+            if (item is Pawn p) site.ResolveHeldBy(p);
+            else site.ResolveEntad(item, HaulerOf(item));
             site.AddToStash(item);
             site.FlushStash(site.WaitingCaravan());
             return true;

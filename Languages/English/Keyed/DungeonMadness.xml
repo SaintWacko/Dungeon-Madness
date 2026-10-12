@@ -80,6 +80,16 @@
   <DMAD_Dweller_EyeingPrey>{PAWN_nameDef} is eyeing {PREY_definite} hungrily. Bring {PAWN_objective} food or move {PREY_objective} away before {PAWN_pronoun} goes hunting.</DMAD_Dweller_EyeingPrey>
   <DMAD_Dweller_Left>{PAWN_nameDef} came up out of the dungeon with the party, thanked them, and went {PAWN_possessive} own way.</DMAD_Dweller_Left>
 
+  <!-- Entads carried out -->
+  <DMAD_Entads_Label>Entads recovered</DMAD_Entads_Label>
+  <DMAD_Entads_Text>The party brought {0} entads out of the dungeon. An entad bound to someone only works for them and their descendants.
+
+{1}</DMAD_Entads_Text>
+  <DMAD_Bind_Line>{0}: {1}</DMAD_Bind_Line>
+  <DMAD_Bind_Single>bound to {PAWN_nameDef}</DMAD_Bind_Single>
+  <DMAD_Bind_Party>bound to the party ({0})</DMAD_Bind_Party>
+  <DMAD_Bind_None>unbound</DMAD_Bind_None>
+
   <DMAD_PartyLost_Label>Party lost</DMAD_PartyLost_Label>
   <DMAD_PartyLost_Text>Noone returned from the level {0} dungeon. There's no way to know what went wrong, but maybe another party will have better luck.</DMAD_PartyLost_Text>
 
@@ -131,5 +141,22 @@
   <DMAD_Settings_PointNoise>Point variation: up to {0} either way</DMAD_Settings_PointNoise>
   <DMAD_Settings_PowerBase>Strongest species at level 0: {0} combat power</DMAD_Settings_PowerBase>
   <DMAD_Settings_PowerPerLevel>Added per level: {0} combat power</DMAD_Settings_PowerPerLevel>
+  <DMAD_Tab_Loot>Loot</DMAD_Tab_Loot>
+  <DMAD_Settings_Loot_Desc>Loot lies in piles around the dungeon and on storeroom shelves. All of it, entads included, is at the colony's tech level or lower. Entad furniture only appears in dungeons with furnished rooms, already set up in the room that suits it, and only if it can be uninstalled and carried out. These settings apply to dungeons entered from now on.</DMAD_Settings_Loot_Desc>
+  <DMAD_Settings_LootPiles>Loot piles</DMAD_Settings_LootPiles>
+  <DMAD_Settings_LootChance>Chance a chamber has a loot pile: {0}</DMAD_Settings_LootChance>
+  <DMAD_Settings_LootValue>Pile value per level: {0}</DMAD_Settings_LootValue>
+  <DMAD_Settings_LootValue_Desc>Each pile holds 2 to 4 things. Example: at effective level 10 a pile is worth about {0}, not counting entads.</DMAD_Settings_LootValue_Desc>
+  <DMAD_Settings_Entads>Entads</DMAD_Settings_Entads>
+  <DMAD_Settings_EntadChance>Chance a piece of loot is an entad: {0}</DMAD_Settings_EntadChance>
+  <DMAD_Settings_EntadChance_Desc>Rolled for each thing in a loot pile and each stack on a storeroom shelf.</DMAD_Settings_EntadChance_Desc>
+  <DMAD_Settings_EntadPoints>Entad points per level: {0}</DMAD_Settings_EntadPoints>
+  <DMAD_Settings_EntadPoints_Desc>An entad's trait points are this times the effective level. Example: at effective level 10 an entad has at least {0} points.</DMAD_Settings_EntadPoints_Desc>
+  <DMAD_Settings_Binding>Binding</DMAD_Settings_Binding>
+  <DMAD_Settings_BindSingle>Bound to one pawn: {0}</DMAD_Settings_BindSingle>
+  <DMAD_Settings_BindParty>Bound to the party: {0}</DMAD_Settings_BindParty>
+  <DMAD_Settings_BindNone>Unbound: {0}</DMAD_Settings_BindNone>
+  <DMAD_Settings_Binding_Desc>Rolled when an entad leaves the dungeon. One pawn means whoever carries it out, or a random member of the party if nobody does. The party is the people who entered together, not dwellers who joined later. A letter lists every entad and its binding when the visit ends.</DMAD_Settings_Binding_Desc>
+
   <DMAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more bastle points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</DMAD_Settings_Power_Desc>
 </LanguageData>
