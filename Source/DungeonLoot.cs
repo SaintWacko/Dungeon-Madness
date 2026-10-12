@@ -238,7 +238,7 @@ namespace DungeonMadness
         {
             if (roomBuildingsCache != null && roomBuildingsRect == room.rect) return roomBuildingsCache;
             roomBuildingsRect = room.rect;
-            roomBuildingsCache = room.rect.Cells.Select(c => c.GetEdifice(map)).Where(b => b != null && IsFurniture(b)).Distinct().ToList();
+            roomBuildingsCache = room.rect.Cells.Select(c => (Thing)c.GetEdifice(map)).Where(b => b != null && IsFurniture(b)).Distinct().ToList();
             return roomBuildingsCache;
         }
 
