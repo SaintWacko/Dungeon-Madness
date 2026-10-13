@@ -276,7 +276,14 @@ namespace DungeonMadness
                 }
                 if (kind == null) continue;
 
-                int count = Mathf.Clamp(SizeRange(kind, type).RandomInRange, 1, s.maxPackSize);
+                // Species well under the ceiling come in bigger groups: the usual size times the square root of how
+                // far under they are. A species at the ceiling keeps its normal size, and the root keeps a 33-power
+                // animal at a high ceiling from filling the room. People are left alone, since a dweller group is a
+                // household rather than a herd. The point total is still split across the pack.
+                int rolled = SizeRange(kind, type).RandomInRange;
+                if (type != PackType.Humanlike)
+                    rolled = Mathf.RoundToInt(rolled * Mathf.Sqrt(Mathf.Max(1f, ceiling / kind.combatPower)));
+                int count = Mathf.Clamp(rolled, 1, s.maxPackSize);
                 float total = Mathf.Max(0.01f, average * Rand.Range(1f - s.pointNoise, 1f + s.pointNoise));
                 IntVec3 home = cells.MinBy(c => c.DistanceToSquared(ch.center));
                 comp.packs.Add(new DungeonPack
@@ -319,17 +326,16 @@ namespace DungeonMadness
             }
         }
 
-        /// <summary>A random species of the pack's type, no stronger than the ceiling. When every candidate is
+        /// <summary>A random species of the pack's type, no stronger than the ceiling, every one equally likely (the
+        /// biome's commonality is ignored, so rare animals turn up as often as common ones). When every candidate is
         /// stronger, the weakest one, so a low ceiling still gets a pack.</summary>
         static PawnKindDef PickKind(PackType type, BiomeDef biome, float ceiling)
         {
             List<PawnKindDef> pool;
-            System.Func<PawnKindDef, float> weight = k => 1f;
             switch (type)
             {
                 case PackType.Animal:
                     pool = biome.AllWildAnimals.Where(k => k.RaceProps.Animal && k.RaceProps.animalType != AnimalType.Dryad && !k.RaceProps.IsAnomalyEntity && k.combatPower > 0f).Distinct().ToList();
-                    weight = k => biome.CommonalityOfAnimal(k);
                     break;
                 case PackType.Insect:
                     pool = DefDatabase<PawnKindDef>.AllDefs.Where(k => k.defaultFactionDef == FactionDefOf.Insect && k.RaceProps.Insect && !k.isBoss && k.combatPower > 0f).ToList();
@@ -346,7 +352,7 @@ namespace DungeonMadness
             if (pool.Count == 0) return null;
             var fits = pool.Where(k => k.combatPower <= ceiling).ToList();
             if (fits.Count == 0) return pool.MinBy(k => k.combatPower);
-            return fits.TryRandomElementByWeight(k => Mathf.Max(0.001f, weight(k)), out var pick) ? pick : fits.RandomElement();
+            return fits.RandomElement();
         }
 
         /// <summary>Makes the pack's pawns, unspawned. The first is rolled as a bastle; the rest are copies of its
