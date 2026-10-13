@@ -30,6 +30,8 @@ namespace DungeonMadness
         public float level;
         // Furniture only when there is a furnished room to put it in
         public bool furnitureAllowed;
+        // The theme's chance that a library book is a dangerous one (an Anomaly tome)
+        public float tomeChance;
         public readonly List<FurnishedRoom> rooms = new List<FurnishedRoom>();
         // Entad furniture made while rooms were still being furnished, set up once they all are
         private readonly List<Thing> furnitureQueue = new List<Thing>();
@@ -134,6 +136,60 @@ namespace DungeonMadness
                 result.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));
             }
             return result;
+        }
+
+        /// <summary>Fills every bookcase standing in a furnished room with books: half full to full, quality rising
+        /// with the effective level, within the colony's tech cap. These are the only books the mod adds; vanilla's
+        /// reward maker (the loot piles) already rolls an occasional book of its own. Books that do nothing but start a
+        /// quest (Odyssey maps) are left out, since a shelf of them would be a shelf of quests. Books that can cause a
+        /// mental break (Anomaly tomes) only appear at the theme's tome chance. Runs while rooms are furnished, before
+        /// PlaceFurniture spawns any entad furniture, so an entad bookcase stays empty.</summary>
+        public void StockBookcases(CellRect rect)
+        {
+            var cases = new List<Building_Bookcase>();
+            foreach (var c in rect)
+                if (c.GetEdifice(map) is Building_Bookcase b && !cases.Contains(b)) cases.Add(b);
+            if (cases.Count == 0) return;
+
+            TechLevel tech = ColonyTech;
+            var books = new List<ThingDef>();
+            var tomes = new List<ThingDef>();
+            foreach (var d in DefDatabase<ThingDef>.AllDefsListForReading)
+            {
+                var props = d.GetCompProperties<CompProperties_Book>();
+                if (props == null || props.pickWeight <= 0f || d.thingClass == null || !typeof(Book).IsAssignableFrom(d.thingClass)) continue;
+                // Only what a bookcase would take and can draw: vanilla bookcases hold the Books category and draw
+                // each book's vertical graphic
+                if (props.verticalGraphic == null || cases[0].GetParentStoreSettings()?.AllowedToAccept(d) == false) continue;
+                if (d.techLevel != TechLevel.Undefined && d.techLevel > tech) continue;
+                var doers = props.doers;
+                if (doers != null && doers.Count > 0 && doers.All(o => o is BookOutcomeProperties_GiveQuest)) continue;
+                if (doers != null && doers.Any(o => o is BookOutcomeProperties_MentalBreak)) tomes.Add(d);
+                else books.Add(d);
+            }
+            bool tomesAllowed = tomes.Count > 0 && tomeChance > 0f;
+            if (books.Count == 0 && !tomesAllowed) return;
+
+            // Level 1 writes like a skill 4 author, the world's highest level like skill 20
+            int maxLevel = Mathf.Max(1, DungeonWorldComponent.Instance?.MaxLevel ?? DungeonsMod.Settings.maxLevel);
+            int skill = Mathf.Clamp(Mathf.RoundToInt(4f + 16f * level / maxLevel), 0, 20);
+
+            foreach (var bookcase in cases)
+            {
+                var holder = bookcase.GetDirectlyHeldThings();
+                int max = bookcase.MaximumBooks;
+                int n = Rand.RangeInclusive(Mathf.CeilToInt(max / 2f), max) - bookcase.HeldBooks.Count;
+                for (; n > 0; n--)
+                {
+                    bool tome = tomesAllowed && (books.Count == 0 || Rand.Chance(tomeChance));
+                    var def = (tome ? tomes : books).RandomElementByWeight(d => d.GetCompProperties<CompProperties_Book>().pickWeight);
+                    // BookUtility.MakeBook's body with our own quality roll: setting quality is what writes the book
+                    Thing book = ThingMaker.MakeThing(def, GenStuff.RandomStuffFor(def));
+                    book.TryGetComp<CompQuality>()?.SetQuality(QualityUtility.GenerateQualityCreatedByPawn(skill, false), ArtGenerationContext.Outsider);
+                    book.SetForbidden(true, false);
+                    if (!holder.TryAdd(book)) { book.Destroy(); break; }
+                }
+            }
         }
 
         /// <summary>Loot piles in random chambers other than the entrance, rolled per chamber like packs and
@@ -256,8 +312,13 @@ namespace DungeonMadness
                 if (bestCost == 0f) break;
             }
             if (!bestCell.IsValid) return false;
+            // A replaced bookcase takes its books with it: books only ever turn up on shelves, never loose
             foreach (var b in bestRemove)
-                if (!b.Destroyed) b.Destroy();
+            {
+                if (b.Destroyed) continue;
+                if (b is Building_Bookcase shelf) shelf.GetDirectlyHeldThings().ClearAndDestroyContents();
+                b.Destroy();
+            }
             foreach (var o in GenAdj.OccupiedRect(bestCell, bestRot, def.size))
                 foreach (var item in o.GetThingList(map).Where(x => x.def.category == ThingCategory.Item).ToList())
                     item.Destroy();

@@ -116,8 +116,6 @@
   <DMAD_Settings_Skew_Desc>At 1 every level is equally common; higher values make low levels more common. Now about {1} of dungeons are level {0} or lower, and {3} are level {2}.</DMAD_Settings_Skew_Desc>
   <DMAD_Settings_Roughness>Level landscape roughness: {0}</DMAD_Settings_Roughness>
   <DMAD_Settings_Roughness_Desc>Levels rise and fall across the world like terrain. Higher values give more, smaller peaks and valleys; lower values give a few broad regions.</DMAD_Settings_Roughness_Desc>
-  <DMAD_Settings_Ocean>Ocean dungeons with Vehicle Framework</DMAD_Settings_Ocean>
-  <DMAD_Settings_Ocean_Tip>When Vehicle Framework is active, dungeons are also placed on water tiles, reachable by boat.</DMAD_Settings_Ocean_Tip>
 
   <DMAD_Tab_Creatures>Creatures</DMAD_Tab_Creatures>
   <DMAD_Settings_Creatures_Desc>Every creature in a dungeon is a bastle. Each chamber may hold one pack, which wakes the first time any of the chamber is seen. These settings apply to dungeons entered from now on.</DMAD_Settings_Creatures_Desc>

@@ -206,8 +206,6 @@ namespace DungeonMadness
             list.Label("DMAD_Settings_Roughness".Translate(s.roughness.ToString("0.#")));
             s.roughness = Mathf.Round(list.Slider(s.roughness, 0.5f, 15f) * 2f) / 2f;
             list.Label("DMAD_Settings_Roughness_Desc".Translate());
-            list.Gap();
-            list.CheckboxLabeled("DMAD_Settings_Ocean".Translate(), ref s.oceanDungeons, "DMAD_Settings_Ocean_Tip".Translate());
         }
     }
 }
