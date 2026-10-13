@@ -131,6 +131,11 @@ namespace DungeonMadness
                     foreach (var (v, thing, n) in fromVehicles)
                         CaravanInventoryUtility.MoveInventoryToSomeoneElse(v, thing, party, null, n);
 
+                    // A pawn stowed in a vehicle's cargo (an animal or a prisoner) is part of everyone too; left there it
+                    // would be deep-saved in the stash and destroyed with it
+                    foreach (var v in vehicles)
+                        foreach (var stowed in v.inventory.innerContainer.OfType<Pawn>().ToList())
+                            if (!party.Contains(stowed)) party.Add(stowed);
                     VehicleCompat.Disembark(caravan, party);
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed
@@ -139,13 +144,12 @@ namespace DungeonMadness
                     if (!caravan.Destroyed) caravan.Destroy();
                     // Into VF's own stash on the world map, which the party collects on the way out; any other caravan
                     // can recover it meanwhile. Kept in the site's stash if VF's cannot be made.
-                    site.vehicleStash = VehicleCompat.StashVehicles(tile, vehicles);
-                    if (site.vehicleStash == null)
-                        foreach (var v in vehicles)
-                        {
-                            if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
-                            site.AddToStash(v);
-                        }
+                    site.vehicleStash = VehicleCompat.StashVehicles(tile, vehicles, out var notStashed);
+                    foreach (var v in notStashed)
+                    {
+                        if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
+                        site.AddToStash(v);
+                    }
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                 }
                 else

@@ -100,11 +100,14 @@ namespace DungeonMadness
 
         /// <summary>Stashes vehicles on the world map the way VF's own "stash vehicle" does, so any caravan can recover
         /// them. The timeout is off: the party collects them on the way out (DungeonSite starts it if the party is
-        /// lost). Returns null, having done nothing, when VF's stash cannot be made; the caller then keeps them itself.</summary>
-        public static WorldObject StashVehicles(PlanetTile tile, List<Pawn> vehicles)
+        /// lost). Vehicles it could not take are returned in notStashed for the caller to keep; null comes back, with
+        /// every vehicle in notStashed, when VF's stash cannot be made at all.</summary>
+        public static WorldObject StashVehicles(PlanetTile tile, List<Pawn> vehicles, out List<Pawn> notStashed)
         {
             Init();
-            if (stashedVehicleDef == null || vehicles.NullOrEmpty()) return null;
+            notStashed = new List<Pawn>();
+            if (vehicles.NullOrEmpty()) return null;
+            if (stashedVehicleDef == null) { notStashed.AddRange(vehicles); return null; }
             WorldObject stash = WorldObjectMaker.MakeWorldObject(stashedVehicleDef);
             stash.Tile = tile;
             stash.SetFaction(Faction.OfPlayer);
@@ -113,9 +116,16 @@ namespace DungeonMadness
             foreach (var v in vehicles)
             {
                 // The stash deep-saves its vehicles, as VF's does, so they leave world pawns
-                if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
-                held.TryAdd(v, canMergeWithExistingStacks: false);
+                bool wasWorldPawn = Find.WorldPawns.Contains(v);
+                if (wasWorldPawn) Find.WorldPawns.RemovePawn(v);
+                if (!held.TryAdd(v, canMergeWithExistingStacks: false))
+                {
+                    if (wasWorldPawn) Find.WorldPawns.PassToWorld(v);
+                    notStashed.Add(v);
+                }
             }
+            // VF's stash draws its largest vehicle, so an empty one must never reach the map
+            if (held.Count == 0) return null;
             Find.WorldObjects.Add(stash);
             return stash;
         }

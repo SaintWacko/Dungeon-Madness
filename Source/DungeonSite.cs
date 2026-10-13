@@ -195,20 +195,24 @@ namespace DungeonMadness
 
         /// <summary>Empties the stash into the caravan and returns the caravan that ends up holding it all, which is a
         /// new one when stashed vehicles turned a plain caravan into a vehicle caravan.</summary>
-        public Caravan FlushStash(Caravan caravan)
+        /// Vehicles kept here (only when Vehicle Framework's own stash could not be made) wait for the final flush, once
+        /// the whole party is out, so everyone gets seated.
+        public Caravan FlushStash(Caravan caravan, bool final = false)
         {
             if (caravan == null) return null;
             List<Pawn> vehicles = null;
             for (int i = stash.Count - 1; i >= 0; i--)
             {
                 Thing t = stash[i];
-                stash.Remove(t);
                 // Vehicles (Vehicle Framework) go back last, all at once, after the people they will carry
                 if (t is Pawn v && VehicleCompat.IsVehicle(v))
                 {
+                    if (!final) continue;
+                    stash.Remove(t);
                     (vehicles ?? (vehicles = new List<Pawn>())).Add(v);
                     continue;
                 }
+                stash.Remove(t);
                 // A downed or roped animal (or a downed person) carried to the exit arrives as a hauled thing;
                 // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
                 if (t is Pawn p)
@@ -270,7 +274,7 @@ namespace DungeonMadness
                     everyoneLeft = true;
                 }
             }
-            caravan = FlushStash(caravan);
+            caravan = FlushStash(caravan, final: true);
             // Vehicles come back once the whole party is out, so everyone is seated. If nobody is there to take them (the
             // party was lost) or VF refuses, they stay stashed and VF's usual timeout starts.
             if (vehicleStash != null)
