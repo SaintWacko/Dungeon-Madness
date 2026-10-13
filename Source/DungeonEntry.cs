@@ -69,6 +69,18 @@ namespace DungeonMadness
         public static float EffectiveLevel(int level, float wealth) => level * WealthMultiplier(wealth);
 
         /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
+        /// <summary>The colony's prisoners in this caravan, including any stowed in a pawn's inventory (Vehicle
+        /// Framework cargo). Prisoners never enter a dungeon: a humanlike going in has to count toward the party cap.</summary>
+        public static List<Pawn> Prisoners(Caravan caravan)
+        {
+            var list = caravan.PawnsListForReading.Where(p => p.IsPrisonerOfColony).ToList();
+            foreach (var p in caravan.PawnsListForReading)
+                if (p.inventory != null)
+                    foreach (var stowed in p.inventory.innerContainer.OfType<Pawn>())
+                        if (stowed.IsPrisonerOfColony && !list.Contains(stowed)) list.Add(stowed);
+            return list;
+        }
+
         public static bool AnyoneStaysOutside(Caravan caravan, ICollection<Pawn> party) =>
             caravan.PawnsListForReading.Any(p => !party.Contains(p) && CaravanUtility.IsOwner(p, Faction.OfPlayer) && !p.Downed);
 
@@ -131,11 +143,11 @@ namespace DungeonMadness
                     foreach (var (v, thing, n) in fromVehicles)
                         CaravanInventoryUtility.MoveInventoryToSomeoneElse(v, thing, party, null, n);
 
-                    // A pawn stowed in a vehicle's cargo (an animal or a prisoner) is part of everyone too; left there it
-                    // would be deep-saved in the stash and destroyed with it
+                    // A pawn stowed in a vehicle's cargo (an animal, say) is part of everyone too; left there it would be
+                    // deep-saved in the stash and destroyed with it. Prisoners cannot get this far: the dialog refuses.
                     foreach (var v in vehicles)
                         foreach (var stowed in v.inventory.innerContainer.OfType<Pawn>().ToList())
-                            if (!party.Contains(stowed)) party.Add(stowed);
+                            if (!party.Contains(stowed) && !stowed.IsPrisonerOfColony) party.Add(stowed);
                     VehicleCompat.Disembark(caravan, party);
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed

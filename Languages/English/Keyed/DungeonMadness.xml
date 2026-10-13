@@ -50,6 +50,9 @@
   <DMAD_Enter_EnteredShort>entered</DMAD_Enter_EnteredShort>
   <DMAD_Enter_EnteredTip>Has already entered this dungeon, and cannot go in again.</DMAD_Enter_EnteredTip>
   <DMAD_Enter_EnteredStuck>Already entered this dungeon, and cannot stay outside on their own: {0}. Leave a non-downed colonist outside with them.</DMAD_Enter_EnteredStuck>
+  <DMAD_Enter_PrisonerShort>prisoner</DMAD_Enter_PrisonerShort>
+  <DMAD_Enter_PrisonerTip>Prisoners cannot go into dungeons. Leave a non-downed colonist outside to guard them.</DMAD_Enter_PrisonerTip>
+  <DMAD_Enter_PrisonersStuck>Prisoners cannot go into the dungeon, and cannot be left outside unguarded: {0}. Leave a non-downed colonist outside with them.</DMAD_Enter_PrisonersStuck>
   <DMAD_Enter_VehicleShort>vehicle</DMAD_Enter_VehicleShort>
   <DMAD_Enter_VehicleTip>Vehicles cannot go into dungeons. Anyone riding it who goes in gets off at the entrance, and cargo you select goes in with the party.\n\nIf someone stays outside, the vehicle stays in their caravan. If everyone goes in, the vehicle is stashed at the entrance with the rest of its cargo, and the party takes it back on the way out unless another caravan has already recovered it. If the whole party is lost, it stays stashed and can be recovered like any stashed vehicle before its timer runs out.</DMAD_Enter_VehicleTip>
   <DMAD_Enter_CannotDisembark>Someone in the party is riding a vehicle, and this version of Vehicle Framework does not let Dungeon Madness take them off it. Disembark them first.</DMAD_Enter_CannotDisembark>

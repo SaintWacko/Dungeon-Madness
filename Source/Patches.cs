@@ -94,9 +94,22 @@ namespace DungeonMadness
     {
         public static void Postfix(Rect rect, Transferable trad)
         {
-            if (Dialog_EnterDungeon.Locked.Count == 0 && Dialog_EnterDungeon.EnteredRows.Count == 0 && Dialog_EnterDungeon.VehicleRows.Count == 0) return;
+            if (Dialog_EnterDungeon.Locked.Count == 0 && Dialog_EnterDungeon.EnteredRows.Count == 0 && Dialog_EnterDungeon.VehicleRows.Count == 0
+                && Dialog_EnterDungeon.PrisonerRows.Count == 0) return;
             if (!(trad is TransferableOneWay tr)) return;
-            if (Dialog_EnterDungeon.VehicleRows.Contains(tr))
+            if (Dialog_EnterDungeon.PrisonerRows.Contains(tr))
+            {
+                rect = rect.Rounded();
+                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 110f, 25f).Rounded();
+                using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
+                {
+                    GUI.color = ColoredText.SubtleGrayColor;
+                    Widgets.Label(label, "DMAD_Enter_PrisonerShort".Translate());
+                    GUI.color = Color.white;
+                }
+                TooltipHandler.TipRegion(rect, "DMAD_Enter_PrisonerTip".Translate());
+            }
+            else if (Dialog_EnterDungeon.VehicleRows.Contains(tr))
             {
                 rect = rect.Rounded();
                 var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 110f, 25f).Rounded();

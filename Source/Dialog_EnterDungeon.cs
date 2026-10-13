@@ -66,12 +66,17 @@ namespace DungeonMadness
         /// <summary>Vehicle rows (Vehicle Framework), locked unticked: vehicles never go in. Read by the row patches.</summary>
         public static readonly HashSet<TransferableOneWay> VehicleRows = new HashSet<TransferableOneWay>();
 
+        /// <summary>Prisoner rows, locked unticked: prisoners never go in. Read by the row patches.</summary>
+        public static readonly HashSet<TransferableOneWay> PrisonerRows = new HashSet<TransferableOneWay>();
+
         /// <summary>Rows for pawns riding a vehicle. VF makes those rows read-only so its own dialogs can manage seats;
         /// here they can be picked like anyone else and get off at the entrance. Read by the row patches.</summary>
         public static readonly HashSet<TransferableOneWay> PassengerRows = new HashSet<TransferableOneWay>();
 
         // Pawns who have been in before but would be swept in anyway, because nobody able stays outside with them
         private List<Pawn> stuckEntered = new List<Pawn>();
+        // Prisoners who would be left with nobody to guard them, because everyone else goes in
+        private List<Pawn> stuckPrisoners = new List<Pawn>();
 
         public override void PostClose()
         {
@@ -79,6 +84,7 @@ namespace DungeonMadness
             Locked.Clear();
             EnteredRows.Clear();
             VehicleRows.Clear();
+            PrisonerRows.Clear();
             PassengerRows.Clear();
         }
 
@@ -87,6 +93,7 @@ namespace DungeonMadness
             Locked.Clear();
             EnteredRows.Clear();
             VehicleRows.Clear();
+            PrisonerRows.Clear();
             PassengerRows.Clear();
             transferables = new List<TransferableOneWay>();
             foreach (var p in caravan.PawnsListForReading) Add(p);
@@ -98,7 +105,13 @@ namespace DungeonMadness
             foreach (var tr in transferables)
             {
                 if (!(tr.AnyThing is Pawn rider)) continue;
-                if (VehicleCompat.IsVehicle(rider))
+                if (rider.IsPrisonerOfColony)
+                {
+                    tr.AdjustTo(0);
+                    tr.interactive = false;
+                    PrisonerRows.Add(tr);
+                }
+                else if (VehicleCompat.IsVehicle(rider))
                 {
                     tr.AdjustTo(0);
                     tr.interactive = false;
@@ -107,7 +120,7 @@ namespace DungeonMadness
                 else if (VehicleCompat.IsAboard(rider, caravan)) PassengerRows.Add(tr);
             }
             foreach (var tr in transferables)
-                if (tr.AnyThing is Pawn p && DungeonEntry.AlreadyEntered(caravan.Tile, Gen.YieldSingle(p)).Any())
+                if (tr.AnyThing is Pawn p && !PrisonerRows.Contains(tr) && DungeonEntry.AlreadyEntered(caravan.Tile, Gen.YieldSingle(p)).Any())
                 {
                     tr.AdjustTo(0);
                     tr.interactive = false;
@@ -143,7 +156,8 @@ namespace DungeonMadness
             {
                 // Nobody left outside could lead a caravan, so they all go in: show them ticked and locked
                 foreach (var tr in transferables)
-                    if (tr.AnyThing is Pawn && !EnteredRows.Contains(tr) && !VehicleRows.Contains(tr) && tr.CountToTransfer < tr.GetMaximumToTransfer())
+                    if (tr.AnyThing is Pawn && !EnteredRows.Contains(tr) && !VehicleRows.Contains(tr) && !PrisonerRows.Contains(tr)
+                        && tr.CountToTransfer < tr.GetMaximumToTransfer())
                     {
                         tr.AdjustTo(tr.GetMaximumToTransfer());
                         tr.interactive = false;
@@ -154,6 +168,7 @@ namespace DungeonMadness
             stuckEntered = everyone
                 ? EnteredRows.SelectMany(tr => tr.things).OfType<Pawn>().ToList()
                 : new List<Pawn>();
+            stuckPrisoners = everyone ? DungeonEntry.Prisoners(caravan) : new List<Pawn>();
             var going = party;
             wealth = DungeonEntry.PartyWealth(going);
             RecacheStats();
@@ -293,15 +308,18 @@ namespace DungeonMadness
             GUI.color = Color.white;
 
             // Pawns who have entered before are locked out of the party, so the only way one goes in is being swept
-            // along when nobody able stays outside with them
-            var entered = stuckEntered;
-            if (entered.Any())
+            // along when nobody able stays outside with them. Prisoners likewise cannot be left unguarded.
+            var notes = new List<string>();
+            if (stuckPrisoners.Any())
+                notes.Add("DMAD_Enter_PrisonersStuck".Translate(stuckPrisoners.Select(p => p.LabelShortCap).ToCommaList(true)));
+            if (stuckEntered.Any())
+                notes.Add("DMAD_Enter_EnteredStuck".Translate(stuckEntered.Select(p => p.LabelShortCap).ToCommaList(true)));
+            if (notes.Count > 0)
             {
                 using (new TextBlock(GameFont.Small, TextAnchor.MiddleCenter))
                 {
                     GUI.color = ColorLibrary.RedReadable;
-                    Widgets.Label(new Rect(rect.x, partyRow.yMax + 4f, rect.width, NoteHeight),
-                        "DMAD_Enter_EnteredStuck".Translate(entered.Select(p => p.LabelShortCap).ToCommaList(true)));
+                    Widgets.Label(new Rect(rect.x, partyRow.yMax + 4f, rect.width, NoteHeight), string.Join("\n", notes));
                     GUI.color = Color.white;
                 }
             }
@@ -342,6 +360,12 @@ namespace DungeonMadness
             if (DungeonEntry.HumanlikeCount(going) > cap)
             {
                 Messages.Message((everyone ? "DMAD_Enter_TooManyEveryone" : "DMAD_Enter_TooMany").Translate(cap), MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
+            if (stuckPrisoners.Any() || going.Any(p => p.IsPrisonerOfColony))
+            {
+                var prisoners = stuckPrisoners.Concat(going.Where(p => p.IsPrisonerOfColony)).Distinct();
+                Messages.Message("DMAD_Enter_PrisonersStuck".Translate(prisoners.Select(p => p.LabelShortCap).ToCommaList(true)), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
             if (stuckEntered.Any())
