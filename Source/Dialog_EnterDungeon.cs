@@ -332,6 +332,11 @@ namespace DungeonMadness
                 Messages.Message("DMAD_Enter_NeedColonist".Translate(), MessageTypeDefOf.RejectInput, false);
                 return false;
             }
+            if (!VehicleCompat.CanDisembark && party.Any(p => VehicleCompat.IsAboard(p, caravan)))
+            {
+                Messages.Message("DMAD_Enter_CannotDisembark".Translate(), MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
             var going = party; // already every pawn when everyone goes in
             int cap = DungeonsMod.Settings.maxPartySize;
             if (DungeonEntry.HumanlikeCount(going) > cap)

@@ -25,7 +25,7 @@ namespace DungeonMadness
     {
         private static bool initialized;
         private static Type vehiclePawnType, vehicleCaravanType;
-        private static MethodInfo removePawn;
+        private static MethodInfo removePawn, distribute;
 
         private static void Init()
         {
@@ -34,12 +34,24 @@ namespace DungeonMadness
             vehiclePawnType = GenTypes.GetTypeInAnyAssembly("Vehicles.VehiclePawn");
             vehicleCaravanType = GenTypes.GetTypeInAnyAssembly("Vehicles.World.VehicleCaravan");
             if (vehiclePawnType != null)
+            {
                 removePawn = AccessTools.Method(vehiclePawnType, "RemovePawn", new[] { typeof(Pawn) });
+                // RoleHelper.Distribute(in List<VehiclePawn> vehicles, List<Pawn> pawns): seats people in vehicles,
+                // drivers first; VF's own unstash calls it before rebuilding a caravan
+                Type roleHelper = GenTypes.GetTypeInAnyAssembly("Vehicles.RoleHelper");
+                Type vehicleList = typeof(List<>).MakeGenericType(vehiclePawnType);
+                if (roleHelper != null)
+                    distribute = AccessTools.Method(roleHelper, "Distribute", new[] { vehicleList.MakeByRefType(), typeof(List<Pawn>) });
+            }
             if (vehiclePawnType != null && removePawn == null)
                 Log.Warning("[Dungeon Madness] Vehicle Framework found, but VehiclePawn.RemovePawn(Pawn) is missing: passengers cannot be taken out of vehicles at dungeon entrances.");
         }
 
         public static bool Active { get { Init(); return vehiclePawnType != null; } }
+
+        /// <summary>Whether riders can be taken out of a vehicle. False only when VF is loaded but its API has changed;
+        /// the enter dialog then refuses a party that includes a rider.</summary>
+        public static bool CanDisembark { get { Init(); return removePawn != null; } }
 
         public static bool IsVehicle(Pawn p)
         {
@@ -81,15 +93,33 @@ namespace DungeonMadness
         public static Caravan AddVehicles(Caravan caravan, List<Pawn> vehicles)
         {
             if (vehicles.NullOrEmpty()) return caravan;
+            // A stashed vehicle was taken out of world pawns so the stash's deep save owns it; a caravan only saves
+            // references, so it has to be passed back to the world when it rejoins one
             if (IsVehicleCaravan(caravan))
             {
-                foreach (var v in vehicles) caravan.AddPawn(v, addCarriedPawnToWorldPawnsIfAny: true);
+                foreach (var v in vehicles)
+                {
+                    caravan.AddPawn(v, addCarriedPawnToWorldPawnsIfAny: true);
+                    if (!v.IsWorldPawn()) Find.WorldPawns.PassToWorld(v);
+                }
                 return caravan;
             }
-            var all = caravan.pawns.InnerListForReading.ToList();
-            all.AddRange(vehicles);
-            Caravan made = CaravanMaker.MakeCaravan(all, caravan.Faction, caravan.Tile, addToWorldPawnsIfNotAlready: true);
-            if (!caravan.Destroyed && caravan.pawns.Count == 0) caravan.Destroy();
+            // VF's own unstash (StashedVehicle): empty the caravan, seat its people in the vehicles, then make a vehicle
+            // caravan of people and vehicles together
+            Faction faction = caravan.Faction;
+            PlanetTile tile = caravan.Tile;
+            var people = caravan.pawns.InnerListForReading.ToList();
+            caravan.RemoveAllPawns();
+            if (distribute != null)
+            {
+                var typed = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(vehiclePawnType));
+                foreach (var v in vehicles) typed.Add(v);
+                try { distribute.Invoke(null, new object[] { typed, people }); }
+                catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + e.InnerException?.Message); }
+            }
+            var all = people.Concat(vehicles).ToList();
+            Caravan made = CaravanMaker.MakeCaravan(all, faction, tile, addToWorldPawnsIfNotAlready: true);
+            if (!caravan.Destroyed) caravan.Destroy();
             return made;
         }
     }

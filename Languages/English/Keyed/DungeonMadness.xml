@@ -54,6 +54,7 @@
   <DMAD_Enter_VehicleTip>Vehicles cannot go into dungeons. Anyone riding it who goes in gets off at the entrance, and cargo you select goes in with the party.
 
 If someone stays outside, the vehicle stays in their caravan. If everyone goes in, the vehicle waits at the entrance with the rest of its cargo, and is lost if the whole party dies.</DMAD_Enter_VehicleTip>
+  <DMAD_Enter_CannotDisembark>Someone in the party is riding a vehicle, and this version of Vehicle Framework does not let Dungeon Madness take them off it. Disembark them first.</DMAD_Enter_CannotDisembark>
   <DMAD_Enter_LockedTip>Cannot stay outside on their own. Leave a non-downed colonist with them to allow them to stay outside.</DMAD_Enter_LockedTip>
   <DMAD_Enter_Everyone>No caravan left outside. Only the items and supplies you select enter the dungeon; the rest wait at the entrance and are lost if the whole party dies.</DMAD_Enter_Everyone>
   <DMAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</DMAD_Enter_NeedColonist>
