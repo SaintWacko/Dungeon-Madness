@@ -63,6 +63,13 @@ namespace DungeonMadness
         /// indicator patch; empty while no enter dialog is open.</summary>
         public static readonly HashSet<TransferableOneWay> EnteredRows = new HashSet<TransferableOneWay>();
 
+        /// <summary>Vehicle rows (Vehicle Framework), locked unticked: vehicles never go in. Read by the row patches.</summary>
+        public static readonly HashSet<TransferableOneWay> VehicleRows = new HashSet<TransferableOneWay>();
+
+        /// <summary>Rows for pawns riding a vehicle. VF makes those rows read-only so its own dialogs can manage seats;
+        /// here they can be picked like anyone else and get off at the entrance. Read by the row patches.</summary>
+        public static readonly HashSet<TransferableOneWay> PassengerRows = new HashSet<TransferableOneWay>();
+
         // Pawns who have been in before but would be swept in anyway, because nobody able stays outside with them
         private List<Pawn> stuckEntered = new List<Pawn>();
 
@@ -71,12 +78,16 @@ namespace DungeonMadness
             base.PostClose();
             Locked.Clear();
             EnteredRows.Clear();
+            VehicleRows.Clear();
+            PassengerRows.Clear();
         }
 
         private void Recache()
         {
             Locked.Clear();
             EnteredRows.Clear();
+            VehicleRows.Clear();
+            PassengerRows.Clear();
             transferables = new List<TransferableOneWay>();
             foreach (var p in caravan.PawnsListForReading) Add(p);
             foreach (var t in CaravanInventoryUtility.AllInventoryItems(caravan)) Add(t);
@@ -84,6 +95,17 @@ namespace DungeonMadness
                 "DMAD_EnterThingCountTip".Translate(), IgnorePawnsInventoryMode.Ignore, () => partyInfo.massCapacity - partyInfo.massUsage,
                 ignoreSpawnedCorpsesGearAndInventoryMass: false, caravan.Tile);
             // Anyone who has been in this dungeon before cannot go again: shown unticked and locked, with a marker
+            foreach (var tr in transferables)
+            {
+                if (!(tr.AnyThing is Pawn rider)) continue;
+                if (VehicleCompat.IsVehicle(rider))
+                {
+                    tr.AdjustTo(0);
+                    tr.interactive = false;
+                    VehicleRows.Add(tr);
+                }
+                else if (VehicleCompat.IsAboard(rider, caravan)) PassengerRows.Add(tr);
+            }
             foreach (var tr in transferables)
                 if (tr.AnyThing is Pawn p && DungeonEntry.AlreadyEntered(caravan.Tile, Gen.YieldSingle(p)).Any())
                 {
@@ -121,7 +143,7 @@ namespace DungeonMadness
             {
                 // Nobody left outside could lead a caravan, so they all go in: show them ticked and locked
                 foreach (var tr in transferables)
-                    if (tr.AnyThing is Pawn && !EnteredRows.Contains(tr) && tr.CountToTransfer < tr.GetMaximumToTransfer())
+                    if (tr.AnyThing is Pawn && !EnteredRows.Contains(tr) && !VehicleRows.Contains(tr) && tr.CountToTransfer < tr.GetMaximumToTransfer())
                     {
                         tr.AdjustTo(tr.GetMaximumToTransfer());
                         tr.interactive = false;
@@ -161,7 +183,8 @@ namespace DungeonMadness
 
             float inMass = CollectionsMassCalculator.MassUsageTransferables(transferables, IgnorePawnsInventoryMode.Ignore);
             sb.Length = 0;
-            float inCap = CollectionsMassCalculator.CapacityTransferables(transferables, sb);
+            // VF counts a pawn riding a vehicle as carrying nothing, but passengers going in get off and carry their share
+            float inCap = VehicleCompat.Active ? PartyCapacity(sb) : CollectionsMassCalculator.CapacityTransferables(transferables, sb);
             string inCapTip = sb.ToString();
             sb.Length = 0;
             float inSpeed = TilesPerDayCalculator.ApproxTilesPerDay(transferables, inMass, inCap, tile, PlanetTile.Invalid, caravan.Shuttle != null, sb);
@@ -175,6 +198,15 @@ namespace DungeonMadness
             float inVis = CaravanVisibilityCalculator.Visibility(transferables, sb);
             partyInfo = new CaravanUIUtility.CaravanInfo(inMass, inCap, inCapTip, inSpeed, inSpeedTip, (inFood, inRot), inForage, inForageTip, inVis, sb.ToString());
 
+        }
+
+        /// <summary>Vanilla's CollectionsMassCalculator.Capacity over the party, per pawn, so Vehicle Framework's
+        /// patch on it (which zeroes passengers) does not apply.</summary>
+        private float PartyCapacity(System.Text.StringBuilder explanation)
+        {
+            float total = 0f;
+            foreach (var p in party) total += MassUtility.Capacity(p, explanation);
+            return Mathf.Max(total, 0f);
         }
 
         public override void DoWindowContents(Rect inRect)

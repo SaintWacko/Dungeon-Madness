@@ -189,13 +189,22 @@ namespace DungeonMadness
             else if (p.carryTracker?.CarriedThing is Thing c) ResolveEntad(c, null);
         }
 
-        public void FlushStash(Caravan caravan)
+        /// <summary>Empties the stash into the caravan and returns the caravan that ends up holding it all, which is a
+        /// new one when stashed vehicles turned a plain caravan into a vehicle caravan.</summary>
+        public Caravan FlushStash(Caravan caravan)
         {
-            if (caravan == null) return;
+            if (caravan == null) return null;
+            List<Pawn> vehicles = null;
             for (int i = stash.Count - 1; i >= 0; i--)
             {
                 Thing t = stash[i];
                 stash.Remove(t);
+                // Vehicles (Vehicle Framework) go back last, all at once, after the people they will carry
+                if (t is Pawn v && VehicleCompat.IsVehicle(v))
+                {
+                    (vehicles ?? (vehicles = new List<Pawn>())).Add(v);
+                    continue;
+                }
                 // A downed or roped animal (or a downed person) carried to the exit arrives as a hauled thing;
                 // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
                 if (t is Pawn p)
@@ -207,6 +216,7 @@ namespace DungeonMadness
                 }
                 else CaravanInventoryUtility.GiveThing(caravan, t);
             }
+            return VehicleCompat.AddVehicles(caravan, vehicles);
         }
 
         public override bool ShouldRemoveMapNow(out bool alsoRemoveWorldObject)
@@ -256,7 +266,7 @@ namespace DungeonMadness
                     everyoneLeft = true;
                 }
             }
-            FlushStash(caravan);
+            caravan = FlushStash(caravan);
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
