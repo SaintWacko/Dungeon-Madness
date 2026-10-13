@@ -24,8 +24,9 @@ namespace DungeonMadness
     public static class VehicleCompat
     {
         private static bool initialized;
-        private static Type vehiclePawnType, vehicleCaravanType;
-        private static MethodInfo removePawn, distribute;
+        private static Type vehiclePawnType, vehicleCaravanType, stashedVehicleType;
+        private static MethodInfo removePawn, distribute, stashArrived;
+        private static WorldObjectDef stashedVehicleDef;
 
         private static void Init()
         {
@@ -42,6 +43,15 @@ namespace DungeonMadness
                 Type vehicleList = typeof(List<>).MakeGenericType(vehiclePawnType);
                 if (roleHelper != null)
                     distribute = AccessTools.Method(roleHelper, "Distribute", new[] { vehicleList.MakeByRefType(), typeof(List<Pawn>) });
+                // VF's own stash on the world map (Vehicles.World.StashedVehicle): an IThingHolder world object whose
+                // Notify_CaravanArrived(Caravan) seats the caravan in its vehicles and returns the new vehicle caravan
+                stashedVehicleType = GenTypes.GetTypeInAnyAssembly("Vehicles.World.StashedVehicle");
+                stashedVehicleDef = DefDatabase<WorldObjectDef>.GetNamedSilentFail("StashedVehicle");
+                if (stashedVehicleType != null)
+                    stashArrived = AccessTools.Method(stashedVehicleType, "Notify_CaravanArrived", new[] { typeof(Caravan) });
+                if (stashedVehicleDef != null && (stashedVehicleType == null || !stashedVehicleType.IsAssignableFrom(stashedVehicleDef.worldObjectClass)
+                    || !typeof(IThingHolder).IsAssignableFrom(stashedVehicleDef.worldObjectClass) || stashArrived == null))
+                    stashedVehicleDef = null;
             }
             if (vehiclePawnType != null && removePawn == null)
                 Log.Warning("[Dungeon Madness] Vehicle Framework found, but VehiclePawn.RemovePawn(Pawn) is missing: passengers cannot be taken out of vehicles at dungeon entrances.");
@@ -86,6 +96,58 @@ namespace DungeonMadness
                 foreach (var v in vehicles)
                     if (removePawn.Invoke(v, new object[] { p }) is bool removed && removed) break;
             }
+        }
+
+        /// <summary>Stashes vehicles on the world map the way VF's own "stash vehicle" does, so any caravan can recover
+        /// them. The timeout is off: the party collects them on the way out (DungeonSite starts it if the party is
+        /// lost). Returns null, having done nothing, when VF's stash cannot be made; the caller then keeps them itself.</summary>
+        public static WorldObject StashVehicles(PlanetTile tile, List<Pawn> vehicles)
+        {
+            Init();
+            if (stashedVehicleDef == null || vehicles.NullOrEmpty()) return null;
+            WorldObject stash = WorldObjectMaker.MakeWorldObject(stashedVehicleDef);
+            stash.Tile = tile;
+            stash.SetFaction(Faction.OfPlayer);
+            stash.GetComponent<TimeoutComp>()?.StopTimeout();
+            ThingOwner held = ((IThingHolder)stash).GetDirectlyHeldThings();
+            foreach (var v in vehicles)
+            {
+                // The stash deep-saves its vehicles, as VF's does, so they leave world pawns
+                if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
+                held.TryAdd(v, canMergeWithExistingStacks: false);
+            }
+            Find.WorldObjects.Add(stash);
+            return stash;
+        }
+
+        public static bool StashStillThere(WorldObject stash) => stash != null && stash.Spawned && !stash.Destroyed;
+
+        /// <summary>The caravan collects the stashed vehicles, seated by VF. Returns the caravan that now holds
+        /// everyone: VF's new vehicle caravan, or the same caravan if the stash is gone or VF refused.</summary>
+        public static Caravan RetrieveStash(WorldObject stash, Caravan caravan)
+        {
+            if (caravan == null || !StashStillThere(stash) || stashArrived == null) return caravan;
+            try
+            {
+                return stashArrived.Invoke(stash, new object[] { caravan }) as Caravan ?? caravan;
+            }
+            catch (Exception e)
+            {
+                Log.Warning("[Dungeon Madness] Could not hand stashed vehicles back to the party; they stay stashed: " + (e.InnerException ?? e).Message);
+                return caravan.Destroyed ? null : caravan;
+            }
+        }
+
+        /// <summary>Starts the stash's timeout as VF's own stash would: 15 to 30 days by the largest vehicle's size.</summary>
+        public static void StartStashTimeout(WorldObject stash)
+        {
+            if (!StashStillThere(stash)) return;
+            var timeout = stash.GetComponent<TimeoutComp>();
+            if (timeout == null || timeout.Active) return;
+            float size = ((IThingHolder)stash).GetDirectlyHeldThings().OfType<Pawn>().Where(IsVehicle)
+                .Select(v => v.def.Size.Magnitude).DefaultIfEmpty(1f).Max();
+            float days = UnityEngine.Mathf.Lerp(15f, 30f, UnityEngine.Mathf.InverseLerp(1f, 10f, size));
+            timeout.StartTimeout(UnityEngine.Mathf.CeilToInt(days * GenDate.TicksPerDay));
         }
 
         /// <summary>Puts vehicles back into a caravan. A vehicle caravan takes them directly; a plain one is remade

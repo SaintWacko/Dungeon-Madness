@@ -33,6 +33,10 @@ namespace DungeonMadness
 
         private bool everyoneLeft;
 
+        // Vehicle Framework's stash on this tile holding the vehicles of a party that all went in (VehicleCompat).
+        // The party collects it when the visit ends, unless another caravan already has.
+        public WorldObject vehicleStash;
+
         // The humanlikes who entered together (not dwellers who joined later): who a party-bound entad binds to
         public List<Pawn> party = new List<Pawn>();
         // Entads made for this dungeon that have not left it yet, by thing id (a minified piece keeps its id)
@@ -267,6 +271,14 @@ namespace DungeonMadness
                 }
             }
             caravan = FlushStash(caravan);
+            // Vehicles come back once the whole party is out, so everyone is seated. If nobody is there to take them (the
+            // party was lost) or VF refuses, they stay stashed and VF's usual timeout starts.
+            if (vehicleStash != null)
+            {
+                caravan = VehicleCompat.RetrieveStash(vehicleStash, caravan);
+                VehicleCompat.StartStashTimeout(vehicleStash);
+                vehicleStash = null;
+            }
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
@@ -294,6 +306,7 @@ namespace DungeonMadness
             Scribe_Defs.Look(ref theme, "theme");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
+            Scribe_References.Look(ref vehicleStash, "vehicleStash");
             if (stash == null) stash = new ThingOwner<Thing>(this);
             Scribe_Collections.Look(ref party, "party", LookMode.Reference);
             Scribe_Collections.Look(ref pendingEntads, "pendingEntads", LookMode.Value);

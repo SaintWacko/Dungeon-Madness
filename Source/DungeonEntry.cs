@@ -135,13 +135,17 @@ namespace DungeonMadness
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed
                     foreach (var p in party) caravan.RemovePawn(p);
-                    foreach (var v in vehicles)
-                    {
-                        caravan.RemovePawn(v);
-                        if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
-                        site.AddToStash(v);
-                    }
+                    foreach (var v in vehicles) caravan.RemovePawn(v);
                     if (!caravan.Destroyed) caravan.Destroy();
+                    // Into VF's own stash on the world map, which the party collects on the way out; any other caravan
+                    // can recover it meanwhile. Kept in the site's stash if VF's cannot be made.
+                    site.vehicleStash = VehicleCompat.StashVehicles(tile, vehicles);
+                    if (site.vehicleStash == null)
+                        foreach (var v in vehicles)
+                        {
+                            if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
+                            site.AddToStash(v);
+                        }
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                 }
                 else
