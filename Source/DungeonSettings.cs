@@ -50,7 +50,7 @@ namespace DungeonMadness
         // Chance a pack (not mechs) is made of stone or another material; outside the point budget
         public const float DefaultStoneChance = 0.15f;
         public float stoneChance = DefaultStoneChance;
-        public const int DefaultMaxPackSize = 6;
+        public const int DefaultMaxPackSize = 10;
         public int maxPackSize = DefaultMaxPackSize;
         // Strongest species allowed, by vanilla combat power: base + perLevel x effective level
         public const float DefaultPowerBase = 60f;

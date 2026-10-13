@@ -123,7 +123,7 @@
   <DMAD_Settings_Occupancy>Chance a chamber has a pack: {0}</DMAD_Settings_Occupancy>
   <DMAD_Settings_EntranceChance>Chance the entrance chamber has a pack: {0}</DMAD_Settings_EntranceChance>
   <DMAD_Settings_MaxPackSize>Largest pack: {0}</DMAD_Settings_MaxPackSize>
-  <DMAD_Settings_MaxPackSize_Desc>Animals come in their species' usual group size, up to this. Insects come 2 to 4 at a time, mechanoids 1 to 3, people 1 to 4.</DMAD_Settings_MaxPackSize_Desc>
+  <DMAD_Settings_MaxPackSize_Desc>Animals come in their species' usual group size, insects 2 to 4 at a time, mechanoids 1 to 3, people 1 to 4. Animals, insects and mechanoids much weaker than the level allows come in larger groups, up to this.</DMAD_Settings_MaxPackSize_Desc>
   <DMAD_Settings_MadChance>Chance a pack is dungeon-mad: {0}</DMAD_Settings_MadChance>
   <DMAD_Settings_MadChance_Desc>Animals and people only. Dungeon-mad creatures attack anything that is not also mad, never recover, and cannot be captured or tamed. The rest are wild animals that can be tamed and people who keep to their rooms. Insects and mechanoids are always hostile.</DMAD_Settings_MadChance_Desc>
   <DMAD_Settings_StoneChance>Chance a pack is made of stone: {0}</DMAD_Settings_StoneChance>
