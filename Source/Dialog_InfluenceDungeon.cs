@@ -156,11 +156,17 @@ namespace DungeonMadness
                         : "DMAD_Influence_BtnRefund".Translate(now - cost, cost));
                 }
                 using (new TextBlock(GameFont.Tiny))
-                    if (Widgets.ButtonText(b, d > 0 ? "+" + d : d.ToString(), active: ok) && ok)
+                {
+                    // Widgets.ButtonText's active flag only blocks the click; it draws the same, so grey it here
+                    if (!ok) GUI.color = new Color(1f, 1f, 1f, 0.35f);
+                    bool clicked = Widgets.ButtonText(b, d > 0 ? "+" + d : d.ToString(), active: ok);
+                    GUI.color = Color.white;
+                    if (clicked && ok)
                     {
                         influence[k] = target;
                         SoundDefOf.Tick_High.PlayOneShotOnCamera();
                     }
+                }
                 x += BtnWidth + BtnGap;
             }
 

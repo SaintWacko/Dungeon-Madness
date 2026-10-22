@@ -357,7 +357,8 @@ namespace DungeonMadness
             }
             if (DungeonsMod.Settings.influenceEnabled)
             {
-                var infRect = new Rect(resetRect.x - 10f - ButtonSize.x, accept.y, ButtonSize.x, ButtonSize.y);
+                // Right of Cancel
+                var infRect = new Rect(accept.xMax + 20f + ButtonSize.x, accept.y, ButtonSize.x, ButtonSize.y);
                 TooltipHandler.TipRegion(infRect, "DMAD_InfluenceButton_Tip".Translate(EntadFramework.EntadApi.Verity.ToString("0.#")));
                 if (Widgets.ButtonText(infRect, "DMAD_InfluenceButton".Translate()))
                     Find.WindowStack.Add(new Dialog_InfluenceDungeon(influence, level, normalTheme));
