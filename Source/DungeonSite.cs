@@ -276,8 +276,9 @@ namespace DungeonMadness
             }
             // A tame animal (or a dweller who agreed to come) sent to the exit but pulled into a fight drops its walk and
             // would vanish with the map. With a caravan to join they are swept out wherever they stand; downed ones are
-            // left, as they would be if nobody carried them.
-            if (caravan != null)
+            // left, as they would be if nobody carried them. Only when a living party member is in that caravan, i.e.
+            // someone walked out to lead them: a party wiped out inside loses its animals even if a caravan waits.
+            if (caravan != null && party.Any(p => p != null && !p.Dead && caravan.ContainsPawn(p)))
             {
                 var stragglers = Map.mapPawns.AllPawnsSpawned.Where(p => !p.Dead && !p.Downed
                     && ((p.Faction == Faction.OfPlayer && p.RaceProps.Animal) || DungeonDwellerUtility.IsFollower(p))).ToList();
