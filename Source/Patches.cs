@@ -94,9 +94,34 @@ namespace DungeonMadness
     {
         public static void Postfix(Rect rect, Transferable trad)
         {
-            if (Dialog_EnterDungeon.Locked.Count == 0 && Dialog_EnterDungeon.EnteredRows.Count == 0) return;
+            if (Dialog_EnterDungeon.Locked.Count == 0 && Dialog_EnterDungeon.EnteredRows.Count == 0 && Dialog_EnterDungeon.VehicleRows.Count == 0
+                && Dialog_EnterDungeon.PrisonerRows.Count == 0) return;
             if (!(trad is TransferableOneWay tr)) return;
-            if (Dialog_EnterDungeon.EnteredRows.Contains(tr))
+            if (Dialog_EnterDungeon.PrisonerRows.Contains(tr))
+            {
+                rect = rect.Rounded();
+                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 110f, 25f).Rounded();
+                using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
+                {
+                    GUI.color = ColoredText.SubtleGrayColor;
+                    Widgets.Label(label, "DMAD_Enter_PrisonerShort".Translate());
+                    GUI.color = Color.white;
+                }
+                TooltipHandler.TipRegion(rect, "DMAD_Enter_PrisonerTip".Translate());
+            }
+            else if (Dialog_EnterDungeon.VehicleRows.Contains(tr))
+            {
+                rect = rect.Rounded();
+                var label = new Rect(rect.center.x - 45f + 28f, rect.center.y - 12.5f, 110f, 25f).Rounded();
+                using (new TextBlock(GameFont.Tiny, TextAnchor.MiddleLeft))
+                {
+                    GUI.color = ColoredText.SubtleGrayColor;
+                    Widgets.Label(label, "DMAD_Enter_VehicleShort".Translate());
+                    GUI.color = Color.white;
+                }
+                TooltipHandler.TipRegion(rect, "DMAD_Enter_VehicleTip".Translate());
+            }
+            else if (Dialog_EnterDungeon.EnteredRows.Contains(tr))
             {
                 // Vanilla draws the pawn checkbox at the left of a 90px box centred in the count area
                 rect = rect.Rounded();
@@ -111,6 +136,21 @@ namespace DungeonMadness
             }
             else if (Dialog_EnterDungeon.Locked.Contains(tr))
                 TooltipHandler.TipRegion(rect, "DMAD_Enter_LockedTip".Translate());
+        }
+    }
+
+    // Vehicle Framework prefixes this to make rows for pawns riding a vehicle read-only. In the enter dialog a rider
+    // can be picked like anyone else (they get off at the entrance), so this runs after VF's prefix and undoes it for
+    // those rows only. Without VF the set is always empty.
+    [HarmonyPatch(typeof(TransferableUIUtility), "DoCountAdjustInterfaceInternal")]
+    public static class Patch_TransferableUIUtility_DoCountAdjustInterfaceInternal
+    {
+        [HarmonyPriority(Priority.Last)]
+        public static void Prefix(Transferable trad, ref bool readOnly)
+        {
+            if (readOnly && Dialog_EnterDungeon.PassengerRows.Count > 0 && trad is TransferableOneWay tr
+                && Dialog_EnterDungeon.PassengerRows.Contains(tr))
+                readOnly = false;
         }
     }
 

@@ -69,6 +69,18 @@ namespace DungeonMadness
         public static float EffectiveLevel(int level, float wealth) => level * WealthMultiplier(wealth);
 
         /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
+        /// <summary>The colony's prisoners in this caravan, including any stowed in a pawn's inventory (Vehicle
+        /// Framework cargo). Prisoners never enter a dungeon: a humanlike going in has to count toward the party cap.</summary>
+        public static List<Pawn> Prisoners(Caravan caravan)
+        {
+            var list = caravan.PawnsListForReading.Where(p => p.IsPrisonerOfColony).ToList();
+            foreach (var p in caravan.PawnsListForReading)
+                if (p.inventory != null)
+                    foreach (var stowed in p.inventory.innerContainer.OfType<Pawn>())
+                        if (stowed.IsPrisonerOfColony && !list.Contains(stowed)) list.Add(stowed);
+            return list;
+        }
+
         public static bool AnyoneStaysOutside(Caravan caravan, ICollection<Pawn> party) =>
             caravan.PawnsListForReading.Any(p => !party.Contains(p) && CaravanUtility.IsOwner(p, Faction.OfPlayer) && !p.Downed);
 
@@ -101,26 +113,63 @@ namespace DungeonMadness
                 Caravan partyCaravan;
                 if (everyone)
                 {
-                    // Unchosen items go to the stash; chosen ones stay in their owners' inventories and go in with them
+                    // Vehicles never go in (Vehicle Framework): they wait in the stash with their cargo. Everyone else,
+                    // passengers included, goes in on foot.
+                    var vehicles = caravan.PawnsListForReading.Where(VehicleCompat.IsVehicle).ToList();
+                    party = caravan.PawnsListForReading.Where(p => !VehicleCompat.IsVehicle(p)).ToList();
+                    var fromVehicles = new List<(Pawn vehicle, Thing thing, int count)>();
+                    // Unchosen items go to the stash; chosen ones stay in their owners' inventories and go in with them.
+                    // The amount left behind is taken from vehicle cargo first, since that stays put in its vehicle;
+                    // chosen cargo is moved to the people going in.
                     foreach (var tr in itemTransferables)
                     {
                         int leave = tr.things.Sum(t => t.stackCount) - tr.CountToTransfer;
-                        if (leave <= 0) continue;
-                        TransferableUtility.TransferNoSplit(tr.things, leave, (thing, n) =>
+                        var ordered = tr.things.OrderBy(t => VehicleCompat.VehicleHolding(t) != null ? 0 : 1).ToList();
+                        var leftInVehicle = new Dictionary<Thing, int>();
+                        if (leave > 0)
+                            TransferableUtility.TransferNoSplit(ordered, leave, (thing, n) =>
+                            {
+                                if (VehicleCompat.VehicleHolding(thing) != null) leftInVehicle[thing] = n;
+                                else thing.holdingOwner?.TryTransferToContainer(thing, site.GetDirectlyHeldThings(), n);
+                            }, removeIfTakingEntireThing: false);
+                        foreach (var thing in ordered)
                         {
-                            var owner = thing.holdingOwner;
-                            if (owner != null) owner.TryTransferToContainer(thing, site.GetDirectlyHeldThings(), n);
-                        });
+                            Pawn v = VehicleCompat.VehicleHolding(thing);
+                            if (v == null) continue;
+                            int take = thing.stackCount - leftInVehicle.TryGetValue(thing, 0);
+                            if (take > 0) fromVehicles.Add((v, thing, take));
+                        }
                     }
-                    party = caravan.PawnsListForReading.ToList();
+                    foreach (var (v, thing, n) in fromVehicles)
+                        CaravanInventoryUtility.MoveInventoryToSomeoneElse(v, thing, party, null, n);
+
+                    // A pawn stowed in a vehicle's cargo (an animal, say) is part of everyone too; left there it would be
+                    // deep-saved in the stash and destroyed with it. Prisoners cannot get this far: the dialog refuses.
+                    foreach (var v in vehicles)
+                        foreach (var stowed in v.inventory.innerContainer.OfType<Pawn>().ToList())
+                            if (!party.Contains(stowed) && !stowed.IsPrisonerOfColony) party.Add(stowed);
+                    VehicleCompat.Disembark(caravan, party);
+                    // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
+                    // destroys any vehicle still in one that is destroyed
                     foreach (var p in party) caravan.RemovePawn(p);
+                    foreach (var v in vehicles) caravan.RemovePawn(v);
                     if (!caravan.Destroyed) caravan.Destroy();
+                    // Into VF's own stash on the world map, which the party collects on the way out; any other caravan
+                    // can recover it meanwhile. Kept in the site's stash if VF's cannot be made.
+                    site.vehicleStash = VehicleCompat.StashVehicles(tile, vehicles, out var notStashed);
+                    foreach (var v in notStashed)
+                    {
+                        if (Find.WorldPawns.Contains(v)) Find.WorldPawns.RemovePawn(v);
+                        site.AddToStash(v);
+                    }
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                 }
                 else
                 {
-                    // Vanilla's caravan split (Dialog_SplitCaravan.TrySplitCaravan)
+                    // Vanilla's caravan split (Dialog_SplitCaravan.TrySplitCaravan). Vehicles stay outside; anyone going
+                    // in who rides one gets off first, since the caravan does not hold them.
                     foreach (var p in party) CaravanInventoryUtility.MoveAllInventoryToSomeoneElse(p, caravan.PawnsListForReading, party);
+                    VehicleCompat.Disembark(caravan, party);
                     foreach (var p in party) caravan.RemovePawn(p);
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                     foreach (var tr in itemTransferables)

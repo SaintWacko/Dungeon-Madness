@@ -33,6 +33,10 @@ namespace DungeonMadness
 
         private bool everyoneLeft;
 
+        // Vehicle Framework's stash on this tile holding the vehicles of a party that all went in (VehicleCompat).
+        // The party collects it when the visit ends, unless another caravan already has.
+        public WorldObject vehicleStash;
+
         // The humanlikes who entered together (not dwellers who joined later): who a party-bound entad binds to
         public List<Pawn> party = new List<Pawn>();
         // Entads made for this dungeon that have not left it yet, by thing id (a minified piece keeps its id)
@@ -189,12 +193,25 @@ namespace DungeonMadness
             else if (p.carryTracker?.CarriedThing is Thing c) ResolveEntad(c, null);
         }
 
-        public void FlushStash(Caravan caravan)
+        /// <summary>Empties the stash into the caravan and returns the caravan that ends up holding it all, which is a
+        /// new one when stashed vehicles turned a plain caravan into a vehicle caravan.</summary>
+        /// Vehicles kept here (only when Vehicle Framework's own stash could not be made) wait for the final flush, once
+        /// the whole party is out, so everyone gets seated.
+        public Caravan FlushStash(Caravan caravan, bool final = false)
         {
-            if (caravan == null) return;
+            if (caravan == null) return null;
+            List<Pawn> vehicles = null;
             for (int i = stash.Count - 1; i >= 0; i--)
             {
                 Thing t = stash[i];
+                // Vehicles (Vehicle Framework) go back last, all at once, after the people they will carry
+                if (t is Pawn v && VehicleCompat.IsVehicle(v))
+                {
+                    if (!final) continue;
+                    stash.Remove(t);
+                    (vehicles ?? (vehicles = new List<Pawn>())).Add(v);
+                    continue;
+                }
                 stash.Remove(t);
                 // A downed or roped animal (or a downed person) carried to the exit arrives as a hauled thing;
                 // GiveThing only takes items and destroys a pawn, so it joins the caravan as a member instead
@@ -207,6 +224,7 @@ namespace DungeonMadness
                 }
                 else CaravanInventoryUtility.GiveThing(caravan, t);
             }
+            return VehicleCompat.AddVehicles(caravan, vehicles);
         }
 
         public override bool ShouldRemoveMapNow(out bool alsoRemoveWorldObject)
@@ -256,7 +274,26 @@ namespace DungeonMadness
                     everyoneLeft = true;
                 }
             }
-            FlushStash(caravan);
+            // A tame animal (or a dweller who agreed to come) sent to the exit but pulled into a fight drops its walk and
+            // would vanish with the map. With a caravan to join they are swept out wherever they stand; downed ones are
+            // left, as they would be if nobody carried them. Only when a living party member is in that caravan, i.e.
+            // someone walked out to lead them: a party wiped out inside loses its animals even if a caravan waits.
+            if (caravan != null && party.Any(p => p != null && !p.Dead && caravan.ContainsPawn(p)))
+            {
+                var stragglers = Map.mapPawns.AllPawnsSpawned.Where(p => !p.Dead && !p.Downed
+                    && ((p.Faction == Faction.OfPlayer && p.RaceProps.Animal) || DungeonDwellerUtility.IsFollower(p))).ToList();
+                foreach (var p in stragglers)
+                    if (TryMovePawnOut(p)) caravan = WaitingCaravan() ?? caravan;
+            }
+            caravan = FlushStash(caravan, final: true);
+            // Vehicles come back once the whole party is out, so everyone is seated. If nobody is there to take them (the
+            // party was lost) or VF refuses, they stay stashed and VF's usual timeout starts.
+            if (vehicleStash != null)
+            {
+                caravan = VehicleCompat.RetrieveStash(vehicleStash, caravan);
+                VehicleCompat.StartStashTimeout(vehicleStash);
+                vehicleStash = null;
+            }
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
@@ -284,6 +321,7 @@ namespace DungeonMadness
             Scribe_Defs.Look(ref theme, "theme");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
+            Scribe_References.Look(ref vehicleStash, "vehicleStash");
             if (stash == null) stash = new ThingOwner<Thing>(this);
             Scribe_Collections.Look(ref party, "party", LookMode.Reference);
             Scribe_Collections.Look(ref pendingEntads, "pendingEntads", LookMode.Value);

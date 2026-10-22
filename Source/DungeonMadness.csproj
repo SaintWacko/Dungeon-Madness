@@ -39,7 +39,7 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="EntadFramework">
-      <HintPath>../../EntadFramework/Assemblies/EntadFramework.dll</HintPath>
+      <HintPath>../../EntadFramework/1.6/Assemblies/EntadFramework.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="UnityEngine">
