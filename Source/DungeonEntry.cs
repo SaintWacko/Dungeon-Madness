@@ -115,16 +115,23 @@ namespace DungeonMadness
                 // Doors are made without a faction, which animals cannot open; the party's animals must follow it
                 site.doorsAlwaysOpenForPlayerPawns = true;
                 Find.WorldObjects.Add(site);
-                Map map;
+                // Generation failing leaves the party in its caravan (nobody has moved yet) and refunds the influence.
+                // Vanilla catches and logs a GenStep's exception itself and returns a half-built map, so a missing
+                // map with no exit counts as failure too. (A throw later, in loot or creatures, still leaves a playable
+                // dungeon with a way out, and the party goes in.)
+                Map map = null;
+                System.Exception error = null;
                 try { map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef); }
-                catch (System.Exception e)
+                catch (System.Exception e) { error = e; }
+                if (error != null || site.layout == null || map == null || !map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).Any())
                 {
-                    // Nobody has moved yet: the party is still in its caravan. Give back the verity paid for this visit.
-                    Log.Error($"[Dungeon Madness] Generating the dungeon failed; the party stays outside. {e}");
+                    Log.Error("[Dungeon Madness] Generating the dungeon failed; the party stays outside." + (error != null ? " " + error : ""));
                     if (influence != null)
                         EntadFramework.EntadApi.AddVerity(influence.TotalCost(baseLevel, DungeonThemeUtility.ThemeFor(tile)));
-                    if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false);
+                    try { if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false); }
+                    catch (System.Exception e) { Log.Error("[Dungeon Madness] Removing the failed dungeon map: " + e); }
                     if (!site.Destroyed) site.Destroy();
+                    Messages.Message("DMAD_Enter_GenerationFailed".Translate(), MessageTypeDefOf.RejectInput, false);
                     return;
                 }
 

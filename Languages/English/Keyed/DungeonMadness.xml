@@ -171,6 +171,7 @@
   <DMAD_Enter_Influence_Tip>Verity spent when the party enters: {0}. The colony has {1}. It is not refunded if the party is lost.</DMAD_Enter_Influence_Tip>
   <DMAD_Enter_Influenced_Tip>Influenced with verity:</DMAD_Enter_Influenced_Tip>
   <DMAD_Enter_CannotAffordInfluence>The influence costs {0} verity and the colony has {1}. Lower it on the Influence screen.</DMAD_Enter_CannotAffordInfluence>
+  <DMAD_Enter_GenerationFailed>The dungeon could not be generated, so the party stays outside. Any verity spent on influence was returned. Details are in the log.</DMAD_Enter_GenerationFailed>
   <DMAD_Entered_Influenced>Influenced with verity:</DMAD_Entered_Influenced>
   <DMAD_Influence_Title>Influence dungeon</DMAD_Influence_Title>
   <DMAD_Influence_Header>Level {0}, {1}. Base step {2} verity</DMAD_Influence_Header>
