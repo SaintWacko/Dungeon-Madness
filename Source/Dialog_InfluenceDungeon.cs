@@ -145,11 +145,12 @@ namespace DungeonMadness
                 int d = Deltas[i];
                 int target = Mathf.Clamp(cur + d, lim.min, lim.max);
                 long cost = CostWith(k, target);
-                bool ok = target != cur && Affordable(cost);
+                long now = influence.TotalCost(baseLevel, normalTheme);
+                // A step that lowers the total is always allowed, even over budget
+                bool ok = target != cur && (cost <= now || Affordable(cost));
                 var b = new Rect(x, by, BtnWidth, 26f);
                 if (target != cur)
                 {
-                    long now = influence.TotalCost(baseLevel, normalTheme);
                     TooltipHandler.TipRegion(b, cost >= now
                         ? "DMAD_Influence_BtnCost".Translate(cost - now, cost)
                         : "DMAD_Influence_BtnRefund".Translate(now - cost, cost));
@@ -180,7 +181,8 @@ namespace DungeonMadness
                 int away = Mathf.Abs(cur) + 1;
                 bool further = cur >= 0 && cur < lim.max || cur <= 0 && cur > lim.min;
                 Widgets.Label(new Rect(v.x, v.y + 34f, v.width, 16f), further
-                    ? "DMAD_Influence_Next".Translate(DungeonInfluence.Marginal(away) * step).ToString()
+                    ? "DMAD_Influence_Next".Translate(DungeonInfluence.Marginal(away) * step
+                        + (influence.Any(normalTheme) ? 0 : DungeonInfluence.Fee(step))).ToString()
                     : "DMAD_Influence_AtLimit".Translate().ToString());
             }
             GUI.color = Color.white;

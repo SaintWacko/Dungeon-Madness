@@ -90,7 +90,7 @@ namespace DungeonMadness
             var s = DungeonsMod.Settings;
             switch (k)
             {
-                case InfluenceKind.Level: return new IntRange(1 - baseLevel, MaxSteps);
+                case InfluenceKind.Level: return new IntRange(Mathf.Max(1 - baseLevel, -MaxSteps), MaxSteps);
                 // Below max - 1 every pack is already 1; above the cap is allowed, the player chose it
                 case InfluenceKind.PackSize: return new IntRange(-(s.maxPackSize - 1), MaxSteps);
                 case InfluenceKind.Occupancy: return new IntRange(-ChanceStepsTo(s.occupancy, 0f), ChanceStepsTo(s.occupancy, 1f));
