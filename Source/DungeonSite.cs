@@ -274,6 +274,16 @@ namespace DungeonMadness
                     everyoneLeft = true;
                 }
             }
+            // A tame animal (or a dweller who agreed to come) sent to the exit but pulled into a fight drops its walk and
+            // would vanish with the map. With a caravan to join they are swept out wherever they stand; downed ones are
+            // left, as they would be if nobody carried them.
+            if (caravan != null)
+            {
+                var stragglers = Map.mapPawns.AllPawnsSpawned.Where(p => !p.Dead && !p.Downed
+                    && ((p.Faction == Faction.OfPlayer && p.RaceProps.Animal) || DungeonDwellerUtility.IsFollower(p))).ToList();
+                foreach (var p in stragglers)
+                    if (TryMovePawnOut(p)) caravan = WaitingCaravan() ?? caravan;
+            }
             caravan = FlushStash(caravan, final: true);
             // Vehicles come back once the whole party is out, so everyone is seated. If nobody is there to take them (the
             // party was lost) or VF refuses, they stay stashed and VF's usual timeout starts.
