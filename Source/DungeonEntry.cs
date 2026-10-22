@@ -115,7 +115,18 @@ namespace DungeonMadness
                 // Doors are made without a faction, which animals cannot open; the party's animals must follow it
                 site.doorsAlwaysOpenForPlayerPawns = true;
                 Find.WorldObjects.Add(site);
-                Map map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef);
+                Map map;
+                try { map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef); }
+                catch (System.Exception e)
+                {
+                    // Nobody has moved yet: the party is still in its caravan. Give back the verity paid for this visit.
+                    Log.Error($"[Dungeon Madness] Generating the dungeon failed; the party stays outside. {e}");
+                    if (influence != null)
+                        EntadFramework.EntadApi.AddVerity(influence.TotalCost(baseLevel, DungeonThemeUtility.ThemeFor(tile)));
+                    if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false);
+                    if (!site.Destroyed) site.Destroy();
+                    return;
+                }
 
                 bool everyone = !AnyoneStaysOutside(caravan, party);
                 Caravan partyCaravan;

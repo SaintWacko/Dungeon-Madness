@@ -335,6 +335,7 @@ namespace DungeonMadness
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 if (party == null) party = new List<Pawn>();
+                if (baseLevel <= 0) baseLevel = level;
                 party.RemoveAll(p => p == null);
                 if (pendingEntads == null) pendingEntads = new HashSet<int>();
                 if (bindReport == null) bindReport = new List<string>();
