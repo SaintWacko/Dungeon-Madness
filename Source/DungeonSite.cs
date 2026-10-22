@@ -26,6 +26,10 @@ namespace DungeonMadness
         // The theme this visit was generated with. Every visit makes a new site, so this is only for the visit;
         // "same tile, same theme" comes from DungeonThemeUtility.ThemeFor's seed, not from this field
         public DungeonThemeDef theme;
+        // Verity spent on this visit (DungeonInfluence). `level` above is already the influenced level; the dungeon's
+        // own is baseLevel. Null on a visit nobody influenced and on saves from before influence existed.
+        public DungeonInfluence influence;
+        public int baseLevel;
 
         // Items left at the entrance when nobody stayed outside, and items carried out through the exit before any
         // pawn came out to take them. Handed to the caravan on the tile as soon as one exists.
@@ -319,6 +323,8 @@ namespace DungeonMadness
             Scribe_Values.Look(ref layoutSeed, "layoutSeed");
             Scribe_Deep.Look(ref layout, "layout");
             Scribe_Defs.Look(ref theme, "theme");
+            Scribe_Deep.Look(ref influence, "influence");
+            Scribe_Values.Look(ref baseLevel, "baseLevel");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
             Scribe_References.Look(ref vehicleStash, "vehicleStash");

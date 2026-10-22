@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 using Verse;
@@ -26,7 +27,7 @@ namespace DungeonMadness
             DungeonWorldComponent.SetLayerDirty();
         }
 
-        private enum Tab { World, Parties, Creatures, Loot }
+        private enum Tab { World, Parties, Creatures, Loot, Influence }
         private Tab tab;
         private Vector2 scroll;
         private float viewHeight = 900f;
@@ -42,6 +43,7 @@ namespace DungeonMadness
                 new TabRecord("DMAD_Tab_Parties".Translate(), () => SetTab(Tab.Parties), tab == Tab.Parties),
                 new TabRecord("DMAD_Tab_Creatures".Translate(), () => SetTab(Tab.Creatures), tab == Tab.Creatures),
                 new TabRecord("DMAD_Tab_Loot".Translate(), () => SetTab(Tab.Loot), tab == Tab.Loot),
+                new TabRecord("DMAD_Tab_Influence".Translate(), () => SetTab(Tab.Influence), tab == Tab.Influence),
             };
             Widgets.DrawMenuSection(body);
             TabDrawer.DrawTabs(body, tabs);
@@ -57,7 +59,8 @@ namespace DungeonMadness
             if (tab == Tab.World) DoWorld(list);
             else if (tab == Tab.Parties) DoParties(list);
             else if (tab == Tab.Creatures) DoCreatures(list);
-            else DoLoot(list);
+            else if (tab == Tab.Loot) DoLoot(list);
+            else DoInfluence(list);
             viewHeight = list.CurHeight + 20f;
             list.End();
             Widgets.EndScrollView();
@@ -174,6 +177,48 @@ namespace DungeonMadness
             s.bindPartyChance = Mathf.Min(s.bindPartyChance, 1f - s.bindSingleChance);
             list.Label("DMAD_Settings_BindNone".Translate(Mathf.Max(0f, 1f - s.bindSingleChance - s.bindPartyChance).ToStringPercent()));
             list.Label("DMAD_Settings_Binding_Desc".Translate());
+        }
+
+        private static void DoInfluence(Listing_Standard list)
+        {
+            var s = Settings;
+            list.CheckboxLabeled("DMAD_Settings_InfluenceEnabled".Translate(), ref s.influenceEnabled, "DMAD_Settings_InfluenceEnabled_Tip".Translate());
+            list.Gap();
+
+            Section(list, "DMAD_Settings_InfluenceCosts");
+            if (list.ButtonTextLabeled("DMAD_Settings_InfluenceCurve".Translate(), ("DMAD_Curve_" + s.influenceCurve).Translate()))
+            {
+                var options = new List<FloatMenuOption>();
+                foreach (InfluenceCurve c in System.Enum.GetValues(typeof(InfluenceCurve)))
+                {
+                    var pick = c;
+                    options.Add(new FloatMenuOption(("DMAD_Curve_" + c).Translate(), () => s.influenceCurve = pick));
+                }
+                Find.WindowStack.Add(new FloatMenu(options));
+            }
+            list.Label("DMAD_Settings_InfluenceCurve_Desc".Translate(string.Join(", ", System.Linq.Enumerable.Range(1, 8).Select(n => DungeonInfluence.Marginal(n).ToString())),
+                DungeonInfluence.RowCost(5, 1), DungeonInfluence.RowCost(10, 1)));
+            list.Gap();
+            list.Label("DMAD_Settings_InfluenceLevelsPerStep".Translate(s.influenceLevelsPerStep.ToString("0.#")));
+            s.influenceLevelsPerStep = Mathf.Round(list.Slider(s.influenceLevelsPerStep, 1f, 30f) * 2f) / 2f;
+            list.Label("DMAD_Settings_InfluenceLevelsPerStep_Desc".Translate(DungeonInfluence.BaseStep(5), DungeonInfluence.BaseStep(12), DungeonInfluence.BaseStep(30)));
+            list.Gap();
+            list.Label("DMAD_Settings_InfluenceFee".Translate(s.influenceFeeSteps));
+            s.influenceFeeSteps = Mathf.RoundToInt(list.Slider(s.influenceFeeSteps, 0f, 20f));
+            list.Label("DMAD_Settings_InfluenceThemeFee".Translate(s.influenceThemeSteps));
+            s.influenceThemeSteps = Mathf.RoundToInt(list.Slider(s.influenceThemeSteps, 0f, 30f));
+            list.Gap();
+
+            Section(list, "DMAD_Settings_InfluenceRows");
+            list.Label("DMAD_Settings_InfluenceRows_Desc".Translate());
+            foreach (var k in DungeonInfluence.Kinds)
+            {
+                bool on = s.InfluenceRowEnabled(k);
+                list.CheckboxLabeled(("DMAD_Influence_Row_" + k).Translate(), ref on, ("DMAD_Influence_Row_" + k + "_Tip").Translate());
+                if (on) s.influenceDisabled.Remove(k);
+                else if (!s.influenceDisabled.Contains(k)) s.influenceDisabled.Add(k);
+            }
+            list.CheckboxLabeled("DMAD_Influence_Theme".Translate(), ref s.influenceTheme, "DMAD_Influence_Theme_Tip".Translate());
         }
 
         private static void DoWorld(Listing_Standard list)

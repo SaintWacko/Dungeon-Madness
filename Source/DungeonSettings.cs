@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -86,6 +87,24 @@ namespace DungeonMadness
         public const float DefaultBindPartyChance = 0.4f;
         public float bindPartyChance = DefaultBindPartyChance;
 
+        // ---- Influence: spending verity on a visit from the entry dialog. Read when the screen is open.
+        public bool influenceEnabled = true;
+        public InfluenceCurve influenceCurve = InfluenceCurve.Fibonacci;
+        // A base step costs the dungeon's own level / this, rounded, at least 1 (level 12: 2)
+        public const float DefaultInfluenceLevelsPerStep = 6f;
+        public float influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
+        // Paid once per visit when anything is influenced, in base steps
+        public const int DefaultInfluenceFeeSteps = 3;
+        public int influenceFeeSteps = DefaultInfluenceFeeSteps;
+        // Choosing another theme, in base steps
+        public const int DefaultInfluenceThemeSteps = 5;
+        public int influenceThemeSteps = DefaultInfluenceThemeSteps;
+        public bool influenceTheme = true;
+        // Rows switched off in settings (empty: every row is offered)
+        public List<InfluenceKind> influenceDisabled = new List<InfluenceKind>();
+
+        public bool InfluenceRowEnabled(InfluenceKind k) => !influenceDisabled.Contains(k);
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -118,6 +137,13 @@ namespace DungeonMadness
             entadPointsPerLevel = DefaultEntadPointsPerLevel;
             bindSingleChance = DefaultBindSingleChance;
             bindPartyChance = DefaultBindPartyChance;
+            influenceEnabled = true;
+            influenceCurve = InfluenceCurve.Fibonacci;
+            influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
+            influenceFeeSteps = DefaultInfluenceFeeSteps;
+            influenceThemeSteps = DefaultInfluenceThemeSteps;
+            influenceTheme = true;
+            influenceDisabled.Clear();
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -172,6 +198,17 @@ namespace DungeonMadness
             bindSingleChance = Mathf.Clamp01(bindSingleChance);
             Scribe_Values.Look(ref bindPartyChance, "bindPartyChance", DefaultBindPartyChance);
             bindPartyChance = Mathf.Clamp(bindPartyChance, 0f, 1f - bindSingleChance);
+            Scribe_Values.Look(ref influenceEnabled, "influenceEnabled", true);
+            Scribe_Values.Look(ref influenceCurve, "influenceCurve", InfluenceCurve.Fibonacci);
+            Scribe_Values.Look(ref influenceLevelsPerStep, "influenceLevelsPerStep", DefaultInfluenceLevelsPerStep);
+            influenceLevelsPerStep = Mathf.Clamp(influenceLevelsPerStep, 1f, 30f);
+            Scribe_Values.Look(ref influenceFeeSteps, "influenceFeeSteps", DefaultInfluenceFeeSteps);
+            influenceFeeSteps = Mathf.Clamp(influenceFeeSteps, 0, 20);
+            Scribe_Values.Look(ref influenceThemeSteps, "influenceThemeSteps", DefaultInfluenceThemeSteps);
+            influenceThemeSteps = Mathf.Clamp(influenceThemeSteps, 0, 30);
+            Scribe_Values.Look(ref influenceTheme, "influenceTheme", true);
+            Scribe_Collections.Look(ref influenceDisabled, "influenceDisabled", LookMode.Value);
+            if (influenceDisabled == null) influenceDisabled = new List<InfluenceKind>();
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

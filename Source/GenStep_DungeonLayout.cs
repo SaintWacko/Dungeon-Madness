@@ -430,14 +430,14 @@ namespace DungeonMadness
             int ordinary = 0;
             for (int k = 0; k < count; k++)
             {
-                Thing entad = Rand.Chance(DungeonsMod.Settings.entadChance) ? loot.MakeEntad() : null;
+                Thing entad = Rand.Chance(loot.EntadChance) ? loot.MakeEntad() : null;
                 if (entad == null) ordinary++;
                 else if (entad.def.category == ThingCategory.Building) loot.QueueFurniture(entad);
                 else goods.Add(entad);
             }
             if (ordinary > 0)
             {
-                float value = Mathf.Min(ordinary * 40f, 600f);
+                float value = Mathf.Min(ordinary * 40f, 600f) * loot.LootValueFactor;
                 var parms = new ThingSetMakerParams
                 {
                     techLevel = DungeonLootContext.ColonyTech,

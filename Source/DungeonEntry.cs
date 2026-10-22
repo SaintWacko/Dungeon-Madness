@@ -89,11 +89,15 @@ namespace DungeonMadness
         /// items with how many of each go in. When nobody able stays outside, every pawn goes in and the items
         /// left behind wait in the site's stash for the party to come back out.
         /// </summary>
-        public static void Enter(Caravan caravan, List<Pawn> party, List<TransferableOneWay> itemTransferables)
+        public static void Enter(Caravan caravan, List<Pawn> party, List<TransferableOneWay> itemTransferables, DungeonInfluence influence = null)
         {
             PlanetTile tile = caravan.Tile;
-            if (!CanEnterAt(tile, out int level).Accepted) return;
+            if (!CanEnterAt(tile, out int baseLevel).Accepted) return;
             float wealth = PartyWealth(party);
+            // Influence was paid for by the dialog just before this; the level row moves the dungeon's own level, so
+            // map size, the wealth multiplier and everything after it see the influenced one
+            if (influence != null && !influence.Any(DungeonThemeUtility.ThemeFor(tile))) influence = null;
+            int level = influence?.Level(baseLevel) ?? baseLevel;
 
             LongEventHandler.QueueLongEvent(() =>
             {
@@ -101,6 +105,10 @@ namespace DungeonMadness
                 site.Tile = tile;
                 site.SetFaction(null);
                 site.level = level;
+                site.baseLevel = baseLevel;
+                site.influence = influence;
+                // GenStep_DungeonLayout keeps a theme already on the site
+                if (influence?.theme != null) site.theme = influence.theme;
                 site.partyWealth = wealth;
                 site.effectiveLevel = EffectiveLevel(level, wealth);
                 site.layoutSeed = Rand.Int | 1;
@@ -193,7 +201,10 @@ namespace DungeonMadness
                 CaravanEnterMapUtility.Enter(partyCaravan, map, p => CellFinder.RandomClosewalkCellNear(entrance, map, 4),
                     CaravanDropInventoryMode.DoNotDrop, draftColonists: false);
                 CameraJumper.TryJump(entrance, map);
-                Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#")),
+                string text = "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#"));
+                if (influence != null)
+                    text += "\n\n" + "DMAD_Entered_Influenced".Translate() + "\n" + string.Join("\n", influence.Describe(baseLevel, DungeonThemeUtility.ThemeFor(tile)).Select(l => "  - " + l));
+                Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), text,
                     LetterDefOf.NeutralEvent, new LookTargets(entrance, map));
             }, "GeneratingMapForNewEncounter", false, null);
         }

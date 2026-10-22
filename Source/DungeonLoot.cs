@@ -33,6 +33,10 @@ namespace DungeonMadness
         // The theme's chance that a library book is a dangerous one (an Anomaly tome)
         public float tomeChance;
         public readonly List<FurnishedRoom> rooms = new List<FurnishedRoom>();
+        // Verity spent on this visit: entad chance and value, loot value
+        public readonly DungeonInfluence influence;
+        public float EntadChance => influence.EntadChance(DungeonsMod.Settings.entadChance);
+        public float LootValueFactor => influence.LootValueFactor;
         // Entad furniture made while rooms were still being furnished, set up once they all are
         private readonly List<Thing> furnitureQueue = new List<Thing>();
         private EntadItemRequest request;
@@ -48,6 +52,7 @@ namespace DungeonMadness
             site = map.Parent as DungeonSite;
             level = site == null ? 1f : Mathf.Max(1f, site.effectiveLevel > 0f ? site.effectiveLevel : site.level);
             this.furnitureAllowed = furnitureAllowed;
+            influence = DungeonInfluence.Of(map);
         }
 
         /// <summary>The colony's current tech level: the highest tech level with at least half of its research
@@ -100,7 +105,7 @@ namespace DungeonMadness
         /// item fits.</summary>
         public Thing MakeEntad()
         {
-            Thing t = EntadApi.GenerateEntadItem(DungeonsMod.Settings.entadPointsPerLevel * level, Request());
+            Thing t = EntadApi.GenerateEntadItem(DungeonsMod.Settings.entadPointsPerLevel * level * influence.EntadValueFactor, Request());
             if (t != null)
             {
                 site?.RegisterEntad(t);
@@ -119,7 +124,7 @@ namespace DungeonMadness
             int ordinary = 0;
             for (int i = 0; i < count; i++)
             {
-                Thing entad = Rand.Chance(DungeonsMod.Settings.entadChance) ? MakeEntad() : null;
+                Thing entad = Rand.Chance(EntadChance) ? MakeEntad() : null;
                 if (entad == null) ordinary++;
                 else if (entad.def.category == ThingCategory.Building) furnitureQueue.Add(entad);
                 else result.Add(entad);
@@ -212,7 +217,7 @@ namespace DungeonMadness
                 cells = cells.Where(c => c.Standable(map) && c.GetFirstItem(map) == null && !c.GetTerrain(map).IsWater).ToList();
                 if (cells.Count == 0) continue;
                 int n = Rand.RangeInclusive(2, 4);
-                float value = s.lootValuePerLevel * level * Rand.Range(0.75f, 1.25f);
+                float value = s.lootValuePerLevel * level * LootValueFactor * Rand.Range(0.75f, 1.25f);
                 var loot = MakeLoot(n, value / n);
                 IntVec3 center = cells.RandomElement();
                 var spots = cells.OrderBy(c => c.DistanceToSquared(center)).ToList();

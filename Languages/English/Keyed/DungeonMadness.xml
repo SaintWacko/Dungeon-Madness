@@ -163,4 +163,64 @@
   <DMAD_Settings_Binding_Desc>Rolled when an entad leaves the dungeon. One pawn means whoever has it equipped, worn or in their inventory as they leave. An entad that is only hauled out binds to a random member of the party. The party is the people who entered together, not dwellers who joined later. A letter lists every entad and its binding when the visit ends.</DMAD_Settings_Binding_Desc>
 
   <DMAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more bastle points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</DMAD_Settings_Power_Desc>
+
+  <!-- Influence: spending verity on a visit (Dialog_InfluenceDungeon) -->
+  <DMAD_InfluenceButton>Influence dungeon</DMAD_InfluenceButton>
+  <DMAD_InfluenceButton_Tip>Spend verity to change this visit: level, packs, madness, loot and theme. Nothing is spent until the party enters. The colony has {0} verity.</DMAD_InfluenceButton_Tip>
+  <DMAD_Enter_Influence>Influence</DMAD_Enter_Influence>
+  <DMAD_Enter_Influence_Tip>Verity spent when the party enters: {0}. The colony has {1}. It is not refunded if the party is lost.</DMAD_Enter_Influence_Tip>
+  <DMAD_Enter_Influenced_Tip>Influenced with verity:</DMAD_Enter_Influenced_Tip>
+  <DMAD_Enter_CannotAffordInfluence>The influence costs {0} verity and the colony has {1}. Lower it on the Influence screen.</DMAD_Enter_CannotAffordInfluence>
+  <DMAD_Entered_Influenced>Influenced with verity:</DMAD_Entered_Influenced>
+  <DMAD_Influence_Title>Influence dungeon</DMAD_Influence_Title>
+  <DMAD_Influence_Header>Level {0}, {1}. Base step {2} verity</DMAD_Influence_Header>
+  <DMAD_Influence_Intro>Each step away from normal costs more than the last ({0}, ...), and each row counts its own steps. Changing anything adds a one-time fee of {1}. Verity is spent when the party enters; cancelling the entry spends nothing. The changes apply to this party's visit only.</DMAD_Influence_Intro>
+  <DMAD_Influence_Less>Less</DMAD_Influence_Less>
+  <DMAD_Influence_More>More</DMAD_Influence_More>
+  <DMAD_Influence_Value>Value</DMAD_Influence_Value>
+  <DMAD_Influence_Spent>Spent</DMAD_Influence_Spent>
+  <DMAD_Influence_Normal>normal {0}</DMAD_Influence_Normal>
+  <DMAD_Influence_PackNote>creatures per pack</DMAD_Influence_PackNote>
+  <DMAD_Influence_Next>next step: {0}</DMAD_Influence_Next>
+  <DMAD_Influence_AtLimit>at its limit</DMAD_Influence_AtLimit>
+  <DMAD_Influence_BtnCost>Costs {0} more verity (total {1}).</DMAD_Influence_BtnCost>
+  <DMAD_Influence_BtnRefund>Saves {0} verity (total {1}).</DMAD_Influence_BtnRefund>
+  <DMAD_Influence_Fee>Influence fee: {0}</DMAD_Influence_Fee>
+  <DMAD_Influence_Total>Total cost: {0}</DMAD_Influence_Total>
+  <DMAD_Influence_Verity>Colony verity: {0} ({1} left)</DMAD_Influence_Verity>
+  <DMAD_Influence_CannotAfford>not enough verity</DMAD_Influence_CannotAfford>
+  <DMAD_Influence_Theme>Theme</DMAD_Influence_Theme>
+  <DMAD_Influence_Theme_Tip>The dungeon's look, its dividers, how many built rooms and skylights it has, and its odds of insects and mechs. Creatures still come from the tile's biome.</DMAD_Influence_Theme_Tip>
+  <DMAD_Influence_ThemeNormal>{0} (normal)</DMAD_Influence_ThemeNormal>
+  <DMAD_Influence_ThemeNote>normal: {0}. Flat fee {1}</DMAD_Influence_ThemeNote>
+  <DMAD_Influence_Row_Level>Level</DMAD_Influence_Row_Level>
+  <DMAD_Influence_Row_Level_Tip>The dungeon's own level, before the party's wealth multiplies it. Changes its size, creature strength and loot.</DMAD_Influence_Row_Level_Tip>
+  <DMAD_Influence_Row_PackSize>Pack size</DMAD_Influence_Row_PackSize>
+  <DMAD_Influence_Row_PackSize_Tip>Creatures added to or taken from every pack, never below 1, and allowed past the usual maximum. A pack's points are shared by its members, so bigger packs are made of weaker creatures and smaller packs of stronger ones.</DMAD_Influence_Row_PackSize_Tip>
+  <DMAD_Influence_Row_Occupancy>Occupancy</DMAD_Influence_Row_Occupancy>
+  <DMAD_Influence_Row_Occupancy_Tip>Chance each chamber other than the entrance has a pack in it.</DMAD_Influence_Row_Occupancy_Tip>
+  <DMAD_Influence_Row_Madness>Madness</DMAD_Influence_Row_Madness>
+  <DMAD_Influence_Row_Madness_Tip>Chance an animal or human pack is dungeon-mad. Sane dwellers can be invited out or arrested; sane animals leave the party alone unless provoked.</DMAD_Influence_Row_Madness_Tip>
+  <DMAD_Influence_Row_EntadChance>Entad chance</DMAD_Influence_Row_EntadChance>
+  <DMAD_Influence_Row_EntadChance_Tip>Chance each loot slot, in a pile or on a storeroom shelf, is an entad.</DMAD_Influence_Row_EntadChance_Tip>
+  <DMAD_Influence_Row_EntadValue>Entad value</DMAD_Influence_Row_EntadValue>
+  <DMAD_Influence_Row_EntadValue_Tip>Trait points each entad is generated with, as a share of normal. More points mean more or rarer traits, and more verity if it is dismantled.</DMAD_Influence_Row_EntadValue_Tip>
+  <DMAD_Influence_Row_LootValue>Loot value</DMAD_Influence_Row_LootValue>
+  <DMAD_Influence_Row_LootValue_Tip>Market value of the ordinary goods in loot piles and on storeroom shelves, as a share of normal.</DMAD_Influence_Row_LootValue_Tip>
+
+  <DMAD_Tab_Influence>Influence</DMAD_Tab_Influence>
+  <DMAD_Settings_InfluenceEnabled>Allow influencing dungeons</DMAD_Settings_InfluenceEnabled>
+  <DMAD_Settings_InfluenceEnabled_Tip>Shows the Influence dungeon button on the entry screen, where verity from dismantled entads can be spent on a visit.</DMAD_Settings_InfluenceEnabled_Tip>
+  <DMAD_Settings_InfluenceCosts>Costs</DMAD_Settings_InfluenceCosts>
+  <DMAD_Settings_InfluenceCurve>Cost curve</DMAD_Settings_InfluenceCurve>
+  <DMAD_Settings_InfluenceCurve_Desc>Base steps for each further step away from normal: {0}, ... Five steps on one row cost {1} base steps in all, ten cost {2}.</DMAD_Settings_InfluenceCurve_Desc>
+  <DMAD_Curve_Fibonacci>Fibonacci</DMAD_Curve_Fibonacci>
+  <DMAD_Curve_Linear>Linear</DMAD_Curve_Linear>
+  <DMAD_Curve_Doubling>Doubling</DMAD_Curve_Doubling>
+  <DMAD_Settings_InfluenceLevelsPerStep>Dungeon levels per verity in a base step: {0}</DMAD_Settings_InfluenceLevelsPerStep>
+  <DMAD_Settings_InfluenceLevelsPerStep_Desc>A base step costs the dungeon's own level divided by this, rounded, at least 1. Party wealth does not change it. A base step at level 5: {0}; level 12: {1}; level 30: {2}.</DMAD_Settings_InfluenceLevelsPerStep_Desc>
+  <DMAD_Settings_InfluenceFee>Influence fee: {0} base steps</DMAD_Settings_InfluenceFee>
+  <DMAD_Settings_InfluenceThemeFee>Choosing a theme: {0} base steps</DMAD_Settings_InfluenceThemeFee>
+  <DMAD_Settings_InfluenceRows>Rows</DMAD_Settings_InfluenceRows>
+  <DMAD_Settings_InfluenceRows_Desc>Which influences the screen offers.</DMAD_Settings_InfluenceRows_Desc>
 </LanguageData>
