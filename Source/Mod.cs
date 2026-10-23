@@ -204,8 +204,8 @@ namespace DungeonMadness
             list.Label("DMAD_Settings_InfluenceLevelsPerStep_Desc".Translate(DungeonInfluence.BaseStep(5), DungeonInfluence.BaseStep(12), DungeonInfluence.BaseStep(30)));
             list.Gap();
             list.Label("DMAD_Settings_InfluenceFee".Translate(s.influenceFeeSteps));
-            list.Label("DMAD_Settings_InfluenceFee_Desc".Translate());
             s.influenceFeeSteps = Mathf.RoundToInt(list.Slider(s.influenceFeeSteps, 0f, 20f));
+            list.Label("DMAD_Settings_InfluenceFee_Desc".Translate());
             list.Label("DMAD_Settings_InfluenceThemeFee".Translate(s.influenceThemeSteps));
             s.influenceThemeSteps = Mathf.RoundToInt(list.Slider(s.influenceThemeSteps, 0f, 30f));
             list.Gap();
