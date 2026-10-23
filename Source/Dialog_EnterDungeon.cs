@@ -300,6 +300,8 @@ namespace DungeonMadness
             int cap = DungeonsMod.Settings.maxPartySize;
             int people = DungeonEntry.HumanlikeCount(party);
             float mult = DungeonEntry.WealthMultiplier(wealth);
+            // What Enter will charge: rows switched off in the settings since the Influence screen closed are dropped
+            if (DungeonsMod.Settings.influenceEnabled) influence.Restrict(target);
             bool influenced = DungeonsMod.Settings.influenceEnabled && influence.Any(NormalTheme);
             int lvl = influenced ? influence.Level(level) : level;
             partyExtra.Clear();

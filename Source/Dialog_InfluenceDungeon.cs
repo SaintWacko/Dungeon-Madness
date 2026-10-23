@@ -148,13 +148,13 @@ namespace DungeonMadness
 
             float by = rect.y + (rect.height - 26f) / 2f;
             float x = rect.x + LabelWidth;
+            long now = influence.TotalCost(target);
             for (int i = 0; i < Deltas.Length; i++)
             {
                 if (i == 3) x += btns + 6f + valueWidth + 6f - (BtnWidth + BtnGap) * 3f;
                 int d = Deltas[i];
                 int to = Mathf.Clamp(cur + d, lim.min, lim.max);
                 long cost = CostWith(k, to);
-                long now = influence.TotalCost(target);
                 // A step that lowers the total is always allowed, even over budget
                 bool ok = to != cur && (cost <= now || Affordable(cost));
                 var b = new Rect(x, by, BtnWidth, 26f);
@@ -232,10 +232,11 @@ namespace DungeonMadness
                 foreach (var t in DefDatabase<DungeonThemeDef>.AllDefsListForReading.OrderBy(t => t.label))
                 {
                     if (t == normalTheme) continue;
-                    var old = influence.theme;
-                    influence.theme = t;
-                    long cost = influence.TotalCost(target);
-                    influence.theme = old;
+                    // Priced as it would stand under that theme, with rows pulled inside its limits
+                    var probe = influence.Copy();
+                    probe.theme = t;
+                    probe.ClampToLimits(target);
+                    long cost = probe.TotalCost(target);
                     var pick = t;
                     options.Add(Affordable(cost)
                         ? new FloatMenuOption(t.LabelCap, () => influence.theme = pick)
