@@ -308,6 +308,7 @@ namespace DungeonMadness
             }
             if (Prefs.DevMode)
                 Log.Message($"[Dungeon Madness] Effective level {level:0.#}: {average:0.##} points per pack, species up to {ceiling:0} combat power. " +
+                    $"Odds animal/insect/mech: caverns {Odds(theme, influence, false)}, ruins {Odds(theme, influence, true)}. " +
                     $"{comp.packs.Count} packs: {string.Join("; ", comp.packs)}");
         }
 
@@ -319,6 +320,13 @@ namespace DungeonMadness
             if (r < mech) return PackType.Mech;
             if (r < mech + insect) return PackType.Insect;
             return PackType.Animal;
+        }
+
+        static string Odds(DungeonThemeDef theme, DungeonInfluence influence, bool ruin)
+        {
+            influence.CreatureWeights(theme, ruin, out float a, out float i, out float m);
+            float t = a + i + m;
+            return t <= 0f ? "all animals" : $"{a / t:P0}/{i / t:P0}/{m / t:P0}";
         }
 
         static IntRange SizeRange(PawnKindDef kind, PackType type)
