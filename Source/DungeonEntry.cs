@@ -68,7 +68,6 @@ namespace DungeonMadness
         public static float WealthMultiplier(float wealth) => 1f + wealth / DungeonsMod.Settings.wealthToDouble;
         public static float EffectiveLevel(int level, float wealth) => level * WealthMultiplier(wealth);
 
-        /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
         /// <summary>The colony's prisoners in this caravan, including any stowed in a pawn's inventory (Vehicle
         /// Framework cargo). Prisoners never enter a dungeon: a humanlike going in has to count toward the party cap.</summary>
         public static List<Pawn> Prisoners(Caravan caravan)
@@ -81,6 +80,7 @@ namespace DungeonMadness
             return list;
         }
 
+        /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
         public static bool AnyoneStaysOutside(Caravan caravan, ICollection<Pawn> party) =>
             caravan.PawnsListForReading.Any(p => !party.Contains(p) && CaravanUtility.IsOwner(p, Faction.OfPlayer) && !p.Downed);
 

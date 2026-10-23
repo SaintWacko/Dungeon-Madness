@@ -8,7 +8,8 @@ using Verse;
 
 namespace DungeonMadness
 {
-    // The rows of the Influence screen. Saved by index (DungeonInfluence.steps, attuned tiles), so new kinds go on the end.
+    // The rows of the Influence screen. DungeonInfluence.steps is saved by index, so new kinds go on the end; attuned
+    // tiles save them by name, so a kind is never renamed.
     public enum InfluenceKind
     {
         Level, PackSize, Occupancy, Madness, EntadChance, EntadValue, LootValue,

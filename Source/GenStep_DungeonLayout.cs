@@ -125,7 +125,7 @@ namespace DungeonMadness
             // ---- Structure. The map generator has already put thick rock roof everywhere (isUnderground).
             // Walls touching a furnished room carry power, so its lights and heaters run (and anything the party
             // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
-            var furnishedIds = AssignUses(layout, DungeonInfluence.Of(map).FurnishedChance(theme.furnishedChance));
+            var furnishedIds = AssignUses(layout, DungeonInfluence.Of(map).FurnishedChance(Mathf.Clamp01(theme.furnishedChance)));
             IntVec3 exitCell = data.exitCell;
             var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.DMAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
