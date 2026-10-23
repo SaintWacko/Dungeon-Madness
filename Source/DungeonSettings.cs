@@ -75,6 +75,10 @@ namespace DungeonMadness
         // A pile's market value per effective level
         public const float DefaultLootValuePerLevel = 60f;
         public float lootValuePerLevel = DefaultLootValuePerLevel;
+        // The piles' ordinary goods are rolled for the whole dungeon in rolls of this value per effective level,
+        // which is also the most one item can be worth (about four default piles)
+        public const float DefaultLootRollValuePerLevel = 250f;
+        public float lootRollValuePerLevel = DefaultLootRollValuePerLevel;
         // Chance each loot slot (in a pile or on a storeroom shelf) is an entad
         public const float DefaultEntadChance = 1f / 3f;
         public float entadChance = DefaultEntadChance;
@@ -137,6 +141,7 @@ namespace DungeonMadness
             joinChance = DefaultJoinChance;
             lootChance = DefaultLootChance;
             lootValuePerLevel = DefaultLootValuePerLevel;
+            lootRollValuePerLevel = DefaultLootRollValuePerLevel;
             entadChance = DefaultEntadChance;
             entadPointsPerLevel = DefaultEntadPointsPerLevel;
             bindSingleChance = DefaultBindSingleChance;
@@ -195,6 +200,8 @@ namespace DungeonMadness
             lootChance = Mathf.Clamp01(lootChance);
             Scribe_Values.Look(ref lootValuePerLevel, "lootValuePerLevel", DefaultLootValuePerLevel);
             lootValuePerLevel = Mathf.Clamp(lootValuePerLevel, 0f, 500f);
+            Scribe_Values.Look(ref lootRollValuePerLevel, "lootRollValuePerLevel", DefaultLootRollValuePerLevel);
+            lootRollValuePerLevel = Mathf.Clamp(lootRollValuePerLevel, 20f, 1000f);
             Scribe_Values.Look(ref entadChance, "entadChance", DefaultEntadChance);
             entadChance = Mathf.Clamp01(entadChance);
             Scribe_Values.Look(ref entadPointsPerLevel, "entadPointsPerLevel", DefaultEntadPointsPerLevel);

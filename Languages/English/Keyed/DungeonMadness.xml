@@ -153,6 +153,8 @@
   <DMAD_Settings_LootChance>Chance a chamber has a loot pile: {0}</DMAD_Settings_LootChance>
   <DMAD_Settings_LootValue>Pile value per level: {0}</DMAD_Settings_LootValue>
   <DMAD_Settings_LootValue_Desc>Each pile holds 2 to 4 things. Example: at effective level 10 a pile is worth about {0}, not counting entads.</DMAD_Settings_LootValue_Desc>
+  <DMAD_Settings_LootRoll>Largest item value per level: {0}</DMAD_Settings_LootRoll>
+  <DMAD_Settings_LootRoll_Desc>The piles' goods are rolled for the whole dungeon in rolls of this size and shared out between the piles, largest first. No single item is worth more than one roll. Larger rolls give a wider choice of items but fewer, bigger ones; at or below the pile value, piles are rolled about one each. Example: at effective level 10 a roll is worth about {0}.</DMAD_Settings_LootRoll_Desc>
   <DMAD_Settings_Entads>Entads</DMAD_Settings_Entads>
   <DMAD_Settings_EntadChance>Chance a piece of loot is an entad: {0}</DMAD_Settings_EntadChance>
   <DMAD_Settings_EntadChance_Desc>Rolled for each thing in a loot pile and each stack on a storeroom shelf.</DMAD_Settings_EntadChance_Desc>

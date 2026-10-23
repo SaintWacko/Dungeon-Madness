@@ -116,31 +116,69 @@ namespace DungeonMadness
 
         public void QueueFurniture(Thing t) => furnitureQueue.Add(t);
 
-        /// <summary>`count` loot slots worth about `valuePerSlot` each. Entad furniture is queued for a room and
-        /// not returned, so a slot that rolled one is simply missing from the pile.</summary>
-        public List<Thing> MakeLoot(int count, float valuePerSlot)
+        class LootPile
         {
-            var result = new List<Thing>();
-            int ordinary = 0;
+            public List<IntVec3> cells;
+            public readonly List<Thing> things = new List<Thing>();
+            // What this pile's ordinary slots are worth, and how much of that the dungeon's rolls have handed it
+            public float budget;
+            public float given;
+            public int slots;
+        }
+
+        /// <summary>Rolls one pile's slots for entads. Entad furniture is queued for a room, so a slot that rolled one
+        /// is simply missing from the pile; every other slot adds its share of the pile's value to the budget.</summary>
+        void RollEntadSlots(LootPile pile, int count, float valuePerSlot)
+        {
             for (int i = 0; i < count; i++)
             {
                 Thing entad = Rand.Chance(EntadChance) ? MakeEntad() : null;
-                if (entad == null) ordinary++;
+                if (entad == null) { pile.slots++; pile.budget += valuePerSlot; }
                 else if (entad.def.category == ThingCategory.Building) furnitureQueue.Add(entad);
-                else result.Add(entad);
+                else pile.things.Add(entad);
             }
-            if (ordinary > 0)
+        }
+
+        /// <summary>The ordinary goods of every pile, rolled for the whole dungeon and then shared out. Vanilla's
+        /// reward maker only picks items that fit what is left of a roll's budget, so a pile-sized roll at a low level
+        /// keeps landing on the few cheap items in a category (a masterwork roll at 300 silver has four to choose
+        /// from). Pooling the piles into rolls of the setting's value per level widens the choice, and that value is
+        /// also the most any single item can be worth. A bigger dungeon has more piles, so more rolls rather than
+        /// bigger ones. Largest first, each item goes to the pile with the most budget still unspent.</summary>
+        void FillPiles(List<LootPile> piles)
+        {
+            var funded = piles.Where(p => p.slots > 0).ToList();
+            float total = funded.Sum(p => p.budget);
+            int slots = funded.Sum(p => p.slots);
+            if (funded.Count == 0 || total <= 0f) return;
+
+            float rollValue = Mathf.Max(1f, DungeonsMod.Settings.lootRollValuePerLevel * level);
+            int rolls = Mathf.Clamp(Mathf.RoundToInt(total / rollValue), 1, slots);
+            float each = total / rolls;
+            TechLevel tech = ColonyTech;
+            var goods = new List<Thing>();
+            for (int r = 0; r < rolls; r++)
             {
-                float value = ordinary * valuePerSlot;
+                int count = Mathf.Max(1, slots * (r + 1) / rolls - slots * r / rolls);
                 var parms = new ThingSetMakerParams
                 {
-                    techLevel = ColonyTech,
-                    totalMarketValueRange = new FloatRange(value * 0.8f, value * 1.2f),
-                    countRange = new IntRange(1, ordinary),
+                    techLevel = tech,
+                    totalMarketValueRange = new FloatRange(each * 0.8f, each * 1.2f),
+                    countRange = new IntRange(1, count),
                 };
-                result.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));
+                goods.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));
             }
-            return result;
+
+            foreach (var t in goods.OrderByDescending(t => t.MarketValue * t.stackCount))
+            {
+                var pile = funded.MaxBy(p => p.budget - p.given);
+                pile.things.Add(t);
+                pile.given += t.MarketValue * t.stackCount;
+            }
+
+            if (Prefs.DevMode)
+                Log.Message($"[Dungeon Madness] Loot: {piles.Count} piles, {total:0} silver in {rolls} rolls of about {each:0}: " +
+                    string.Join(", ", goods.Select(t => t.LabelCap)));
         }
 
         /// <summary>Fills every bookcase standing in a furnished room with books: half full to full, quality rising
@@ -210,6 +248,7 @@ namespace DungeonMadness
                 if (!byChamber.TryGetValue(id, out var list)) byChamber[id] = list = new List<IntVec3>();
                 list.Add(new IntVec3(k % layout.size, 0, k / layout.size));
             }
+            var piles = new List<LootPile>();
             foreach (var ch in layout.data.chambers)
             {
                 if (ch.id == 0 || !Rand.Chance(influence.LootChance(s.lootChance))) continue;
@@ -218,11 +257,19 @@ namespace DungeonMadness
                 if (cells.Count == 0) continue;
                 int n = Rand.RangeInclusive(2, 4);
                 float value = s.lootValuePerLevel * level * LootValueFactor * Rand.Range(0.75f, 1.25f);
-                var loot = MakeLoot(n, value / n);
+                var pile = new LootPile { cells = cells };
+                RollEntadSlots(pile, n, value / n);
+                piles.Add(pile);
+            }
+            FillPiles(piles);
+
+            foreach (var pile in piles)
+            {
+                var cells = pile.cells;
                 IntVec3 center = cells.RandomElement();
                 var spots = cells.OrderBy(c => c.DistanceToSquared(center)).ToList();
                 int i = 0;
-                foreach (var t in loot)
+                foreach (var t in pile.things)
                 {
                     bool placed = false;
                     while (!placed && i < spots.Count)

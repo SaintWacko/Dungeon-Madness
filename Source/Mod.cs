@@ -158,6 +158,10 @@ namespace DungeonMadness
             s.lootValuePerLevel = Mathf.Round(list.Slider(s.lootValuePerLevel, 0f, 500f) / 5f) * 5f;
             list.Label("DMAD_Settings_LootValue_Desc".Translate((10f * s.lootValuePerLevel).ToStringMoney()));
             list.Gap();
+            list.Label("DMAD_Settings_LootRoll".Translate(s.lootRollValuePerLevel.ToStringMoney()));
+            s.lootRollValuePerLevel = Mathf.Round(list.Slider(s.lootRollValuePerLevel, 20f, 1000f) / 10f) * 10f;
+            list.Label("DMAD_Settings_LootRoll_Desc".Translate((10f * s.lootRollValuePerLevel).ToStringMoney()));
+            list.Gap();
 
             Section(list, "DMAD_Settings_Entads");
             list.Label("DMAD_Settings_EntadChance".Translate(s.entadChance.ToStringPercent()));
