@@ -44,9 +44,9 @@ namespace DungeonMadness
         // Tiles the colony has paid to attune to, by surface tile id, with the influence rows each was dealt then.
         // Stored rather than re-rolled, so a later change to the settings' row count or a new row kind leaves an
         // attuned dungeon as the player found it.
-        private Dictionary<int, AttunedRows> attuned = new Dictionary<int, AttunedRows>();
+        private Dictionary<int, AttunedSet> attuned = new Dictionary<int, AttunedSet>();
 
-        private class AttunedRows : IExposable
+        private class AttunedSet : IExposable
         {
             public List<InfluenceKind> kinds = new List<InfluenceKind>();
             public void ExposeData()
@@ -83,7 +83,7 @@ namespace DungeonMadness
         /// <summary>The rows an attuned tile offers besides level and theme; null when it is not attuned.</summary>
         public List<InfluenceKind> AttunedRows(int tileId) => attuned.TryGetValue(tileId, out var a) ? a.kinds : null;
 
-        public void Attune(int tileId, List<InfluenceKind> kinds) => attuned[tileId] = new AttunedRows { kinds = kinds };
+        public void Attune(int tileId, List<InfluenceKind> kinds) => attuned[tileId] = new AttunedSet { kinds = kinds };
 
         public bool TryGetLevel(PlanetTile tile, out int level)
         {
@@ -130,7 +130,7 @@ namespace DungeonMadness
             Scribe_Collections.Look(ref enteredBy, "enteredBy", LookMode.Value, LookMode.Deep);
             if (Scribe.mode == LoadSaveMode.PostLoadInit && enteredBy == null) enteredBy = new Dictionary<int, EnteredSet>();
             Scribe_Collections.Look(ref attuned, "attuned", LookMode.Value, LookMode.Deep);
-            if (Scribe.mode == LoadSaveMode.PostLoadInit && attuned == null) attuned = new Dictionary<int, AttunedRows>();
+            if (Scribe.mode == LoadSaveMode.PostLoadInit && attuned == null) attuned = new Dictionary<int, AttunedSet>();
             DataExposeUtility.LookByteArray(ref tileBytes, "tiles");
             DataExposeUtility.LookByteArray(ref levelBytes, "levels");
             if (Scribe.mode == LoadSaveMode.LoadingVars)

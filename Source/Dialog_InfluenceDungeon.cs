@@ -152,13 +152,13 @@ namespace DungeonMadness
             {
                 if (i == 3) x += btns + 6f + valueWidth + 6f - (BtnWidth + BtnGap) * 3f;
                 int d = Deltas[i];
-                int target = Mathf.Clamp(cur + d, lim.min, lim.max);
-                long cost = CostWith(k, target);
+                int to = Mathf.Clamp(cur + d, lim.min, lim.max);
+                long cost = CostWith(k, to);
                 long now = influence.TotalCost(target);
                 // A step that lowers the total is always allowed, even over budget
-                bool ok = target != cur && (cost <= now || Affordable(cost));
+                bool ok = to != cur && (cost <= now || Affordable(cost));
                 var b = new Rect(x, by, BtnWidth, 26f);
-                if (target != cur)
+                if (to != cur)
                 {
                     TooltipHandler.TipRegion(b, cost >= now
                         ? "DMAD_Influence_BtnCost".Translate(cost - now, cost)
@@ -172,7 +172,7 @@ namespace DungeonMadness
                     GUI.color = Color.white;
                     if (clicked && ok)
                     {
-                        influence[k] = target;
+                        influence[k] = to;
                         SoundDefOf.Tick_High.PlayOneShotOnCamera();
                     }
                 }
