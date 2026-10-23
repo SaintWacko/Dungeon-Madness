@@ -35,7 +35,7 @@
     <!-- Hard dependency, loaded before this mod by About.xml. Never copied into our Assemblies/: the game loads
          Bastle's own copy, and a second one would split its types in two. -->
     <Reference Include="BastleFramework">
-      <HintPath>../../87257f378d52/Assemblies/BastleFramework.dll</HintPath>
+      <HintPath>../../87257f378d52/1.6/Assemblies/BastleFramework.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="EntadFramework">
