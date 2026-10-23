@@ -5,6 +5,7 @@
   <!-- World map -->
   <DMAD_ToggleIcons>Show dungeon icons.</DMAD_ToggleIcons>
   <DMAD_TileDungeon>Dungeon: level {0}</DMAD_TileDungeon>
+  <DMAD_TileAttuned>Attuned: {0}</DMAD_TileAttuned>
   <DMAD_SearchLabel>Dungeon (level {0})</DMAD_SearchLabel>
   <DMAD_River>river</DMAD_River>
   <DMAD_Coastal>coastal</DMAD_Coastal>
@@ -26,6 +27,7 @@
   <DMAD_Finder_Matches>Matching dungeons: {0}</DMAD_Finder_Matches>
   <DMAD_Finder_LevelShort>Lv {0}</DMAD_Finder_LevelShort>
   <DMAD_Finder_Tiles>{0} tiles</DMAD_Finder_Tiles>
+  <DMAD_Finder_Attuned>attuned</DMAD_Finder_Attuned>
 
   <!-- Entering -->
   <DMAD_SiteLabel>dungeon (level {0})</DMAD_SiteLabel>
@@ -187,6 +189,18 @@
   <DMAD_Influence_BtnCost>Costs {0} more verity (total {1}).</DMAD_Influence_BtnCost>
   <DMAD_Influence_BtnRefund>Saves {0} verity (total {1}).</DMAD_Influence_BtnRefund>
   <DMAD_Influence_Fee>Influence fee: {0}</DMAD_Influence_Fee>
+  <DMAD_Influence_FeeAttuned>Influence fee: none (attuned)</DMAD_Influence_FeeAttuned>
+  <DMAD_Influence_IntroAttuned>Each step away from normal costs more than the last ({0}, ...), and each row counts its own steps. The colony is attuned to this dungeon, so it offers these influences to every visit with no fee. Verity is spent when the party enters; cancelling the entry spends nothing. The changes apply to this party's visit only.</DMAD_Influence_IntroAttuned>
+  <DMAD_Influence_Shares>{0} caverns, {1} ruins</DMAD_Influence_Shares>
+  <DMAD_AttuneButton>Attune dungeon</DMAD_AttuneButton>
+  <DMAD_AttuneButton_Tip>Pay {0} verity to attune the colony to this dungeon. That reveals the influences it offers besides level and theme ({1} of them), and lets any party influence its visits from then on with no further fee. The colony has {2} verity.</DMAD_AttuneButton_Tip>
+  <DMAD_Attune_Confirm>Attune to this dungeon for {0} verity?
+
+The verity is spent now, whether or not this party goes in. The dungeon then shows the influences it offers besides level and theme ({1} of them), for every visit, with no further fee.
+
+The colony has {2} verity.</DMAD_Attune_Confirm>
+  <DMAD_Attune_CannotAfford>Attuning to this dungeon costs {0} verity and the colony has {1}.</DMAD_Attune_CannotAfford>
+  <DMAD_Attuned_NoRows>level and theme only</DMAD_Attuned_NoRows>
   <DMAD_Influence_Total>Total cost: {0}</DMAD_Influence_Total>
   <DMAD_Influence_Verity>Colony verity: {0} ({1} left)</DMAD_Influence_Verity>
   <DMAD_Influence_CannotAfford>not enough verity</DMAD_Influence_CannotAfford>
@@ -208,6 +222,20 @@
   <DMAD_Influence_Row_EntadValue_Tip>Trait points each entad is generated with, as a share of normal. More points mean more or rarer traits, and more verity if it is dismantled.</DMAD_Influence_Row_EntadValue_Tip>
   <DMAD_Influence_Row_LootValue>Loot value</DMAD_Influence_Row_LootValue>
   <DMAD_Influence_Row_LootValue_Tip>Market value of the ordinary goods in loot piles and on storeroom shelves, as a share of normal.</DMAD_Influence_Row_LootValue_Tip>
+  <DMAD_Influence_Row_Animals>Animals</DMAD_Influence_Row_Animals>
+  <DMAD_Influence_Row_Animals_Tip>How often a pack in a cavern or a ruin is the biome's animals rather than insects or mechanoids. Each step moves the animals' weight by 5 points; the shares shown are after the other types are weighed in. Furnished rooms always hold people.</DMAD_Influence_Row_Animals_Tip>
+  <DMAD_Influence_Row_Insects>Insects</DMAD_Influence_Row_Insects>
+  <DMAD_Influence_Row_Insects_Tip>How often a pack in a cavern or a ruin is insects. Each step moves the insects' weight by 5 points, so insects can be brought into a dungeon whose theme has none. Furnished rooms always hold people.</DMAD_Influence_Row_Insects_Tip>
+  <DMAD_Influence_Row_Mechs>Mechanoids</DMAD_Influence_Row_Mechs>
+  <DMAD_Influence_Row_Mechs_Tip>How often a pack is mechanoids. Normally they only guard ruins; raised, they turn up in caverns too. Each step moves the mechanoids' weight by 5 points. Furnished rooms always hold people.</DMAD_Influence_Row_Mechs_Tip>
+  <DMAD_Influence_Row_BuiltRooms>Built rooms</DMAD_Influence_Row_BuiltRooms>
+  <DMAD_Influence_Row_BuiltRooms_Tip>Chance each chamber is a built room (a ruin, or rarely a furnished room) rather than a natural cavern. Ruins can hold mechanoids.</DMAD_Influence_Row_BuiltRooms_Tip>
+  <DMAD_Influence_Row_FurnishedRooms>Furnished rooms</DMAD_Influence_Row_FurnishedRooms>
+  <DMAD_Influence_Row_FurnishedRooms_Tip>Chance a built room big enough is furnished, with powered walls, furniture, libraries and storerooms, rather than a ruin. Furnished rooms hold people instead of animals, and let entad furniture appear.</DMAD_Influence_Row_FurnishedRooms_Tip>
+  <DMAD_Influence_Row_DungeonSize>Dungeon size</DMAD_Influence_Row_DungeonSize>
+  <DMAD_Influence_Row_DungeonSize_Tip>The map's side length, 5 cells a step. A bigger dungeon has more chambers, so more packs and more loot. Very large maps take longer to generate and run slower.</DMAD_Influence_Row_DungeonSize_Tip>
+  <DMAD_Influence_Row_LootChance>Loot chance</DMAD_Influence_Row_LootChance>
+  <DMAD_Influence_Row_LootChance_Tip>Chance each chamber other than the entrance has a loot pile.</DMAD_Influence_Row_LootChance_Tip>
 
   <DMAD_Tab_Influence>Influence</DMAD_Tab_Influence>
   <DMAD_Settings_InfluenceEnabled>Allow influencing dungeons</DMAD_Settings_InfluenceEnabled>
@@ -223,5 +251,9 @@
   <DMAD_Settings_InfluenceFee>Influence fee: {0} base steps</DMAD_Settings_InfluenceFee>
   <DMAD_Settings_InfluenceThemeFee>Choosing a theme: {0} base steps</DMAD_Settings_InfluenceThemeFee>
   <DMAD_Settings_InfluenceRows>Rows</DMAD_Settings_InfluenceRows>
-  <DMAD_Settings_InfluenceRows_Desc>Which influences the screen offers.</DMAD_Settings_InfluenceRows_Desc>
+  <DMAD_Settings_InfluenceRows_Desc>Which influences can be offered. A dungeon attuned before a row was switched on does not gain it; one switched off is hidden everywhere.</DMAD_Settings_InfluenceRows_Desc>
+  <DMAD_Settings_InfluenceRowCount>Influences per dungeon: {0}</DMAD_Settings_InfluenceRowCount>
+  <DMAD_Settings_InfluenceRowCount_All>all</DMAD_Settings_InfluenceRowCount_All>
+  <DMAD_Settings_InfluenceRowCount_Desc>Besides level and theme, each dungeon offers this many influences, fixed for its tile. The colony pays the influence fee once to attune to a dungeon, which reveals them for good. At "all", every dungeon offers every influence, nothing is attuned, and the fee is paid on each influenced visit instead. Dungeons already attuned keep the influences they were given.</DMAD_Settings_InfluenceRowCount_Desc>
+  <DMAD_Settings_InfluenceFee_Desc>Paid once to attune to a dungeon, or on each influenced visit when every dungeon offers every influence.</DMAD_Settings_InfluenceFee_Desc>
 </LanguageData>

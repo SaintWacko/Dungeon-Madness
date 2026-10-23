@@ -212,7 +212,7 @@ namespace DungeonMadness
             }
             foreach (var ch in layout.data.chambers)
             {
-                if (ch.id == 0 || !Rand.Chance(s.lootChance)) continue;
+                if (ch.id == 0 || !Rand.Chance(influence.LootChance(s.lootChance))) continue;
                 if (!byChamber.TryGetValue(ch.id, out var cells)) continue;
                 cells = cells.Where(c => c.Standable(map) && c.GetFirstItem(map) == null && !c.GetTerrain(map).IsWater).ToList();
                 if (cells.Count == 0) continue;

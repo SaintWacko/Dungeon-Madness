@@ -204,14 +204,21 @@ namespace DungeonMadness
             list.Label("DMAD_Settings_InfluenceLevelsPerStep_Desc".Translate(DungeonInfluence.BaseStep(5), DungeonInfluence.BaseStep(12), DungeonInfluence.BaseStep(30)));
             list.Gap();
             list.Label("DMAD_Settings_InfluenceFee".Translate(s.influenceFeeSteps));
+            list.Label("DMAD_Settings_InfluenceFee_Desc".Translate());
             s.influenceFeeSteps = Mathf.RoundToInt(list.Slider(s.influenceFeeSteps, 0f, 20f));
             list.Label("DMAD_Settings_InfluenceThemeFee".Translate(s.influenceThemeSteps));
             s.influenceThemeSteps = Mathf.RoundToInt(list.Slider(s.influenceThemeSteps, 0f, 30f));
             list.Gap();
 
             Section(list, "DMAD_Settings_InfluenceRows");
+            int slots = DungeonInfluence.Slots.Length;
+            list.Label("DMAD_Settings_InfluenceRowCount".Translate(s.influenceRowCount >= slots
+                ? "DMAD_Settings_InfluenceRowCount_All".Translate().ToString() : s.influenceRowCount.ToString()));
+            s.influenceRowCount = Mathf.RoundToInt(list.Slider(s.influenceRowCount, 0f, slots));
+            list.Label("DMAD_Settings_InfluenceRowCount_Desc".Translate());
+            list.Gap();
             list.Label("DMAD_Settings_InfluenceRows_Desc".Translate());
-            foreach (var k in DungeonInfluence.Kinds)
+            foreach (var k in DungeonInfluence.DisplayOrder)
             {
                 bool on = s.InfluenceRowEnabled(k);
                 list.CheckboxLabeled(("DMAD_Influence_Row_" + k).Translate(), ref on, ("DMAD_Influence_Row_" + k + "_Tip").Translate());

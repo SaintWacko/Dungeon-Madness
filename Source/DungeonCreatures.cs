@@ -270,7 +270,7 @@ namespace DungeonMadness
                 if (!Rand.Chance(ch.id == 0 ? s.entranceChance : occupancy)) continue;
                 if (!byChamber.TryGetValue(ch.id, out var cells) || cells.Count == 0) continue;
 
-                PackType type = PickType(ch, theme);
+                PackType type = PickType(ch, theme, influence);
                 PawnKindDef kind = PickKind(type, map.Biome, ceiling);
                 if (kind == null && type != PackType.Animal)
                 {
@@ -311,11 +311,13 @@ namespace DungeonMadness
                     $"{comp.packs.Count} packs: {string.Join("; ", comp.packs)}");
         }
 
-        static PackType PickType(DungeonChamber ch, DungeonThemeDef theme)
+        static PackType PickType(DungeonChamber ch, DungeonThemeDef theme, DungeonInfluence influence)
         {
             if (ch.Furnished) return PackType.Humanlike;
-            if (ch.use == RoomUse.Ruin && Faction.OfMechanoids != null && Rand.Chance(theme.mechChance)) return PackType.Mech;
-            if (Faction.OfInsects != null && Rand.Chance(theme.insectChance)) return PackType.Insect;
+            influence.CreatureWeights(theme, ch.use == RoomUse.Ruin, out float animal, out float insect, out float mech);
+            float r = Rand.Value * (animal + insect + mech);
+            if (r < mech) return PackType.Mech;
+            if (r < mech + insect) return PackType.Insect;
             return PackType.Animal;
         }
 

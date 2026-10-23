@@ -96,8 +96,10 @@ namespace DungeonMadness
             float wealth = PartyWealth(party);
             // Influence was paid for by the dialog just before this; the level row moves the dungeon's own level, so
             // map size, the wealth multiplier and everything after it see the influenced one
-            if (influence != null && !influence.Any(DungeonThemeUtility.ThemeFor(tile))) influence = null;
+            var target = new InfluenceTarget(tile, baseLevel);
+            if (influence != null && !influence.Any(target.normalTheme)) influence = null;
             int level = influence?.Level(baseLevel) ?? baseLevel;
+            IntVec3 size = influence?.MapSize(MapSizeFor(level)) ?? MapSizeFor(level);
 
             LongEventHandler.QueueLongEvent(() =>
             {
@@ -121,13 +123,13 @@ namespace DungeonMadness
                 // dungeon with a way out, and the party goes in.)
                 Map map = null;
                 System.Exception error = null;
-                try { map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef); }
+                try { map = MapGenerator.GenerateMap(size, site, site.MapGeneratorDef); }
                 catch (System.Exception e) { error = e; }
                 if (error != null || site.layout == null || map == null || !map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).Any())
                 {
                     Log.Error("[Dungeon Madness] Generating the dungeon failed; the party stays outside." + (error != null ? " " + error : ""));
                     if (influence != null)
-                        EntadFramework.EntadApi.AddVerity(influence.TotalCost(baseLevel, DungeonThemeUtility.ThemeFor(tile)));
+                        EntadFramework.EntadApi.AddVerity(influence.TotalCost(target));
                     try { if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false); }
                     catch (System.Exception e) { Log.Error("[Dungeon Madness] Removing the failed dungeon map: " + e); }
                     if (!site.Destroyed) site.Destroy();
@@ -221,7 +223,7 @@ namespace DungeonMadness
                 CameraJumper.TryJump(entrance, map);
                 string text = "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#"));
                 if (influence != null)
-                    text += "\n\n" + "DMAD_Entered_Influenced".Translate() + "\n" + string.Join("\n", influence.Describe(baseLevel, DungeonThemeUtility.ThemeFor(tile)).Select(l => "  - " + l));
+                    text += "\n\n" + "DMAD_Entered_Influenced".Translate() + "\n" + string.Join("\n", influence.Describe(target).Select(l => "  - " + l));
                 Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), text,
                     LetterDefOf.NeutralEvent, new LookTargets(entrance, map));
             }, "GeneratingMapForNewEncounter", false, null);

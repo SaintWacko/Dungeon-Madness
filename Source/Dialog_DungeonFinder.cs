@@ -32,7 +32,9 @@ namespace DungeonMadness
         private PlanetTile origin = PlanetTile.Invalid;
         private string originLabel;
 
-        private readonly List<(PlanetTile tile, int level, float dist, string desc)> results = new List<(PlanetTile, int, float, string)>();
+        // attuned: the tile's influence rows when the colony has attuned to it, else null
+        private readonly List<(PlanetTile tile, int level, float dist, string desc, string attuned)> results = new List<(PlanetTile, int, float, string, string)>();
+        private const float AttunedWidth = 70f;
         private bool dirty = true;
         private Vector2 partyScroll, resultScroll;
         private PlanetTile hovered = PlanetTile.Invalid;
@@ -227,7 +229,16 @@ namespace DungeonMadness
                 Widgets.DrawBoxSolid(new Rect(row.x + 4f, row.y + 8f, 10f, 10f), DungeonUtility.LevelColor(r.level, maxLevel));
                 Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(new Rect(row.x + 20f, row.y, 70f, row.height), "DMAD_Finder_LevelShort".Translate(r.level));
-                Widgets.Label(new Rect(row.x + 92f, row.y, row.width - 92f - 80f, row.height), r.desc.Truncate(row.width - 172f));
+                float tag = r.attuned != null ? AttunedWidth : 0f;
+                Widgets.Label(new Rect(row.x + 92f, row.y, row.width - 92f - 80f - tag, row.height), r.desc.Truncate(row.width - 172f - tag));
+                if (r.attuned != null)
+                {
+                    var tagRect = new Rect(row.xMax - 80f - AttunedWidth, row.y, AttunedWidth, row.height);
+                    GUI.color = ColoredText.ImpactColor;
+                    Widgets.Label(tagRect, "DMAD_Finder_Attuned".Translate());
+                    GUI.color = Color.white;
+                    TooltipHandler.TipRegion(tagRect, "DMAD_TileAttuned".Translate(r.attuned));
+                }
                 Text.Anchor = TextAnchor.MiddleRight;
                 string dist = origin.Valid ? "DMAD_Finder_Tiles".Translate(Mathf.RoundToInt(r.dist)).ToString() : "";
                 Widgets.Label(new Rect(row.xMax - 80f, row.y, 76f, row.height), dist);
@@ -266,12 +277,13 @@ namespace DungeonMadness
                     ? surface.ApproxDistanceInTiles(GenMath.SphericalDistance(originDir, surface.GetTileCenter(id).normalized))
                     : 0f;
                 if (limit && dist > maxDistance) continue;
-                results.Add((tile, level, dist, null));
+                results.Add((tile, level, dist, null, null));
             }
             results.Sort((a, b) => a.dist != b.dist ? a.dist.CompareTo(b.dist) : a.level.CompareTo(b.level));
             // Descriptions only for what is listed, after filtering
             for (int i = 0; i < results.Count; i++)
-                results[i] = (results[i].tile, results[i].level, results[i].dist, DungeonUtility.DescribeTile(results[i].tile));
+                results[i] = (results[i].tile, results[i].level, results[i].dist, DungeonUtility.DescribeTile(results[i].tile),
+                    DungeonInfluence.AttunedSummary(results[i].tile));
         }
     }
 }

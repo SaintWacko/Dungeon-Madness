@@ -51,7 +51,8 @@ namespace DungeonMadness
             DungeonThemeDef theme = site?.theme ?? DungeonThemeUtility.ThemeFor(tile);
             if (site != null) site.theme = theme;
             List<ThingDef> rocks = DungeonThemeUtility.RocksFor(tile);
-            float builtChance = Mathf.Clamp01(theme.builtChance * DungeonThemeUtility.HillinessBuiltFactor(info.hilliness));
+            var influence = DungeonInfluence.Of(map);
+            float builtChance = influence.BuiltChance(Mathf.Clamp01(theme.builtChance * DungeonThemeUtility.HillinessBuiltFactor(info.hilliness)));
             if (DungeonDebugActions.forceFurnished) builtChance = Mathf.Max(builtChance, 0.5f);
 
             // MapGenerator seeds from the world and the tile, which would give every party the same dungeon. The
@@ -124,7 +125,7 @@ namespace DungeonMadness
             // ---- Structure. The map generator has already put thick rock roof everywhere (isUnderground).
             // Walls touching a furnished room carry power, so its lights and heaters run (and anything the party
             // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
-            var furnishedIds = AssignUses(layout, theme);
+            var furnishedIds = AssignUses(layout, DungeonInfluence.Of(map).FurnishedChance(theme.furnishedChance));
             IntVec3 exitCell = data.exitCell;
             var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.DMAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
@@ -168,7 +169,7 @@ namespace DungeonMadness
 
         /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at
         /// least 5x5 inside can be furnished, and never the entrance room.</summary>
-        static HashSet<int> AssignUses(DungeonLayoutResult layout, DungeonThemeDef theme)
+        static HashSet<int> AssignUses(DungeonLayoutResult layout, float furnishedChance)
         {
             var ids = new HashSet<int>();
             bool force = DungeonDebugActions.forceFurnished;
@@ -178,7 +179,7 @@ namespace DungeonMadness
                 ch.use = RoomUse.Ruin;
                 if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
                 if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
-                if (!force && !Rand.Chance(theme.furnishedChance)) continue;
+                if (!force && !Rand.Chance(furnishedChance)) continue;
                 ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
                 ids.Add(ch.id);
             }

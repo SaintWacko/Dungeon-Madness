@@ -93,7 +93,11 @@ namespace DungeonMadness
         // A base step costs the dungeon's own level / this, rounded, at least 1 (level 12: 2)
         public const float DefaultInfluenceLevelsPerStep = 6f;
         public float influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
-        // Paid once per visit when anything is influenced, in base steps
+        // Rows a dungeon offers besides level and theme. Below the number of slots, each tile is dealt its own and
+        // the fee attunes to it once; at every slot, every row is offered everywhere and the fee is paid per visit.
+        public const int DefaultInfluenceRowCount = 4;
+        public int influenceRowCount = DefaultInfluenceRowCount;
+        // The attunement fee, or the per-visit fee when every row is offered everywhere, in base steps
         public const int DefaultInfluenceFeeSteps = 3;
         public int influenceFeeSteps = DefaultInfluenceFeeSteps;
         // Choosing another theme, in base steps
@@ -141,6 +145,7 @@ namespace DungeonMadness
             influenceCurve = InfluenceCurve.Fibonacci;
             influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
             influenceFeeSteps = DefaultInfluenceFeeSteps;
+            influenceRowCount = DefaultInfluenceRowCount;
             influenceThemeSteps = DefaultInfluenceThemeSteps;
             influenceTheme = true;
             influenceDisabled.Clear();
@@ -204,6 +209,8 @@ namespace DungeonMadness
             influenceLevelsPerStep = Mathf.Clamp(influenceLevelsPerStep, 1f, 30f);
             Scribe_Values.Look(ref influenceFeeSteps, "influenceFeeSteps", DefaultInfluenceFeeSteps);
             influenceFeeSteps = Mathf.Clamp(influenceFeeSteps, 0, 20);
+            Scribe_Values.Look(ref influenceRowCount, "influenceRowCount", DefaultInfluenceRowCount);
+            influenceRowCount = Mathf.Clamp(influenceRowCount, 0, DungeonInfluence.Slots.Length);
             Scribe_Values.Look(ref influenceThemeSteps, "influenceThemeSteps", DefaultInfluenceThemeSteps);
             influenceThemeSteps = Mathf.Clamp(influenceThemeSteps, 0, 30);
             Scribe_Values.Look(ref influenceTheme, "influenceTheme", true);

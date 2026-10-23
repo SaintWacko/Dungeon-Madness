@@ -17,9 +17,12 @@ namespace DungeonMadness
     public class Dialog_InfluenceDungeon : Window
     {
         private readonly DungeonInfluence influence;
+        private readonly InfluenceTarget target;
         private readonly int baseLevel;
         private readonly DungeonThemeDef normalTheme;
         private readonly int step;
+        // Level, then the tile's attuned rows (or every row, with attunement off), in display order
+        private readonly List<InfluenceKind> offered;
 
         private const float RowHeight = 54f;
         private const float LabelWidth = 130f;
@@ -30,13 +33,15 @@ namespace DungeonMadness
 
         public override Vector2 InitialSize => new Vector2(680f, 640f);
 
-        public Dialog_InfluenceDungeon(DungeonInfluence influence, int baseLevel, DungeonThemeDef normalTheme)
+        public Dialog_InfluenceDungeon(DungeonInfluence influence, InfluenceTarget target)
         {
             this.influence = influence;
-            this.baseLevel = baseLevel;
-            this.normalTheme = normalTheme;
-            step = DungeonInfluence.BaseStep(baseLevel);
-            influence.DropDisabled();
+            this.target = target;
+            baseLevel = target.baseLevel;
+            normalTheme = target.normalTheme;
+            step = target.BaseStep;
+            offered = DungeonInfluence.OfferedRows(target.tile);
+            influence.Restrict(target);
             forcePause = true;
             absorbInputAroundWindow = true;
             closeOnClickedOutside = false;
@@ -50,7 +55,7 @@ namespace DungeonMadness
         {
             int old = influence[k];
             influence[k] = steps;
-            long cost = influence.TotalCost(baseLevel, normalTheme);
+            long cost = influence.TotalCost(target);
             influence[k] = old;
             return cost;
         }
@@ -59,6 +64,8 @@ namespace DungeonMadness
 
         public override void DoWindowContents(Rect inRect)
         {
+            // A new theme or level can move other rows' limits
+            influence.ClampToLimits(target);
             float y = inRect.y;
             using (new TextBlock(GameFont.Medium))
                 Widgets.Label(new Rect(inRect.x, y, inRect.width, 34f), "DMAD_Influence_Title".Translate());
@@ -73,7 +80,9 @@ namespace DungeonMadness
 
             var ladder = Enumerable.Range(1, 5).Select(n => (DungeonInfluence.Marginal(n) * step).ToString());
             var s = DungeonsMod.Settings;
-            string intro = "DMAD_Influence_Intro".Translate(string.Join(", ", ladder), DungeonInfluence.Fee(step));
+            string intro = DungeonInfluence.UsesAttunement
+                ? "DMAD_Influence_IntroAttuned".Translate(string.Join(", ", ladder))
+                : "DMAD_Influence_Intro".Translate(string.Join(", ", ladder), DungeonInfluence.Fee(step));
             using (new TextBlock(GameFont.Small))
             {
                 float h = Text.CalcHeight(intro, inRect.width);
@@ -108,7 +117,7 @@ namespace DungeonMadness
 
             float footerTop = inRect.yMax - 64f;
             var rowsRect = new Rect(inRect.x, y, inRect.width, footerTop - y - 6f);
-            var kinds = DungeonInfluence.Kinds.Where(s.InfluenceRowEnabled).ToList();
+            var kinds = offered;
             float viewH = kinds.Count * RowHeight + (s.influenceTheme ? RowHeight : 0f);
             var view = new Rect(0f, 0f, rowsRect.width - (viewH > rowsRect.height ? 16f : 0f), viewH);
             Widgets.BeginScrollView(rowsRect, ref scroll, view);
@@ -133,7 +142,7 @@ namespace DungeonMadness
             if (Mouse.IsOver(rect)) Widgets.DrawHighlight(rect);
             TooltipHandler.TipRegion(new Rect(rect.x, rect.y, LabelWidth, rect.height), ("DMAD_Influence_Row_" + k + "_Tip").Translate());
             int cur = influence[k];
-            IntRange lim = DungeonInfluence.Limits(k, baseLevel);
+            IntRange lim = influence.Limits(k, target);
             using (new TextBlock(GameFont.Small, TextAnchor.MiddleLeft))
                 Widgets.Label(new Rect(rect.x + 4f, rect.y, LabelWidth - 4f, rect.height), ("DMAD_Influence_Row_" + k).Translate());
 
@@ -145,7 +154,7 @@ namespace DungeonMadness
                 int d = Deltas[i];
                 int target = Mathf.Clamp(cur + d, lim.min, lim.max);
                 long cost = CostWith(k, target);
-                long now = influence.TotalCost(baseLevel, normalTheme);
+                long now = influence.TotalCost(target);
                 // A step that lowers the total is always allowed, even over budget
                 bool ok = target != cur && (cost <= now || Affordable(cost));
                 var b = new Rect(x, by, BtnWidth, 26f);
@@ -175,20 +184,20 @@ namespace DungeonMadness
             using (new TextBlock(GameFont.Small, TextAnchor.UpperCenter))
             {
                 GUI.color = cur != 0 ? ColoredText.ImpactColor : Color.white;
-                Widgets.Label(new Rect(v.x, v.y, v.width, 22f), influence.ValueText(k, baseLevel));
+                Widgets.Label(new Rect(v.x, v.y, v.width, 22f), influence.ValueText(k, target));
             }
             using (new TextBlock(GameFont.Tiny, TextAnchor.UpperCenter))
             {
                 GUI.color = ColoredText.SubtleGrayColor;
                 string normal = k == InfluenceKind.PackSize
                     ? "DMAD_Influence_PackNote".Translate().ToString()
-                    : "DMAD_Influence_Normal".Translate(DungeonInfluence.NormalText(k, baseLevel)).ToString();
+                    : "DMAD_Influence_Normal".Translate(influence.NormalText(k, target)).ToString();
                 Widgets.Label(new Rect(v.x, v.y + 20f, v.width, 16f), normal);
                 int away = Mathf.Abs(cur) + 1;
                 bool further = cur >= 0 && cur < lim.max || cur <= 0 && cur > lim.min;
                 Widgets.Label(new Rect(v.x, v.y + 34f, v.width, 16f), further
                     ? "DMAD_Influence_Next".Translate(DungeonInfluence.Marginal(away) * step
-                        + (influence.Any(normalTheme) ? 0 : DungeonInfluence.Fee(step))).ToString()
+                        + (influence.Any(normalTheme) ? 0 : DungeonInfluence.VisitFee(step))).ToString()
                     : "DMAD_Influence_AtLimit".Translate().ToString());
             }
             GUI.color = Color.white;
@@ -225,7 +234,7 @@ namespace DungeonMadness
                     if (t == normalTheme) continue;
                     var old = influence.theme;
                     influence.theme = t;
-                    long cost = influence.TotalCost(baseLevel, normalTheme);
+                    long cost = influence.TotalCost(target);
                     influence.theme = old;
                     var pick = t;
                     options.Add(Affordable(cost)
@@ -253,14 +262,15 @@ namespace DungeonMadness
         private void DoFooter(Rect rect)
         {
             Widgets.DrawLineHorizontal(rect.x, rect.y, rect.width, ColoredText.SubtleGrayColor.ToTransparent(0.4f));
-            long total = influence.TotalCost(baseLevel, normalTheme);
+            long total = influence.TotalCost(target);
             bool any = influence.Any(normalTheme);
             float verity = Verity;
             using (new TextBlock(GameFont.Small, TextAnchor.MiddleLeft))
             {
                 float y = rect.y + 4f;
-                Widgets.Label(new Rect(rect.x, y, 360f, 20f),
-                    "DMAD_Influence_Fee".Translate(any ? DungeonInfluence.Fee(step) : 0));
+                Widgets.Label(new Rect(rect.x, y, 360f, 20f), DungeonInfluence.UsesAttunement
+                    ? "DMAD_Influence_FeeAttuned".Translate()
+                    : "DMAD_Influence_Fee".Translate(any ? DungeonInfluence.Fee(step) : 0));
                 Widgets.Label(new Rect(rect.x, y + 20f, 360f, 20f), "DMAD_Influence_Total".Translate(total));
                 GUI.color = total > verity + 0.0001f ? ColorLibrary.RedReadable : ColoredText.SubtleGrayColor;
                 Widgets.Label(new Rect(rect.x, y + 40f, 360f, 20f),
