@@ -322,10 +322,16 @@ namespace DungeonMadness
             if (caravan == null && stash.Count > 0)
             {
                 var lost = new List<Thing>();
+                var inner = new List<Thing>();
                 foreach (var t in stash)
                 {
                     lost.Add(t);
-                    if (t is IThingHolder holder) ThingOwnerUtility.GetAllThingsRecursively(holder, lost, true);
+                    // GetAllThingsRecursively clears its output list first
+                    if (t is IThingHolder holder)
+                    {
+                        ThingOwnerUtility.GetAllThingsRecursively(holder, inner, true);
+                        lost.AddRange(inner);
+                    }
                 }
                 var lostIds = new HashSet<int>(lost.Select(t => t.thingIDNumber));
                 for (int i = bindReport.Count - 1; i >= 0; i--)
