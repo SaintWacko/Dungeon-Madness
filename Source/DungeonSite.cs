@@ -129,6 +129,10 @@ namespace DungeonMadness
             // Refuse before binding anything, so a pack animal still waiting for a caravan has nothing reported yet
             if (WaitingCaravan() == null && !pawn.IsColonist && !pawn.IsColonySubhumanPlayerControlled
                 && !pawn.IsColonyMechPlayerControlled) return false;
+            // A follower carried out on someone's shoulder goes the way a hauled one does, through the stash, so the
+            // join roll happens and a factionless person is not taken into the caravan as a prisoner
+            if (pawn.carryTracker?.CarriedThing is Pawn carriedPawn && DungeonDwellerUtility.Comp(Map)?.followers.Contains(carriedPawn) == true)
+                AddToStash(carriedPawn);
             ResolveHeldBy(pawn);
 
             // Pawn.ExitMap destroys a carried item, and a drafted pawn keeps carrying through the exit

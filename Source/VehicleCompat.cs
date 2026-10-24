@@ -84,26 +84,28 @@ namespace DungeonMadness
             Active && !IsVehicle(p) && p.holdingOwner != null && p.holdingOwner != caravan.pawns;
 
         /// <summary>Takes these pawns out of whatever vehicle in the caravan holds them, leaving them in no container,
-        /// ready for CaravanMaker.MakeCaravan or Caravan.AddPawn. Pawns not aboard are left alone.</summary>
-        public static void Disembark(Caravan caravan, IEnumerable<Pawn> pawns)
+        /// ready for CaravanMaker.MakeCaravan or Caravan.AddPawn. Pawns not aboard are left alone. Returns the riders VF
+        /// would not let off, who must not go in.</summary>
+        public static List<Pawn> Disembark(Caravan caravan, IEnumerable<Pawn> pawns)
         {
-            if (!Active || removePawn == null) return;
+            var stuck = new List<Pawn>();
+            if (!Active || removePawn == null) return stuck;
             var vehicles = caravan.PawnsListForReading.Where(IsVehicle).ToList();
-            if (vehicles.Count == 0) return;
+            if (vehicles.Count == 0) return stuck;
             foreach (var p in pawns.ToList())
             {
-                if (!IsAboard(p, caravan)) continue;
-                try
+                // Cargo is not a seat: a pawn stowed there is not RemovePawn's to take off
+                if (!IsAboard(p, caravan) || p.holdingOwner.Owner is Pawn_InventoryTracker) continue;
+                // Checked by IsAboard rather than RemovePawn's return value, which may change between VF versions
+                foreach (var v in vehicles)
                 {
-                    foreach (var v in vehicles)
-                        if (removePawn.Invoke(v, new object[] { p }) is bool removed && removed) break;
+                    try { removePawn.Invoke(v, new object[] { p }); }
+                    catch (Exception e) { Log.Warning("[Dungeon Madness] Could not take " + p.LabelShort + " out of " + v.LabelShort + ": " + (e.InnerException ?? e).Message); }
+                    if (!IsAboard(p, caravan)) break;
                 }
-                catch (Exception e)
-                {
-                    // Only this rider stays aboard; the rest can still be taken off
-                    Log.Warning("[Dungeon Madness] Could not take " + p.LabelShort + " out of a vehicle: " + (e.InnerException ?? e).Message);
-                }
+                if (IsAboard(p, caravan)) stuck.Add(p);
             }
+            return stuck;
         }
 
         /// <summary>Stashes vehicles on the world map the way VF's own "stash vehicle" does, so any caravan can recover

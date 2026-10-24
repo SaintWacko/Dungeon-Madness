@@ -178,7 +178,9 @@ namespace DungeonMadness
                     foreach (var v in vehicles)
                         foreach (var stowed in v.inventory.innerContainer.OfType<Pawn>().ToList())
                             if (!party.Contains(stowed) && !stowed.IsPrisonerOfColony) party.Add(stowed);
-                    VehicleCompat.Disembark(caravan, party);
+                    // A rider VF would not let off stays with the vehicles, in the stash
+                    var stuck = VehicleCompat.Disembark(caravan, party);
+                    if (stuck.Count > 0) party = party.Except(stuck).ToList();
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed
                     foreach (var p in party) caravan.RemovePawn(p);
@@ -199,7 +201,8 @@ namespace DungeonMadness
                     // Vanilla's caravan split (Dialog_SplitCaravan.TrySplitCaravan). Vehicles stay outside; anyone going
                     // in who rides one gets off first, since the caravan does not hold them.
                     foreach (var p in party) CaravanInventoryUtility.MoveAllInventoryToSomeoneElse(p, caravan.PawnsListForReading, party);
-                    VehicleCompat.Disembark(caravan, party);
+                    var stuck = VehicleCompat.Disembark(caravan, party);
+                    if (stuck.Count > 0) party = party.Except(stuck).ToList();
                     foreach (var p in party) caravan.RemovePawn(p);
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                     foreach (var tr in itemTransferables)
