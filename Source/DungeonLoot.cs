@@ -58,6 +58,10 @@ namespace DungeonMadness
         /// <summary>The colony's current tech level: the highest tech level with at least half of its research
         /// projects finished, never below the player faction's own. A tribe starts Neolithic and climbs as it
         /// researches (the faction def alone never changes); one techprint project does not lift the whole colony.</summary>
+        // Read for every entad request, roll and bookcase of one map, and it walks every research project
+        private TechLevel? colonyTech;
+        TechLevel Tech => colonyTech ?? (colonyTech = ColonyTech).Value;
+
         public static TechLevel ColonyTech
         {
             get
@@ -90,7 +94,7 @@ namespace DungeonMadness
         EntadItemRequest Request()
         {
             if (request != null) return request;
-            TechLevel tech = ColonyTech;
+            TechLevel tech = Tech;
             bool furniture = furnitureAllowed;
             request = new EntadItemRequest
             {
@@ -153,10 +157,12 @@ namespace DungeonMadness
             if (funded.Count == 0 || total <= 0f) return;
 
             float rollValue = Mathf.Max(1f, DungeonsMod.Settings.lootRollValuePerLevel * level);
-            // Rounded up, so a roll is never over the cap; more rolls than slots just means some ask for one item
-            int rolls = Mathf.Max(1, Mathf.CeilToInt(total / rollValue));
+            // Rounded up, so a roll is never over the cap. No more rolls than slots, which keeps generation to what
+            // per-pile rolls cost; only a roll setting far below the pile value then leaves some value unrolled.
+            int rolls = Mathf.Clamp(Mathf.CeilToInt(total / rollValue), 1, slots);
             float each = total / rolls;
-            TechLevel tech = ColonyTech;
+            var range = new FloatRange(Mathf.Min(each * 0.8f, rollValue * 0.8f), Mathf.Min(each * 1.2f, rollValue));
+            TechLevel tech = Tech;
             var goods = new List<Thing>();
             for (int r = 0; r < rolls; r++)
             {
@@ -164,7 +170,7 @@ namespace DungeonMadness
                 var parms = new ThingSetMakerParams
                 {
                     techLevel = tech,
-                    totalMarketValueRange = new FloatRange(each * 0.8f, Mathf.Min(each * 1.2f, rollValue)),
+                    totalMarketValueRange = range,
                     countRange = new IntRange(1, count),
                 };
                 goods.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));
@@ -195,7 +201,7 @@ namespace DungeonMadness
                 if (c.GetEdifice(map) is Building_Bookcase b && !cases.Contains(b)) cases.Add(b);
             if (cases.Count == 0) return;
 
-            TechLevel tech = ColonyTech;
+            TechLevel tech = Tech;
             var books = new List<ThingDef>();
             var tomes = new List<ThingDef>();
             foreach (var d in DefDatabase<ThingDef>.AllDefsListForReading)
@@ -252,7 +258,9 @@ namespace DungeonMadness
             var piles = new List<LootPile>();
             foreach (var ch in layout.data.chambers)
             {
-                if (ch.id == 0 || !Rand.Chance(influence.LootChance(s.lootChance))) continue;
+                // Furnished rooms have their own shelves, and entad furniture set up there later clears the floor
+                // it stands on, which would take a pile's goods with it
+                if (ch.id == 0 || ch.Furnished || !Rand.Chance(influence.LootChance(s.lootChance))) continue;
                 if (!byChamber.TryGetValue(ch.id, out var cells)) continue;
                 cells = cells.Where(c => c.Standable(map) && c.GetFirstItem(map) == null && !c.GetTerrain(map).IsWater).ToList();
                 if (cells.Count == 0) continue;

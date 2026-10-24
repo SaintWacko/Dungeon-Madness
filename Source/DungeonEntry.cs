@@ -130,6 +130,8 @@ namespace DungeonMadness
                     Log.Error("[Dungeon Madness] Generating the dungeon failed; the party stays outside." + (error != null ? " " + error : ""));
                     if (influence != null)
                         EntadFramework.EntadApi.AddVerity(influence.TotalCost(target));
+                    // Nobody went in, so removing the half-built map must not read as the party lost inside
+                    site.Notify_PawnLeft();
                     try { if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false); }
                     catch (System.Exception e) { Log.Error("[Dungeon Madness] Removing the failed dungeon map: " + e); }
                     if (!site.Destroyed) site.Destroy();
