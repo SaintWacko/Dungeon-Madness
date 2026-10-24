@@ -169,7 +169,11 @@ namespace DungeonMadness
             string how = "DMAD_Bind_None".Translate();
             if (roll < s.bindSingleChance)
             {
-                Pawn who = holder != null && holder.RaceProps.Humanlike && !holder.Dead ? holder : living.RandomElementWithFallback();
+                // Only someone of the colony keeps a single bind: a captive dweller carried out, or a follower who
+                // declined to join, holds it for a random party member instead
+                bool holderCounts = holder != null && holder.RaceProps.Humanlike && !holder.Dead
+                    && (holder.IsColonist || party.Contains(holder));
+                Pawn who = holderCounts ? holder : living.RandomElementWithFallback();
                 if (who != null && EntadFramework.EntadApi.Bind(inner, new[] { who }))
                     how = "DMAD_Bind_Single".Translate(who.Named("PAWN"));
             }
@@ -301,6 +305,8 @@ namespace DungeonMadness
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
+            // With no caravan, whatever went through the exit is lost with the site, entads included
+            if (caravan == null) bindReport.Clear();
             if (bindReport.Count > 0)
                 Find.LetterStack.ReceiveLetter("DMAD_Entads_Label".Translate(), "DMAD_Entads_Text".Translate(bindReport.Count, string.Join("\n", bindReport)),
                     LetterDefOf.PositiveEvent, caravan != null ? new GlobalTargetInfo(caravan) : new GlobalTargetInfo(Tile));
