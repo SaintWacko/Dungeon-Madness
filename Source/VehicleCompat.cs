@@ -203,8 +203,9 @@ namespace DungeonMadness
                 try { distribute.Invoke(null, new object[] { typed, people }); }
                 catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + (e.InnerException ?? e).Message); }
             }
-            // Vehicles first, as VF's own unstash does, so the people Distribute seated are taken in as passengers
-            var all = vehicles.Concat(people).ToList();
+            // Order does not matter: VF's MakeCaravan prefix turns any list with a vehicle into a vehicle caravan and
+            // filters out the passengers Distribute seated (CaravanHelper.MakeVehicleCaravan)
+            var all = people.Concat(vehicles).ToList();
             Caravan made = CaravanMaker.MakeCaravan(all, faction, tile, addToWorldPawnsIfNotAlready: true);
             if (!caravan.Destroyed) caravan.Destroy();
             return made;
