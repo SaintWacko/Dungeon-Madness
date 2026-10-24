@@ -89,6 +89,14 @@ namespace DungeonMadness
         /// items with how many of each go in. When nobody able stays outside, every pawn goes in and the items
         /// left behind wait in the site's stash for the party to come back out.
         /// </summary>
+        // Only when a VF call throws: the dialog already refuses a rider when VF's RemovePawn cannot be found
+        static List<Pawn> StayAboard(List<Pawn> party, List<Pawn> stuck)
+        {
+            Messages.Message("DMAD_Enter_StayedAboard".Translate(stuck.Select(p => p.LabelShort).ToCommaList(useAnd: true)),
+                MessageTypeDefOf.NegativeEvent, false);
+            return party.Except(stuck).ToList();
+        }
+
         public static void Enter(Caravan caravan, List<Pawn> party, List<TransferableOneWay> itemTransferables, DungeonInfluence influence = null)
         {
             PlanetTile tile = caravan.Tile;
@@ -180,7 +188,7 @@ namespace DungeonMadness
                             if (!party.Contains(stowed) && !stowed.IsPrisonerOfColony) party.Add(stowed);
                     // A rider VF would not let off stays with the vehicles, in the stash
                     var stuck = VehicleCompat.Disembark(caravan, party);
-                    if (stuck.Count > 0) party = party.Except(stuck).ToList();
+                    if (stuck.Count > 0) party = StayAboard(party, stuck);
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed
                     foreach (var p in party) caravan.RemovePawn(p);
@@ -202,7 +210,7 @@ namespace DungeonMadness
                     // in who rides one gets off first, since the caravan does not hold them.
                     foreach (var p in party) CaravanInventoryUtility.MoveAllInventoryToSomeoneElse(p, caravan.PawnsListForReading, party);
                     var stuck = VehicleCompat.Disembark(caravan, party);
-                    if (stuck.Count > 0) party = party.Except(stuck).ToList();
+                    if (stuck.Count > 0) party = StayAboard(party, stuck);
                     foreach (var p in party) caravan.RemovePawn(p);
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                     foreach (var tr in itemTransferables)

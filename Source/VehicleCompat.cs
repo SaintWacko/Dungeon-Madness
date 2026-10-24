@@ -94,8 +94,8 @@ namespace DungeonMadness
             if (vehicles.Count == 0) return stuck;
             foreach (var p in pawns.ToList())
             {
-                // Cargo is not a seat: a pawn stowed there is not RemovePawn's to take off
-                if (!IsAboard(p, caravan) || p.holdingOwner.Owner is Pawn_InventoryTracker) continue;
+                // RemovePawn takes a pawn off a seat or out of the cargo
+                if (!IsAboard(p, caravan)) continue;
                 // Checked by IsAboard rather than RemovePawn's return value, which may change between VF versions
                 foreach (var v in vehicles)
                 {
@@ -143,9 +143,12 @@ namespace DungeonMadness
         public static bool StashStillThere(WorldObject stash) => stash != null && stash.Spawned && !stash.Destroyed;
 
         /// <summary>The caravan collects the stashed vehicles, seated by VF. Returns the caravan that now holds
-        /// everyone: VF's new vehicle caravan, or the same caravan if the stash is gone or VF refused.</summary>
+        /// everyone: VF's new vehicle caravan, or the same caravan if the stash is gone or VF refused. Null when VF
+        /// destroyed the caravan without handing back another.</summary>
         public static Caravan RetrieveStash(WorldObject stash, Caravan caravan)
         {
+            // After a load nothing else may have looked VF up yet
+            Init();
             if (caravan == null || !StashStillThere(stash) || stashArrived == null) return caravan;
             try
             {
