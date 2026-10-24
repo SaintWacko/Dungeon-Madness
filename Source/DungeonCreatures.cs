@@ -398,7 +398,8 @@ namespace DungeonMadness
                             BastleUtility.RollMaterial(p);
                         BastleUtility.RollTraits(p, pack.points);
                     }
-                    else BastleUtility.CopyBastle(leader, p);
+                    // Linked, so a trait found on one packmate is known on all of them
+                    else BastleUtility.CopyBastle(leader, p, linkDiscovery: true);
                     pawns.Add(p);
                 }
             }
