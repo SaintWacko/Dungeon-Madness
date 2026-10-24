@@ -153,7 +153,8 @@ namespace DungeonMadness
             if (funded.Count == 0 || total <= 0f) return;
 
             float rollValue = Mathf.Max(1f, DungeonsMod.Settings.lootRollValuePerLevel * level);
-            int rolls = Mathf.Clamp(Mathf.RoundToInt(total / rollValue), 1, slots);
+            // Rounded up, so a roll is never over the cap; more rolls than slots just means some ask for one item
+            int rolls = Mathf.Max(1, Mathf.CeilToInt(total / rollValue));
             float each = total / rolls;
             TechLevel tech = ColonyTech;
             var goods = new List<Thing>();
@@ -163,7 +164,7 @@ namespace DungeonMadness
                 var parms = new ThingSetMakerParams
                 {
                     techLevel = tech,
-                    totalMarketValueRange = new FloatRange(each * 0.8f, each * 1.2f),
+                    totalMarketValueRange = new FloatRange(each * 0.8f, Mathf.Min(each * 1.2f, rollValue)),
                     countRange = new IntRange(1, count),
                 };
                 goods.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));

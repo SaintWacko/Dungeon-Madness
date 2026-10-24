@@ -391,12 +391,14 @@ namespace DungeonMadness
             }
             void Pay()
             {
+                var world = DungeonWorldComponent.Instance;
+                if (world == null) return;
                 if (fee > 0 && !EntadFramework.EntadApi.TrySpendVerity(fee))
                 {
                     Messages.Message("DMAD_Attune_CannotAfford".Translate(fee, EntadFramework.EntadApi.Verity.ToString("0.#")), MessageTypeDefOf.RejectInput, false);
                     return;
                 }
-                DungeonWorldComponent.Instance.Attune(caravan.Tile.tileId, DungeonInfluence.RollRows(caravan.Tile));
+                world.Attune(caravan.Tile.tileId, DungeonInfluence.RollRows(caravan.Tile));
                 SoundDefOf.Tick_High.PlayOneShotOnCamera();
                 Find.WindowStack.Add(new Dialog_InfluenceDungeon(influence, target));
             }
