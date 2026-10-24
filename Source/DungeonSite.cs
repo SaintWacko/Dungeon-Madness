@@ -47,6 +47,8 @@ namespace DungeonMadness
         private HashSet<int> pendingEntads = new HashSet<int>();
         // One line per entad that has left, for the letter when the visit ends
         private List<string> bindReport = new List<string>();
+        // The entad each bindReport line is about, so lines for things lost with the site can be dropped
+        private List<int> bindReportIds = new List<int>();
 
         public DungeonSite()
         {
@@ -169,8 +171,8 @@ namespace DungeonMadness
             string how = "DMAD_Bind_None".Translate();
             if (roll < s.bindSingleChance)
             {
-                // Only someone of the colony keeps a single bind: a captive dweller carried out, or a follower who
-                // declined to join, holds it for a random party member instead
+                // Only someone of the colony keeps a single bind: a captive dweller carried out holds it for a random
+                // party member instead
                 bool holderCounts = holder != null && holder.RaceProps.Humanlike && !holder.Dead
                     && (holder.IsColonist || party.Contains(holder));
                 Pawn who = holderCounts ? holder : living.RandomElementWithFallback();
@@ -183,6 +185,7 @@ namespace DungeonMadness
                     how = "DMAD_Bind_Party".Translate(living.Select(p => p.LabelShort).ToCommaList(useAnd: true));
             }
             bindReport.Add("DMAD_Bind_Line".Translate(inner.LabelCap, how));
+            bindReportIds.Add(inner.thingIDNumber);
         }
 
         /// <summary>Everything a pawn has on them as they leave. Equipment, apparel and inventory count as theirs for a
@@ -190,6 +193,9 @@ namespace DungeonMadness
         public void ResolveHeldBy(Pawn p)
         {
             if (pendingEntads.Count == 0 || p == null) return;
+            // A living follower has not had the join roll yet, and one who declines leaves with their gear: it is
+            // resolved once they have joined (FlushStash, or TryMovePawnOut's colonist path)
+            if (!p.Dead && DungeonDwellerUtility.Comp(Map)?.followers.Contains(p) == true) return;
             var held = new List<Thing>();
             if (p.equipment != null) held.AddRange(p.equipment.AllEquipmentListForReading);
             if (p.apparel != null) held.AddRange(p.apparel.WornApparel);
@@ -226,6 +232,8 @@ namespace DungeonMadness
                 if (t is Pawn p)
                 {
                     if (DungeonDwellerUtility.TryResolveCarriedFollower(p, this)) continue;
+                    // A follower who just joined had their gear held back from binding until now
+                    ResolveHeldBy(p);
                     caravan.AddPawn(p, addCarriedPawnToWorldPawnsIfAny: true);
                     if (!p.Dead && !p.IsWorldPawn()) Find.WorldPawns.PassToWorld(p);
                     if (p.inventory != null) p.inventory.UnloadEverything = false;
@@ -305,12 +313,29 @@ namespace DungeonMadness
             if (!everyoneLeft || (anyCorpse && caravan == null))
                 Find.LetterStack.ReceiveLetter("DMAD_PartyLost_Label".Translate(), "DMAD_PartyLost_Text".Translate(level),
                     LetterDefOf.NegativeEvent, new GlobalTargetInfo(Tile));
-            // With no caravan, whatever went through the exit is lost with the site, entads included
-            if (caravan == null) bindReport.Clear();
+            // With no caravan, whatever is still in the stash is lost with the site, entads included; anything that
+            // reached an earlier caravan was really brought out
+            if (caravan == null && stash.Count > 0)
+            {
+                var lost = new List<Thing>();
+                foreach (var t in stash)
+                {
+                    lost.Add(t);
+                    if (t is IThingHolder holder) ThingOwnerUtility.GetAllThingsRecursively(holder, lost, true);
+                }
+                var lostIds = new HashSet<int>(lost.Select(t => t.thingIDNumber));
+                for (int i = bindReport.Count - 1; i >= 0; i--)
+                    if (i < bindReportIds.Count && lostIds.Contains(bindReportIds[i]))
+                    {
+                        bindReport.RemoveAt(i);
+                        bindReportIds.RemoveAt(i);
+                    }
+            }
             if (bindReport.Count > 0)
                 Find.LetterStack.ReceiveLetter("DMAD_Entads_Label".Translate(), "DMAD_Entads_Text".Translate(bindReport.Count, string.Join("\n", bindReport)),
                     LetterDefOf.PositiveEvent, caravan != null ? new GlobalTargetInfo(caravan) : new GlobalTargetInfo(Tile));
             bindReport.Clear();
+            bindReportIds.Clear();
         }
 
         public override IEnumerable<FloatMenuOption> GetFloatMenuOptions(Caravan caravan)
@@ -340,6 +365,7 @@ namespace DungeonMadness
             Scribe_Collections.Look(ref party, "party", LookMode.Reference);
             Scribe_Collections.Look(ref pendingEntads, "pendingEntads", LookMode.Value);
             Scribe_Collections.Look(ref bindReport, "bindReport", LookMode.Value);
+            Scribe_Collections.Look(ref bindReportIds, "bindReportIds", LookMode.Value);
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 if (party == null) party = new List<Pawn>();
@@ -347,6 +373,8 @@ namespace DungeonMadness
                 party.RemoveAll(p => p == null);
                 if (pendingEntads == null) pendingEntads = new HashSet<int>();
                 if (bindReport == null) bindReport = new List<string>();
+                if (bindReportIds == null) bindReportIds = new List<int>();
+                while (bindReportIds.Count < bindReport.Count) bindReportIds.Add(-1);
             }
         }
     }

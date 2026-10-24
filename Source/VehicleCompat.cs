@@ -100,9 +100,8 @@ namespace DungeonMadness
                 }
                 catch (Exception e)
                 {
-                    // Riders already taken off are in no container; the caller still puts them in a caravan
-                    Log.Warning("[Dungeon Madness] Could not take a rider out of a vehicle: " + (e.InnerException ?? e).Message);
-                    return;
+                    // Only this rider stays aboard; the rest can still be taken off
+                    Log.Warning("[Dungeon Madness] Could not take " + p.LabelShort + " out of a vehicle: " + (e.InnerException ?? e).Message);
                 }
             }
         }
