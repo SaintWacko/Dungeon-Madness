@@ -327,6 +327,8 @@ namespace DungeonMadness
             Scribe_Values.Look(ref baseLevel, "baseLevel");
             Scribe_Values.Look(ref everyoneLeft, "everyoneLeft");
             Scribe_Deep.Look(ref stash, "stash", this);
+            // Any caravan can recover the stash while the party is inside; a gone one would save a dangling reference
+            if (Scribe.mode == LoadSaveMode.Saving && !VehicleCompat.StashStillThere(vehicleStash)) vehicleStash = null;
             Scribe_References.Look(ref vehicleStash, "vehicleStash");
             if (stash == null) stash = new ThingOwner<Thing>(this);
             Scribe_Collections.Look(ref party, "party", LookMode.Reference);

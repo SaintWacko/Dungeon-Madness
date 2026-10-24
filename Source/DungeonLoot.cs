@@ -60,7 +60,7 @@ namespace DungeonMadness
         /// researches (the faction def alone never changes); one techprint project does not lift the whole colony.</summary>
         // Read for every entad request, roll and bookcase of one map, and it walks every research project
         private TechLevel? colonyTech;
-        TechLevel Tech => colonyTech ?? (colonyTech = ColonyTech).Value;
+        internal TechLevel Tech => colonyTech ?? (colonyTech = ColonyTech).Value;
 
         public static TechLevel ColonyTech
         {

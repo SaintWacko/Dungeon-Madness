@@ -93,8 +93,17 @@ namespace DungeonMadness
             foreach (var p in pawns.ToList())
             {
                 if (!IsAboard(p, caravan)) continue;
-                foreach (var v in vehicles)
-                    if (removePawn.Invoke(v, new object[] { p }) is bool removed && removed) break;
+                try
+                {
+                    foreach (var v in vehicles)
+                        if (removePawn.Invoke(v, new object[] { p }) is bool removed && removed) break;
+                }
+                catch (Exception e)
+                {
+                    // Riders already taken off are in no container; the caller still puts them in a caravan
+                    Log.Warning("[Dungeon Madness] Could not take a rider out of a vehicle: " + (e.InnerException ?? e).Message);
+                    return;
+                }
             }
         }
 
@@ -139,7 +148,8 @@ namespace DungeonMadness
             if (caravan == null || !StashStillThere(stash) || stashArrived == null) return caravan;
             try
             {
-                return stashArrived.Invoke(stash, new object[] { caravan }) as Caravan ?? caravan;
+                Caravan result = stashArrived.Invoke(stash, new object[] { caravan }) as Caravan ?? caravan;
+                return result.Destroyed ? null : result;
             }
             catch (Exception e)
             {
@@ -187,7 +197,7 @@ namespace DungeonMadness
                 var typed = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(vehiclePawnType));
                 foreach (var v in vehicles) typed.Add(v);
                 try { distribute.Invoke(null, new object[] { typed, people }); }
-                catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + e.InnerException?.Message); }
+                catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + (e.InnerException ?? e).Message); }
             }
             var all = people.Concat(vehicles).ToList();
             Caravan made = CaravanMaker.MakeCaravan(all, faction, tile, addToWorldPawnsIfNotAlready: true);

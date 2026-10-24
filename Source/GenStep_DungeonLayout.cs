@@ -441,7 +441,7 @@ namespace DungeonMadness
                 float value = Mathf.Min(ordinary * 40f, 600f) * loot.LootValueFactor;
                 var parms = new ThingSetMakerParams
                 {
-                    techLevel = DungeonLootContext.ColonyTech,
+                    techLevel = loot.Tech,
                     totalMarketValueRange = new FloatRange(value, value),
                     countRange = new IntRange(ordinary, ordinary),
                 };
