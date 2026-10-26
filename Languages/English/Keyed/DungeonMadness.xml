@@ -112,10 +112,11 @@
   <DMAD_Settings_Reset>Reset to defaults</DMAD_Settings_Reset>
   <DMAD_Settings_WorldSetup>Bastles and entads outside dungeons</DMAD_Settings_WorldSetup>
   <DMAD_Settings_AskWorldSetup>Ask when starting a new colony</DMAD_Settings_AskWorldSetup>
-  <DMAD_Settings_AskWorldSetup_Tip>Shows a window once for each new colony, and once for a save that has never had Dungeon Madness, to choose whether bastles and entads turn up outside dungeons in that game. Off: new games follow Bastle Framework's and Entad Framework's mod settings.</DMAD_Settings_AskWorldSetup_Tip>
+  <DMAD_Settings_AskWorldSetup_Tip>Shows a window once for each new colony, and once for a save that has never had Dungeon Madness, to choose whether bastles and entads turn up outside dungeons in that game. Off: new games follow Bastle Framework's and Entad Framework's mod settings. A game started while this was off is asked the next time it loads with this on.</DMAD_Settings_AskWorldSetup_Tip>
   <DMAD_Settings_ConfigureWorld>Configure this game's world</DMAD_Settings_ConfigureWorld>
   <DMAD_Settings_ConfigureWorld_NoGame>Load a game to change where bastles and entads turn up in it.</DMAD_Settings_ConfigureWorld_NoGame>
 
+  <DMAD_WorldSetup_Source>Dungeon Madness's mod settings: Configure this game's world</DMAD_WorldSetup_Source>
   <DMAD_WorldSetup_Title>Dungeon Madness: this colony's world</DMAD_WorldSetup_Title>
   <DMAD_WorldSetup_Intro>Dungeons always hold bastles and entads. These switches decide whether they also turn up everywhere else in this game. You can change them later from Dungeon Madness's mod settings while this game is loaded.</DMAD_WorldSetup_Intro>
   <DMAD_WorldSetup_PresetDungeonsOnly>Dungeons only</DMAD_WorldSetup_PresetDungeonsOnly>
@@ -139,8 +140,6 @@
   <DMAD_WorldSetup_Bastle_GroupAnimals_Tip>Pack animals and fighting animals in raids, caravans and settlement defences. They are added danger: the group keeps its size.</DMAD_WorldSetup_Bastle_GroupAnimals_Tip>
   <DMAD_WorldSetup_Bastle_TraderAnimals>Animals for sale</DMAD_WorldSetup_Bastle_TraderAnimals>
   <DMAD_WorldSetup_Bastle_TraderAnimals_Tip>The trader knows some of each one's traits (none to all, at random).</DMAD_WorldSetup_Bastle_TraderAnimals_Tip>
-  <DMAD_WorldSetup_Bastle_RewardAnimals>Reward animals</DMAD_WorldSetup_Bastle_RewardAnimals>
-  <DMAD_WorldSetup_Bastle_RewardAnimals_Tip>Animals among a quest's item rewards. The quest giver knows some of each one's traits. Vanilla's rewards never include animals, so this only matters with mods that add them.</DMAD_WorldSetup_Bastle_RewardAnimals_Tip>
   <DMAD_WorldSetup_Bastle_Sighting>Bastle sighting</DMAD_WorldSetup_Bastle_Sighting>
   <DMAD_WorldSetup_Bastle_Sighting_Tip>One strong wild bastle passes through. It leaves if you let it be.</DMAD_WorldSetup_Bastle_Sighting_Tip>
   <DMAD_WorldSetup_Bastle_Pack>Bastle pack</DMAD_WorldSetup_Bastle_Pack>

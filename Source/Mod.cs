@@ -239,7 +239,7 @@ namespace DungeonMadness
             list.CheckboxLabeled("DMAD_Settings_AskWorldSetup".Translate(), ref s.askWorldSetup, "DMAD_Settings_AskWorldSetup_Tip".Translate());
             if (Current.ProgramState == ProgramState.Playing)
             {
-                if (list.ButtonText("DMAD_Settings_ConfigureWorld".Translate())) Find.WindowStack.Add(new Dialog_WorldSetup());
+                if (list.ButtonText("DMAD_Settings_ConfigureWorld".Translate())) Find.WindowStack.Add(new Dialog_WorldSetup(canCancel: true));
             }
             else list.Label("DMAD_Settings_ConfigureWorld_NoGame".Translate());
             list.Gap();

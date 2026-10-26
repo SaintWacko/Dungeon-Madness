@@ -11,11 +11,10 @@ namespace DungeonMadness
     // override, not just the changed ones, so editing the frameworks' mod settings later never changes this game.
     public class Dialog_WorldSetup : Window
     {
-        // By name rather than by enum member: a row whose switch the installed framework doesn't have yet (or has
-        // renamed) is left out instead of failing to load the window. The first build against Bastle hit exactly
-        // that, a DLL older than the source it was built from, without RewardAnimals.
+        // By name rather than by enum member: a switch the installed framework doesn't have (Bastle added and then
+        // dropped RewardAnimals while this window was written) leaves its row out instead of breaking the window.
         private static readonly List<BastleWorldFeature> BastleConverted = Present<BastleWorldFeature>(
-            "WildAnimals", "AnimalEvents", "GroupAnimals", "TraderAnimals", "RewardAnimals");
+            "WildAnimals", "AnimalEvents", "GroupAnimals", "TraderAnimals");
         private static readonly List<BastleWorldFeature> BastleEvents = Present<BastleWorldFeature>(
             "Sighting", "Pack", "Rampage", "HuntQuest");
         private static readonly List<EntadWorldFeature> EntadSources = Present<EntadWorldFeature>(
@@ -33,17 +32,22 @@ namespace DungeonMadness
         private readonly Dictionary<BastleWorldFeature, bool> bastle = new Dictionary<BastleWorldFeature, bool>();
         private readonly Dictionary<EntadWorldFeature, bool> entad = new Dictionary<EntadWorldFeature, bool>();
 
+        // Shown in Bastle's and Entad's settings beside each switch this window overrides
+        private const string SourceKey = "DMAD_WorldSetup_Source";
+
         private const float RowHeight = 26f;
         private const float Indent = 18f;
 
-        public override Vector2 InitialSize => new Vector2(720f, 590f);
+        public override Vector2 InitialSize => new Vector2(720f, 640f);
 
-        public Dialog_WorldSetup()
+        // The once-per-game prompt can only be accepted. Reopened from the mod settings it can be closed without
+        // saving, since Accept turns every switch into an override and a player may only want to look.
+        public Dialog_WorldSetup(bool canCancel = false)
         {
             forcePause = true;
             absorbInputAroundWindow = true;
-            doCloseX = false;
-            closeOnCancel = false;
+            doCloseX = canCancel;
+            closeOnCancel = canCancel;
             closeOnClickedOutside = false;
             closeOnAccept = false;
             foreach (BastleWorldFeature f in Enum.GetValues(typeof(BastleWorldFeature)))
@@ -71,7 +75,9 @@ namespace DungeonMadness
             y += 42f;
 
             string foot = "DMAD_WorldSetup_Footnote".Translate();
+            Text.Font = GameFont.Tiny;
             float footH = Text.CalcHeight(foot, inRect.width);
+            Text.Font = GameFont.Small;
             float colBottom = inRect.yMax - 40f - footH - 8f;
             float colW = (inRect.width - 14f) / 2f;
             DoBastleColumn(new Rect(inRect.x, y, colW, colBottom - y));
@@ -86,8 +92,6 @@ namespace DungeonMadness
             if (Widgets.ButtonText(new Rect(inRect.xMax - 160f, inRect.yMax - 36f, 160f, 36f), "AcceptButton".Translate()))
                 Accept();
         }
-
-        public override void OnAcceptKeyPressed() => Accept();
 
         private void DoPresets(Rect rect)
         {
@@ -193,8 +197,8 @@ namespace DungeonMadness
 
         private void Accept()
         {
-            foreach (var kv in bastle) BastleWorld.SetForGame(kv.Key, kv.Value);
-            foreach (var kv in entad) EntadWorld.SetForGame(kv.Key, kv.Value);
+            foreach (var kv in bastle) BastleWorld.SetForGame(kv.Key, kv.Value, SourceKey);
+            foreach (var kv in entad) EntadWorld.SetForGame(kv.Key, kv.Value, SourceKey);
             var game = DungeonGameComponent.Instance;
             if (game != null) game.worldConfigured = true;
             Close();
