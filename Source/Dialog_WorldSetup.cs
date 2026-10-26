@@ -48,6 +48,8 @@ namespace DungeonMadness
             absorbInputAroundWindow = true;
             doCloseX = canCancel;
             closeOnCancel = canCancel;
+            // WindowStack only passes Enter to a window with closeOnAccept or this flag; Escape still obeys closeOnCancel
+            forceCatchAcceptAndCancelEventEvenIfUnfocused = true;
             closeOnClickedOutside = false;
             closeOnAccept = false;
             foreach (BastleWorldFeature f in Enum.GetValues(typeof(BastleWorldFeature)))
@@ -193,6 +195,12 @@ namespace DungeonMadness
             GUI.color = Color.white;
             TooltipHandler.TipRegion(row, (key + "_Tip").Translate());
             y += RowHeight;
+        }
+
+        public override void OnAcceptKeyPressed()
+        {
+            Accept();
+            Event.current.Use();
         }
 
         private void Accept()
