@@ -4,17 +4,19 @@
     published). Circinus's build looks for a .csproj in Source/; the real projects are 1.6/Source and 1.7/Source,
     and both compile the shared .cs files in this folder. Referencing them here builds both.
 
+    It targets net10.0 so it can reference the net10.0 1.7 project as well as the net472 1.6 one (the other
+    direction is refused). Its own TFM decides nothing about the mod's DLLs.
+
     Open this project in an IDE to get both. It has to be the only project file directly in Source/, or
     `dotnet build` there stops and asks which one to build.
   -->
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>DungeonMadness.Build</AssemblyName>
+    <!-- The net472 1.6 project is built, never referenced -->
+    <NoWarn>$(NoWarn);NU1702</NoWarn>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\1.6\Source\DungeonMadness.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
