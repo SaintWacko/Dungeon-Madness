@@ -235,6 +235,15 @@ namespace DungeonMadness
         private static void DoWorld(Listing_Standard list)
         {
             var s = Settings;
+            Section(list, "DMAD_Settings_WorldSetup");
+            list.CheckboxLabeled("DMAD_Settings_AskWorldSetup".Translate(), ref s.askWorldSetup, "DMAD_Settings_AskWorldSetup_Tip".Translate());
+            if (Current.ProgramState == ProgramState.Playing)
+            {
+                if (list.ButtonText("DMAD_Settings_ConfigureWorld".Translate())) Find.WindowStack.Add(new Dialog_WorldSetup());
+            }
+            else list.Label("DMAD_Settings_ConfigureWorld_NoGame".Translate());
+            list.Gap();
+
             Section(list, "DMAD_Settings_Display");
             list.CheckboxLabeled("DMAD_Settings_ShowIcons".Translate(), ref s.showIcons, "DMAD_Settings_ShowIcons_Tip".Translate());
             list.Label("DMAD_Settings_IconOpacity".Translate(s.iconOpacity.ToStringPercent()));

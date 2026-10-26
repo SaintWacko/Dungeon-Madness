@@ -110,6 +110,59 @@
   <DMAD_Settings_WealthToDouble_Desc>A dungeon is generated at its level times 1 + party wealth / this value. Party wealth is the pawns going in plus what they wear and wield. Example: a party worth {0} entering a level 10 dungeon meets effective level {1}.</DMAD_Settings_WealthToDouble_Desc>
   <DMAD_Tab_World>World</DMAD_Tab_World>
   <DMAD_Settings_Reset>Reset to defaults</DMAD_Settings_Reset>
+  <DMAD_Settings_WorldSetup>Bastles and entads outside dungeons</DMAD_Settings_WorldSetup>
+  <DMAD_Settings_AskWorldSetup>Ask when starting a new colony</DMAD_Settings_AskWorldSetup>
+  <DMAD_Settings_AskWorldSetup_Tip>Shows a window once for each new colony, and once for a save that has never had Dungeon Madness, to choose whether bastles and entads turn up outside dungeons in that game. Off: new games follow Bastle Framework's and Entad Framework's mod settings.</DMAD_Settings_AskWorldSetup_Tip>
+  <DMAD_Settings_ConfigureWorld>Configure this game's world</DMAD_Settings_ConfigureWorld>
+  <DMAD_Settings_ConfigureWorld_NoGame>Load a game to change where bastles and entads turn up in it.</DMAD_Settings_ConfigureWorld_NoGame>
+
+  <DMAD_WorldSetup_Title>Dungeon Madness: this colony's world</DMAD_WorldSetup_Title>
+  <DMAD_WorldSetup_Intro>Dungeons always hold bastles and entads. These switches decide whether they also turn up everywhere else in this game. You can change them later from Dungeon Madness's mod settings while this game is loaded.</DMAD_WorldSetup_Intro>
+  <DMAD_WorldSetup_PresetDungeonsOnly>Dungeons only</DMAD_WorldSetup_PresetDungeonsOnly>
+  <DMAD_WorldSetup_PresetDungeonsOnly_Tip>Bastles and entads come only from dungeons. Turns off both master switches; the rows below keep their ticks.</DMAD_WorldSetup_PresetDungeonsOnly_Tip>
+  <DMAD_WorldSetup_PresetLivingWorld>Living world</DMAD_WorldSetup_PresetLivingWorld>
+  <DMAD_WorldSetup_PresetLivingWorld_Tip>Every source on: bastles and entads can turn up anywhere.</DMAD_WorldSetup_PresetLivingWorld_Tip>
+  <DMAD_WorldSetup_PresetSettings>Mod settings</DMAD_WorldSetup_PresetSettings>
+  <DMAD_WorldSetup_PresetSettings_Tip>What Bastle Framework's and Entad Framework's mod settings say.</DMAD_WorldSetup_PresetSettings_Tip>
+  <DMAD_WorldSetup_Footnote>* differs from the mod settings. Every row is saved with this game, so later changes to the mod settings don't reach it.</DMAD_WorldSetup_Footnote>
+  <DMAD_WorldSetup_Greyed>Greyed rows keep their ticks. They apply again if their master switch goes back on.</DMAD_WorldSetup_Greyed>
+  <DMAD_WorldSetup_Bastles>Bastles</DMAD_WorldSetup_Bastles>
+  <DMAD_WorldSetup_Bastle_World>Bastles appear in the world</DMAD_WorldSetup_Bastle_World>
+  <DMAD_WorldSetup_Bastle_World_Tip>Every bastle source in this column. Off: bastles come only from dungeons.</DMAD_WorldSetup_Bastle_World_Tip>
+  <DMAD_WorldSetup_BastleConverted>Animals the game already makes</DMAD_WorldSetup_BastleConverted>
+  <DMAD_WorldSetup_BastleEvents>Bastle events</DMAD_WorldSetup_BastleEvents>
+  <DMAD_WorldSetup_Bastle_WildAnimals>Wild animals</DMAD_WorldSetup_Bastle_WildAnimals>
+  <DMAD_WorldSetup_Bastle_WildAnimals_Tip>On a new map and for every animal that wanders in later.</DMAD_WorldSetup_Bastle_WildAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_AnimalEvents>Animal events</DMAD_WorldSetup_Bastle_AnimalEvents>
+  <DMAD_WorldSetup_Bastle_AnimalEvents_Tip>Manhunter packs and ambushes, herd migrations, thrumbo passes, farm animals wandering in, alphabeavers and frenzied animals. The whole group is one kind of bastle and shares what you learn about it.</DMAD_WorldSetup_Bastle_AnimalEvents_Tip>
+  <DMAD_WorldSetup_Bastle_GroupAnimals>Animals with raiders and caravans</DMAD_WorldSetup_Bastle_GroupAnimals>
+  <DMAD_WorldSetup_Bastle_GroupAnimals_Tip>Pack animals and fighting animals in raids, caravans and settlement defences. They are added danger: the group keeps its size.</DMAD_WorldSetup_Bastle_GroupAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_TraderAnimals>Animals for sale</DMAD_WorldSetup_Bastle_TraderAnimals>
+  <DMAD_WorldSetup_Bastle_TraderAnimals_Tip>The trader knows some of each one's traits (none to all, at random).</DMAD_WorldSetup_Bastle_TraderAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_RewardAnimals>Reward animals</DMAD_WorldSetup_Bastle_RewardAnimals>
+  <DMAD_WorldSetup_Bastle_RewardAnimals_Tip>Animals among a quest's item rewards. The quest giver knows some of each one's traits. Vanilla's rewards never include animals, so this only matters with mods that add them.</DMAD_WorldSetup_Bastle_RewardAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_Sighting>Bastle sighting</DMAD_WorldSetup_Bastle_Sighting>
+  <DMAD_WorldSetup_Bastle_Sighting_Tip>One strong wild bastle passes through. It leaves if you let it be.</DMAD_WorldSetup_Bastle_Sighting_Tip>
+  <DMAD_WorldSetup_Bastle_Pack>Bastle pack</DMAD_WorldSetup_Bastle_Pack>
+  <DMAD_WorldSetup_Bastle_Pack_Tip>A manhunter pack of one bastle kind.</DMAD_WorldSetup_Bastle_Pack_Tip>
+  <DMAD_WorldSetup_Bastle_Rampage>Rampage</DMAD_WorldSetup_Bastle_Rampage>
+  <DMAD_WorldSetup_Bastle_Rampage_Tip>A single bastle goes manhunter, with the pack's threat in its traits.</DMAD_WorldSetup_Bastle_Rampage_Tip>
+  <DMAD_WorldSetup_Bastle_HuntQuest>Hunt quests</DMAD_WorldSetup_Bastle_HuntQuest>
+  <DMAD_WorldSetup_Bastle_HuntQuest_Tip>A faction asks you to kill a bastle and its pack at a site, for vanilla rewards.</DMAD_WorldSetup_Bastle_HuntQuest_Tip>
+  <DMAD_WorldSetup_Entads>Entads</DMAD_WorldSetup_Entads>
+  <DMAD_WorldSetup_Entad_World>Entads appear in the world</DMAD_WorldSetup_Entad_World>
+  <DMAD_WorldSetup_Entad_World_Tip>Every entad source in this column. Off: entads come only from dungeons.</DMAD_WorldSetup_Entad_World_Tip>
+  <DMAD_WorldSetup_Entad_Carriers>NPC groups carry entads</DMAD_WorldSetup_Entad_Carriers>
+  <DMAD_WorldSetup_Entad_Carriers_Tip>Raids, visitors, trade caravans and settlement defenders can have members whose own weapon or apparel is an entad. Only humanlike members. Their entads start unidentified.</DMAD_WorldSetup_Entad_Carriers_Tip>
+  <DMAD_WorldSetup_Entad_Traders>Trader stock</DMAD_WorldSetup_Entad_Traders>
+  <DMAD_WorldSetup_Entad_Traders_Tip>Traders can stock entads. Items they would have stocked anyway become entads: nothing extra is added.</DMAD_WorldSetup_Entad_Traders_Tip>
+  <DMAD_WorldSetup_Entad_Rewards>Quest rewards</DMAD_WorldSetup_Entad_Rewards>
+  <DMAD_WorldSetup_Entad_Rewards_Tip>Quest rewards can include entads, turned from items the reward already held.</DMAD_WorldSetup_Entad_Rewards_Tip>
+  <DMAD_WorldSetup_Entad_Loot>Loot at sites and settlements</DMAD_WorldSetup_Entad_Loot>
+  <DMAD_WorldSetup_Entad_Loot_Tip>Loot at sites, ancient complexes, faction settlements and item stashes can turn up entads.</DMAD_WorldSetup_Entad_Loot_Tip>
+  <DMAD_WorldSetup_Entad_Appraisers>Appraisers</DMAD_WorldSetup_Entad_Appraisers>
+  <DMAD_WorldSetup_Entad_Appraisers_Tip>Caravans and settlements can have appraisers who identify entads for silver. Off: no new appraisers turn up and existing ones are hidden until it goes back on.</DMAD_WorldSetup_Entad_Appraisers_Tip>
+
   <DMAD_Settings_Display>Display</DMAD_Settings_Display>
   <DMAD_Settings_ShowIcons>Show dungeon icons on the world map</DMAD_Settings_ShowIcons>
   <DMAD_Settings_ShowIcons_Tip>Also toggled by the dungeon button with the other world map toggles in the bottom right.</DMAD_Settings_ShowIcons_Tip>

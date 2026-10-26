@@ -113,6 +113,9 @@ namespace DungeonMadness
 
         public bool InfluenceRowEnabled(InfluenceKind k) => !influenceDisabled.Contains(k);
 
+        // ---- This game's world: show Dialog_WorldSetup once per game (new colony, or a save first loaded with this mod)
+        public bool askWorldSetup = true;
+
         // ---- Display: take effect immediately
         public bool showIcons = true;
         public const float DefaultIconOpacity = 0.4f;
@@ -154,6 +157,7 @@ namespace DungeonMadness
             influenceThemeSteps = DefaultInfluenceThemeSteps;
             influenceTheme = true;
             influenceDisabled.Clear();
+            askWorldSetup = true;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -223,6 +227,7 @@ namespace DungeonMadness
             Scribe_Values.Look(ref influenceTheme, "influenceTheme", true);
             Scribe_Collections.Look(ref influenceDisabled, "influenceDisabled", LookMode.Value);
             if (influenceDisabled == null) influenceDisabled = new List<InfluenceKind>();
+            Scribe_Values.Look(ref askWorldSetup, "askWorldSetup", true);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);
