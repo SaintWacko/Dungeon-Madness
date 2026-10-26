@@ -116,7 +116,7 @@
   <DMAD_Settings_ConfigureWorld>Configure this game's world</DMAD_Settings_ConfigureWorld>
   <DMAD_Settings_ConfigureWorld_NoGame>Load a game to change where bastles and entads turn up in it.</DMAD_Settings_ConfigureWorld_NoGame>
 
-  <DMAD_WorldSetup_Source>Dungeon Madness's mod settings: Configure this game's world</DMAD_WorldSetup_Source>
+  <DMAD_WorldSetup_Source>Dungeon Madness's mod settings (Configure this game's world)</DMAD_WorldSetup_Source>
   <DMAD_WorldSetup_Title>Dungeon Madness: this colony's world</DMAD_WorldSetup_Title>
   <DMAD_WorldSetup_Intro>Dungeons always hold bastles and entads. These switches decide whether they also turn up everywhere else in this game. You can change them later from Dungeon Madness's mod settings while this game is loaded.</DMAD_WorldSetup_Intro>
   <DMAD_WorldSetup_PresetDungeonsOnly>Dungeons only</DMAD_WorldSetup_PresetDungeonsOnly>
