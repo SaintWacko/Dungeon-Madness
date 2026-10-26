@@ -1,0 +1,69 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    RimWorld 1.6 build of the main assembly. The C# is shared: every version compiles the same files from the mod's
+    top-level Source/ folder, with RW16 / RW17 defined for the places where the game versions differ.
+    Output goes to 1.6/Assemblies, which LoadFolders.xml loads only on 1.6.
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <RootNamespace>DungeonMadness</RootNamespace>
+    <AssemblyName>DungeonMadness</AssemblyName>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <Deterministic>true</Deterministic>
+    <OutputPath>..\Assemblies\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);RW16</DefineConstants>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Dungeon Madness</Product>
+    <Authors>SaintWacko</Authors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <Optimize>false</Optimize>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Top level only: obj/ under Source holds generated files. -->
+    <Compile Include="..\..\Source\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference assemblies for RimWorld + Unity, so the project builds on any machine without a game install.
+         Pinned: a floating version can pull a prerelease ref assembly on restore. -->
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4871">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <!-- Compile-only: the Harmony mod (brrainz.harmony) supplies the runtime DLL. Shipping our own 0Harmony.dll is
+         what breaks other mods. -->
+    <PackageReference Include="Lib.Harmony" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Hard dependencies, loaded before this mod by About.xml. Never copied into our Assemblies/: the game loads
+         their own copies, and a second one would split their types in two. -->
+    <Reference Include="BastleFramework">
+      <HintPath>..\..\..\87257f378d52\1.6\Assemblies\BastleFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="EntadFramework">
+      <HintPath>..\..\..\EntadFramework\1.6\Assemblies\EntadFramework.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
