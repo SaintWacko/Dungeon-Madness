@@ -11,20 +11,23 @@ namespace DungeonMadness
     // override, not just the changed ones, so editing the frameworks' mod settings later never changes this game.
     public class Dialog_WorldSetup : Window
     {
-        private static readonly BastleWorldFeature[] BastleConverted =
+        // By name rather than by enum member: a row whose switch the installed framework doesn't have yet (or has
+        // renamed) is left out instead of failing to load the window. The first build against Bastle hit exactly
+        // that, a DLL older than the source it was built from, without RewardAnimals.
+        private static readonly List<BastleWorldFeature> BastleConverted = Present<BastleWorldFeature>(
+            "WildAnimals", "AnimalEvents", "GroupAnimals", "TraderAnimals", "RewardAnimals");
+        private static readonly List<BastleWorldFeature> BastleEvents = Present<BastleWorldFeature>(
+            "Sighting", "Pack", "Rampage", "HuntQuest");
+        private static readonly List<EntadWorldFeature> EntadSources = Present<EntadWorldFeature>(
+            "Carriers", "Traders", "Rewards", "Loot", "Appraisers");
+
+        private static List<T> Present<T>(params string[] names) where T : struct
         {
-            BastleWorldFeature.WildAnimals, BastleWorldFeature.AnimalEvents, BastleWorldFeature.GroupAnimals,
-            BastleWorldFeature.TraderAnimals, BastleWorldFeature.RewardAnimals,
-        };
-        private static readonly BastleWorldFeature[] BastleEvents =
-        {
-            BastleWorldFeature.Sighting, BastleWorldFeature.Pack, BastleWorldFeature.Rampage, BastleWorldFeature.HuntQuest,
-        };
-        private static readonly EntadWorldFeature[] EntadSources =
-        {
-            EntadWorldFeature.Carriers, EntadWorldFeature.Traders, EntadWorldFeature.Rewards,
-            EntadWorldFeature.Loot, EntadWorldFeature.Appraisers,
-        };
+            var found = new List<T>();
+            foreach (var n in names)
+                if (Enum.IsDefined(typeof(T), n)) found.Add((T)Enum.Parse(typeof(T), n));
+            return found;
+        }
 
         // Every enum value, so a source a framework adds later is carried through Accept unchanged
         private readonly Dictionary<BastleWorldFeature, bool> bastle = new Dictionary<BastleWorldFeature, bool>();
