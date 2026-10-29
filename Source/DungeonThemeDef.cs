@@ -43,6 +43,10 @@ namespace DungeonMadness
     public class DividerOption
     {
         public ThingDef thing;
+        /// <summary>A cover plant from the dungeon's biome instead of a set thing; collapsed rocks if it has none.</summary>
+        public bool biomePlant;
+        /// <summary>Scattered on the open cells either side of the plug (sand around a buried ruin's cave-in).</summary>
+        public ThingDef filth;
         public float weight = 1f;
     }
 
@@ -112,11 +116,15 @@ namespace DungeonMadness
                 && plantDensity.Includes(tile.PrimaryBiome?.plantDensity ?? 0f);
         }
 
-        public ThingDef RandomDivider()
+        public ThingDef RandomDivider(BiomeDef biome, out ThingDef filth)
         {
-            if (dividers.NullOrEmpty()) return DungeonDefOf.DMAD_DungeonRubble;
-            return dividers.Where(d => d.thing != null).RandomElementByWeightWithFallback(d => d.weight)?.thing
-                ?? DungeonDefOf.DMAD_DungeonRubble;
+            filth = null;
+            var option = dividers.Where(d => d.thing != null || d.biomePlant).RandomElementByWeightWithFallback(d => d.weight);
+            if (option == null) return ThingDefOf.CollapsedRocks;
+            filth = option.filth;
+            if (!option.biomePlant) return option.thing;
+            var plants = DungeonThemeUtility.CoverPlantsOf(biome);
+            return plants.Count > 0 ? plants.RandomElementByWeight(p => biome.CommonalityOfPlant(p)) : ThingDefOf.CollapsedRocks;
         }
 
         public override IEnumerable<string> ConfigErrors()
@@ -124,6 +132,8 @@ namespace DungeonMadness
             foreach (var e in base.ConfigErrors()) yield return e;
             foreach (var f in floors)
                 if (f.terrain == null && f.biomeTerrain == BiomeTerrain.None) yield return "floor patch with neither terrain nor biomeTerrain";
+            foreach (var d in dividers)
+                if (d.thing != null && d.biomePlant) yield return $"divider names {d.thing.defName} and biomePlant; the thing is ignored";
         }
     }
 
@@ -226,6 +236,28 @@ namespace DungeonMadness
             if (biome.terrainPatchMakers != null)
                 foreach (var pm in biome.terrainPatchMakers)
                     if (pm?.thresholds != null) foreach (var t in pm.thresholds) Add(t.terrain);
+            return list;
+        }
+
+        static readonly Dictionary<BiomeDef, List<ThingDef>> coverPlants = new Dictionary<BiomeDef, List<ThingDef>>();
+
+        /// <summary>
+        /// The biome's wild trees, bushes and cacti that could plug a squeeze. Only plain vanilla-class plants with
+        /// no comps, so anima, gauranlen and the like (and modded plants with their own behaviour) stay out; and
+        /// nothing that dies where it is put: cave plants, which light kills, plants tied to a terrain tag the
+        /// squeeze's floor won't have, and plants that need pollution.
+        /// </summary>
+        public static List<ThingDef> CoverPlantsOf(BiomeDef biome)
+        {
+            if (biome == null) return new List<ThingDef>();
+            if (!coverPlants.TryGetValue(biome, out var list))
+            {
+                list = biome.AllWildPlants.Where(p => p.plant != null && p.thingClass == typeof(Plant) && p.comps.NullOrEmpty()
+                        && p.fillPercent >= 0.2f && !p.plant.cavePlant && !p.plant.diesToLight && !p.plant.isStump
+                        && p.plant.WildTerrainTags.Count == 0 && !p.plant.RequiresPollution && biome.CommonalityOfPlant(p) > 0f)
+                    .Distinct().ToList();
+                coverPlants[biome] = list;
+            }
             return list;
         }
     }

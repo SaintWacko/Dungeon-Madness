@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -83,12 +84,14 @@ namespace DungeonMadness
         }
     }
 
-    /// <summary>What stands between two chambers: a door in a built room's wall, or a plug (rubble, ice, roots,
-    /// sand) in a one-cell squeeze between two caverns.</summary>
+    /// <summary>What stands between two chambers: a door in a built room's wall, or a plug (collapsed rocks, ice,
+    /// a biome plant) in a one-cell squeeze between two caverns.</summary>
     public class DungeonDivider : IExposable
     {
         public List<IntVec3> cells = new List<IntVec3>();
         public ThingDef def;
+        // Only read while the map is dressed, so not saved
+        public ThingDef filth;
         public bool door;
         public int a, b;
 
@@ -193,6 +196,7 @@ namespace DungeonMadness
         readonly int n;
         readonly float s;
         readonly DungeonThemeDef theme;
+        readonly BiomeDef biome;
         readonly float builtChance;
         readonly bool[] open, keep, locked, exitMask;
         readonly int[] owner, built;
@@ -208,11 +212,12 @@ namespace DungeonMadness
         readonly int[] cameFrom, visitStamp;
         int stamp;
 
-        DungeonLayoutGenerator(int size, DungeonThemeDef theme, float builtChance)
+        DungeonLayoutGenerator(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance)
         {
             n = size;
             s = size / 100f;
             this.theme = theme;
+            this.biome = biome;
             this.builtChance = builtChance;
             int len = n * n;
             open = new bool[len]; keep = new bool[len]; locked = new bool[len]; exitMask = new bool[len];
@@ -222,9 +227,9 @@ namespace DungeonMadness
             for (int i = 0; i < len; i++) { owner[i] = -1; built[i] = -1; }
         }
 
-        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, float builtChance)
+        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance)
         {
-            return new DungeonLayoutGenerator(size, theme, builtChance).Build();
+            return new DungeonLayoutGenerator(size, theme, biome, builtChance).Build();
         }
 
         int I(int x, int z) => z * n + x;
@@ -508,8 +513,8 @@ namespace DungeonMadness
                 for (int q = pinch - 2; q <= pinch + 2; q++) { int k = path[q]; locked[k] = false; open[k] = true; keep[k] = true; }
                 int length = Rand.RangeInclusive(1, 3);
                 int from = pinch - (length == 3 ? 1 : 0);
-                ThingDef def = theme.RandomDivider();
-                var divider = new DungeonDivider { def = def, a = i, b = j };
+                ThingDef def = theme.RandomDivider(biome, out ThingDef filth);
+                var divider = new DungeonDivider { def = def, filth = filth, a = i, b = j };
                 for (int q = from; q < from + length; q++)
                 {
                     feature[path[q]] = CellFeature.Plug;

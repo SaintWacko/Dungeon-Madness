@@ -20,7 +20,7 @@
     <builtChance>0.12</builtChance>
     <pinchChance>0.75</pinchChance>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing></li>
+      <li><thing>CollapsedRocks</thing></li>
     </dividers>
     <floors>
       <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.12</share><mode>Low</mode></li>
@@ -41,8 +41,9 @@
     <builtChance>0.08</builtChance>
     <pinchChance>0.75</pinchChance>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing><weight>0.4</weight></li>
-      <li><thing>DMAD_IcePlug</thing><weight>0.6</weight></li>
+      <li><thing>CollapsedRocks</thing><weight>0.4</weight></li>
+      <!-- Without Odyssey this entry is dropped and every plug is collapsed rocks -->
+      <li MayRequire="Ludeon.RimWorld.Odyssey"><thing>SolidIce</thing><weight>0.6</weight></li>
     </dividers>
     <floors>
       <li><terrain>Ice</terrain><share>0.5</share><mode>Low</mode></li>
@@ -56,14 +57,15 @@
   <DungeonMadness.DungeonThemeDef>
     <defName>DMAD_Overgrown</defName>
     <label>overgrown caves</label>
-    <description>Caverns under thick growth: moss and soil on the floors, roots knotted through the squeezes, and more of the ceiling fallen in.</description>
+    <description>Caverns under thick growth: moss and soil on the floors, trees and brush packed into the squeezes, and more of the ceiling fallen in.</description>
     <plantDensity>0.55~99</plantDensity>
     <priority>1</priority>
     <builtChance>0.12</builtChance>
     <pinchChance>0.8</pinchChance>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing><weight>0.35</weight></li>
-      <li><thing>DMAD_RootTangle</thing><weight>0.65</weight></li>
+      <li><thing>CollapsedRocks</thing><weight>0.35</weight></li>
+      <!-- A tree, bush or cactus from the tile's biome; collapsed rocks where it grows none -->
+      <li><biomePlant>true</biomePlant><weight>0.65</weight></li>
     </dividers>
     <floors>
       <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.1</share><mode>Low</mode></li>
@@ -86,7 +88,7 @@
     <builtChance>0.1</builtChance>
     <pinchChance>0.7</pinchChance>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing></li>
+      <li><thing>CollapsedRocks</thing></li>
     </dividers>
     <floors>
       <li><biomeTerrain>ShallowWater</biomeTerrain><share>0.5</share><mode>Low</mode></li>
@@ -108,8 +110,8 @@
     <builtChance>0.3</builtChance>
     <pinchChance>0.75</pinchChance>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing><weight>0.5</weight></li>
-      <li><thing>DMAD_SandDrift</thing><weight>0.5</weight></li>
+      <li><thing>CollapsedRocks</thing><weight>0.5</weight></li>
+      <li><thing>CollapsedRocks</thing><filth>Filth_Sand</filth><weight>0.5</weight></li>
     </dividers>
     <floors>
       <li><terrain>SoftSand</terrain><share>0.3</share><mode>High</mode></li>
@@ -133,7 +135,7 @@
     <tomeChance>0.15</tomeChance>
     <tiledBuiltFloor>true</tiledBuiltFloor>
     <dividers>
-      <li><thing>DMAD_DungeonRubble</thing></li>
+      <li><thing>CollapsedRocks</thing></li>
     </dividers>
     <floors>
       <li><biomeTerrain>Gravel</biomeTerrain><share>0.2</share><mode>High</mode></li>

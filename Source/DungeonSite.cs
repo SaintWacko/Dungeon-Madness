@@ -395,10 +395,9 @@ namespace DungeonMadness
         public static WorldObjectDef DMAD_DungeonSite;
         public static MapGeneratorDef DMAD_Dungeon;
         public static ThingDef DMAD_DungeonWall;
-        public static ThingDef DMAD_DungeonRubble;
         public static ThingDef DMAD_DungeonExit;
         public static DungeonThemeDef DMAD_Cave;
-        public static ThingDef DMAD_TangleCore;
+        public static ThingDef DMAD_PlantCore;
         public static ThingDef DMAD_DungeonWallPowered;
         public static HediffDef DMAD_DungeonMad;
         public static MentalStateDef DMAD_DungeonMadness;

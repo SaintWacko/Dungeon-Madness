@@ -60,7 +60,7 @@ namespace DungeonMadness
             Rand.PushState(site != null && site.layoutSeed != 0 ? site.layoutSeed : Rand.Int);
             try
             {
-                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, builtChance);
+                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, map.Biome, builtChance);
                 if (site != null) site.layout = layout.data;
                 Dress(map, layout, theme, rocks, info);
                 if (Prefs.DevMode)
@@ -70,6 +70,21 @@ namespace DungeonMadness
                         $"{layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
             }
             finally { Rand.PopState(); }
+        }
+
+        const int CollapsedRocksHitPoints = 200;
+
+        // Thickest at the plug's mouths and thinning out over a few cells, so it reads as spill from the squeeze
+        static void ScatterFilth(Map map, DungeonLayoutResult layout, DungeonDivider d)
+        {
+            foreach (var plugCell in d.cells)
+                foreach (var c in GenRadial.RadialCellsAround(plugCell, 3.5f, false))
+                {
+                    if (!c.InBounds(map) || !layout.open[layout.Index(c)] || layout.feature[layout.Index(c)] == CellFeature.Plug) continue;
+                    if (c.GetEdifice(map) != null) continue;
+                    float chance = Mathf.Lerp(0.85f, 0.15f, (c - plugCell).LengthHorizontal / 3.5f);
+                    if (Rand.Chance(chance)) FilthMaker.TryMakeFilth(c, map, d.filth, Rand.RangeInclusive(1, 3));
+                }
         }
 
         static void Dress(Map map, DungeonLayoutResult layout, DungeonThemeDef theme, List<ThingDef> rocks, Tile info)
@@ -139,17 +154,25 @@ namespace DungeonMadness
             foreach (var d in data.dividers)
                 foreach (var c in d.cells)
                 {
-                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? DungeonDefOf.DMAD_DungeonRubble);
-                    // A plant plug (root tangle) spawns at its starting growth, which would draw it tiny and
-                    // halve its wood; it never grows underground, so set it mature here. Its fog-holding core goes
-                    // in first: a new plant never wipes an edifice, the other way round it would.
+                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? ThingDefOf.CollapsedRocks);
+                    // A plant plug spawns at its starting growth, which would draw it tiny and shrink its yield; it
+                    // never grows underground, so set it mature here. Its fog-holding core goes in first: a new plant
+                    // never wipes an edifice, the other way round it would.
                     if (thing is Plant plant)
                     {
                         plant.Growth = 1f;
-                        if (thing is Plant_RootTangle) GenSpawn.Spawn(DungeonDefOf.DMAD_TangleCore, c, map);
+                        GenSpawn.Spawn(DungeonDefOf.DMAD_PlantCore, c, map);
                     }
-                    GenSpawn.Spawn(thing, c, map);
+                    // As a thick roof's collapse leaves them: turned at random, and already knocked about
+                    else if (thing.def == ThingDefOf.CollapsedRocks)
+                    {
+                        thing.Rotation = Rot4.Random;
+                        thing.HitPoints = Mathf.Min(CollapsedRocksHitPoints, thing.MaxHitPoints);
+                    }
+                    GenSpawn.Spawn(thing, c, map, thing.Rotation);
                 }
+            foreach (var d in data.dividers)
+                if (d.filth != null) ScatterFilth(map, layout, d);
             GenSpawn.Spawn(DungeonDefOf.DMAD_DungeonExit, exitCell, map);
             MapGenerator.PlayerStartSpot = DungeonExit.InsideCellFor(exitCell);
 

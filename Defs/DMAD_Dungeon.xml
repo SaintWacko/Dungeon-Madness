@@ -111,118 +111,19 @@
     </comps>
   </ThingDef>
 
-  <!-- Fills a passage between chambers. Full fill blocks sight, so the next chamber stays fogged until it is mined out. -->
-  <ThingDef Name="DMAD_PlugBase" ParentName="BuildingNaturalBase" Abstract="True">
-    <thingClass>Mineable</thingClass>
-    <altitudeLayer>Building</altitudeLayer>
-    <passability>Impassable</passability>
-    <blockWind>true</blockWind>
-    <castEdgeShadows>true</castEdgeShadows>
-    <fillPercent>1</fillPercent>
-    <coversFloor>true</coversFloor>
-    <neverMultiSelect>true</neverMultiSelect>
-    <rotatable>false</rotatable>
-    <holdsRoof>true</holdsRoof>
-    <staticSunShadowHeight>1</staticSunShadowHeight>
-    <blockLight>true</blockLight>
-    <mineable>true</mineable>
-    <useHitPoints>true</useHitPoints>
-    <canOverlapZones>false</canOverlapZones>
-    <statBases>
-      <MaxHitPoints>200</MaxHitPoints>
-      <Flammability>0</Flammability>
-      <Beauty>-2</Beauty>
-    </statBases>
-    <building>
-      <isInert>true</isInert>
-      <isAirtight>true</isAirtight>
-      <canBuildNonEdificesUnder>false</canBuildNonEdificesUnder>
-      <deconstructible>false</deconstructible>
-      <claimable>false</claimable>
-    </building>
-  </ThingDef>
-
-  <ThingDef ParentName="DMAD_PlugBase">
-    <defName>DMAD_DungeonRubble</defName>
-    <label>rubble</label>
-    <description>Fallen stone packed into a squeeze between caverns. It can be mined out.</description>
-    <graphicData>
-      <texPath>Things/Building/DMAD_Rubble</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-    </graphicData>
-  </ThingDef>
-
-  <ThingDef ParentName="DMAD_PlugBase">
-    <defName>DMAD_IcePlug</defName>
-    <label>ice plug</label>
-    <description>Water that seeped into a squeeze and froze solid. It can be mined out.</description>
-    <graphicData>
-      <texPath>Things/Building/DMAD_IcePlug</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-    </graphicData>
-    <statBases>
-      <MaxHitPoints>150</MaxHitPoints>
-    </statBases>
-  </ThingDef>
-
-  <!-- A plant rather than a mineable, so it is cleared with "cut" or "chop wood" by plant cutters and gives a
-       little wood. It never grows, ages, spreads, blights or dies of darkness: the generator spawns it fully grown
-       and it stays until cut or burned. Impassable like the other plugs. -->
-  <ThingDef ParentName="PlantBaseNonEdible">
-    <defName>DMAD_RootTangle</defName>
-    <thingClass>DungeonMadness.Plant_RootTangle</thingClass>
-    <label>root tangle</label>
-    <description>A knot of roots grown down from the surface, thick enough to fill a squeeze between caverns. It can be chopped out for a little wood, or burned.</description>
-    <graphicData>
-      <texPath>Things/Building/DMAD_RootTangle</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-    </graphicData>
-    <altitudeLayer>Building</altitudeLayer>
-    <selectable>true</selectable>
-    <passability>Impassable</passability>
-    <!-- Below full: only an edifice may give full cover. The DMAD_TangleCore under it blocks fog, sight and shots. -->
-    <fillPercent>0.75</fillPercent>
-    <blockWind>true</blockWind>
-    <rotatable>false</rotatable>
-    <statBases>
-      <MaxHitPoints>120</MaxHitPoints>
-      <Flammability>0.6</Flammability>
-      <BeautyOutdoors>0</BeautyOutdoors>
-    </statBases>
-    <plant>
-      <fertilityMin>0</fertilityMin>
-      <fertilitySensitivity>0</fertilitySensitivity>
-      <growDays>1</growDays>
-      <lifespanDaysPerGrowDays>0</lifespanDaysPerGrowDays>
-      <dieIfNoSunlight>false</dieIfNoSunlight>
-      <neverBlightable>true</neverBlightable>
-      <showGrowthInInspectPane>false</showGrowthInInspectPane>
-      <harvestWork>600</harvestWork>
-      <harvestedThingDef>WoodLog</harvestedThingDef>
-      <harvestYield>8</harvestYield>
-      <harvestTag>Wood</harvestTag>
-      <harvestMinGrowth>0</harvestMinGrowth>
-      <harvestFailable>false</harvestFailable>
-      <soundHarvesting>Harvest_Tree</soundHarvesting>
-      <soundHarvestFinish>Harvest_Tree_Finish</soundHarvestFinish>
-      <visualSizeRange>1~1</visualSizeRange>
-      <topWindExposure>0</topWindExposure>
-      <destroyedByFlooding>false</destroyedByFlooding>
-      <treeLoversCareIfChopped>false</treeLoversCareIfChopped>
-    </plant>
-  </ThingDef>
-
-  <!-- Invisible edifice under each root tangle. Plants are never edifices, and only an edifice stops the fog flood
-       and line of sight, so this holds the cavern behind fogged until the tangle is cleared. The tangle destroys it
-       on despawn (Plant_RootTangle). Not targetable, no hit points, nothing to select. -->
+  <!-- Invisible edifice under each plant plug (a tree, bush or cactus from the dungeon's biome). Plants are never
+       edifices, and only an edifice stops the fog flood and line of sight, so this holds the cavern behind fogged
+       until the plant is cut, chopped, eaten or burned; it goes with the plant and keeps it from rotting in the dark
+       (DungeonPlantCore). Not targetable, no hit points, nothing to select. -->
   <ThingDef ParentName="BuildingNaturalBase">
-    <defName>DMAD_TangleCore</defName>
-    <label>root tangle</label>
-    <description>The heart of a root tangle.</description>
-    <thingClass>Building</thingClass>
+    <defName>DMAD_PlantCore</defName>
+    <label>tangled growth</label>
+    <description>Growth packed tight enough to fill a squeeze between caverns.</description>
+    <thingClass>DungeonMadness.DungeonPlantCore</thingClass>
+    <tickerType>Long</tickerType>
     <drawerType>None</drawerType>
     <graphicData>
-      <texPath>Things/Building/DMAD_RootTangle</texPath>
+      <texPath>Things/Building/Natural/CollapsedRocks</texPath>
       <graphicClass>Graphic_Single</graphicClass>
     </graphicData>
     <altitudeLayer>Building</altitudeLayer>
@@ -234,6 +135,7 @@
     <rotatable>false</rotatable>
     <useHitPoints>false</useHitPoints>
     <canOverlapZones>false</canOverlapZones>
+    <filthLeaving IsNull="True" />
     <statBases>
       <Flammability>0</Flammability>
     </statBases>
@@ -244,20 +146,6 @@
       <isTargetable>false</isTargetable>
       <destroyShakeAmount>0</destroyShakeAmount>
     </building>
-  </ThingDef>
-
-  <ThingDef ParentName="DMAD_PlugBase">
-    <defName>DMAD_SandDrift</defName>
-    <label>sand drift</label>
-    <description>Sand that has poured in from above and choked a squeeze between caverns. It can be dug out.</description>
-    <graphicData>
-      <texPath>Things/Building/DMAD_SandDrift</texPath>
-      <graphicClass>Graphic_Single</graphicClass>
-    </graphicData>
-    <filthLeaving IsNull="True" />
-    <statBases>
-      <MaxHitPoints>100</MaxHitPoints>
-    </statBases>
   </ThingDef>
 
   <ThingDef ParentName="PocketMapExit">
