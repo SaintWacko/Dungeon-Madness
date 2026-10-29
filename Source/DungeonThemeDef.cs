@@ -133,7 +133,10 @@ namespace DungeonMadness
             foreach (var f in floors)
                 if (f.terrain == null && f.biomeTerrain == BiomeTerrain.None) yield return "floor patch with neither terrain nor biomeTerrain";
             foreach (var d in dividers)
+            {
                 if (d.thing != null && d.biomePlant) yield return $"divider names {d.thing.defName} and biomePlant; the thing is ignored";
+                if (d.filth != null && d.filth.filth == null) yield return $"divider filth {d.filth.defName} is not a filth def";
+            }
         }
     }
 
