@@ -14,6 +14,7 @@ namespace DungeonMadness
     {
         Level, PackSize, Occupancy, Madness, EntadChance, EntadValue, LootValue,
         Animals, Insects, Mechs, BuiltRooms, FurnishedRooms, DungeonSize, LootChance,
+        MeleeWeapons, RangedWeapons, Apparel, Furniture,
     }
 
     // How the price of each further step away from normal grows. Marginal cost of the nth step, times the base step:
@@ -73,27 +74,25 @@ namespace DungeonMadness
             InfluenceKind.Occupancy, InfluenceKind.PackSize, InfluenceKind.Madness,
             InfluenceKind.Animals, InfluenceKind.Insects, InfluenceKind.Mechs,
             InfluenceKind.LootChance, InfluenceKind.LootValue, InfluenceKind.EntadChance, InfluenceKind.EntadValue,
+            InfluenceKind.MeleeWeapons, InfluenceKind.RangedWeapons, InfluenceKind.Apparel, InfluenceKind.Furniture,
         };
 
-        /// <summary>The optional rows a tile can be dealt, one slot each; a slot with several kinds gives the tile one
-        /// of them. Level and theme are always offered and are not here. New slots go on the end so the hashes of the
-        /// old ones do not move.</summary>
-        public static readonly InfluenceKind[][] Slots =
-        {
-            new[] { InfluenceKind.PackSize },
-            new[] { InfluenceKind.Occupancy },
-            new[] { InfluenceKind.Madness },
-            new[] { InfluenceKind.EntadChance },
-            new[] { InfluenceKind.EntadValue },
-            new[] { InfluenceKind.LootValue },
-            new[] { InfluenceKind.Animals, InfluenceKind.Insects, InfluenceKind.Mechs },
-            new[] { InfluenceKind.BuiltRooms },
-            new[] { InfluenceKind.FurnishedRooms },
-            new[] { InfluenceKind.DungeonSize },
-            new[] { InfluenceKind.LootChance },
-        };
+        public static readonly InfluenceKind[] TypeRows =
+            { InfluenceKind.MeleeWeapons, InfluenceKind.RangedWeapons, InfluenceKind.Apparel, InfluenceKind.Furniture };
+
+        /// <summary>The optional rows a tile can be dealt: every row but level (level and theme are always offered).
+        /// Each row is its own card, so a creature or item type row comes up as often as any other, but a tile takes at
+        /// most one row of each group. Enum order, so a kind added on the end leaves the old cards' hashes alone.</summary>
+        public static readonly InfluenceKind[] Deck = Kinds.Where(k => k != InfluenceKind.Level).ToArray();
+
+        // Creature types and item types are exclusive groups; every other row is a group of its own
+        public static int GroupOf(InfluenceKind k) => IsCreatureRow(k) ? -1 : IsTypeRow(k) ? -2 : (int)k;
+
+        /// <summary>The most rows a tile can be dealt, one per group: the settings' row count at this means all.</summary>
+        public static readonly int GroupCount = Deck.Select(GroupOf).Distinct().Count();
 
         public static bool IsCreatureRow(InfluenceKind k) => k == InfluenceKind.Animals || k == InfluenceKind.Insects || k == InfluenceKind.Mechs;
+        public static bool IsTypeRow(InfluenceKind k) => k >= InfluenceKind.MeleeWeapons && k <= InfluenceKind.Furniture;
 
         private List<int> steps = new List<int>();
         /// <summary>The theme chosen for this visit; null keeps the tile's own.</summary>
@@ -133,7 +132,7 @@ namespace DungeonMadness
 
         /// <summary>Whether dungeons offer a subset of rows and must be attuned to first. Off when the settings
         /// offer every slot, which is stage 1's behaviour: every row everywhere and the fee on each visit.</summary>
-        public static bool UsesAttunement => DungeonsMod.Settings.influenceRowCount < Slots.Length;
+        public static bool UsesAttunement => DungeonsMod.Settings.influenceRowCount < GroupCount;
 
         public static bool NeedsAttuning(PlanetTile tile) =>
             UsesAttunement && !(DungeonWorldComponent.Instance?.IsAttuned(tile.tileId) ?? false);
@@ -150,23 +149,22 @@ namespace DungeonMadness
 
         private static bool Usable(InfluenceKind k) => DungeonsMod.Settings.InfluenceRowEnabled(k) && Available(k);
 
-        /// <summary>The rows dealt to a tile when it is attuned: the settings' count of slots, ordered by a hash of the
-        /// world, the tile and the slot, skipping slots whose rows are switched off. A slot of several kinds gives one
-        /// of them by the same kind of hash.</summary>
+        /// <summary>The rows dealt to a tile when it is attuned: the settings' count of cards from the deck, shuffled by
+        /// a hash of the world, the tile and the card, skipping rows that are switched off and rows whose group the
+        /// tile already holds.</summary>
         public static List<InfluenceKind> RollRows(PlanetTile tile)
         {
             int tileSeed = Gen.HashCombineInt(Gen.HashCombineInt(Find.World.info.Seed, tile.tileId ^ 0x1F7A), tile.Layer?.LayerID ?? 0);
-            var order = Enumerable.Range(0, Slots.Length).OrderBy(i => Gen.HashCombineInt(tileSeed, i)).ThenBy(i => i);
+            var order = Enumerable.Range(0, Deck.Length).OrderBy(i => Gen.HashCombineInt(tileSeed, i)).ThenBy(i => i);
             var rows = new List<InfluenceKind>();
+            var groups = new HashSet<int>();
             int want = DungeonsMod.Settings.influenceRowCount;
             foreach (int i in order)
             {
                 if (rows.Count >= want) break;
-                var slot = Slots[i];
-                var usable = slot.Where(Usable).ToList();
-                if (usable.Count == 0) continue;
-                var pick = slot[(Gen.HashCombineInt(tileSeed, i ^ 0x2C3B) & int.MaxValue) % slot.Length];
-                rows.Add(usable.Contains(pick) ? pick : usable[(Gen.HashCombineInt(tileSeed, i ^ 0x4D5E) & int.MaxValue) % usable.Count]);
+                var k = Deck[i];
+                if (!Usable(k) || !groups.Add(GroupOf(k))) continue;
+                rows.Add(k);
             }
             return rows;
         }
@@ -225,6 +223,13 @@ namespace DungeonMadness
         public float BuiltChance(float normal) => Chance(normal, InfluenceKind.BuiltRooms);
         public float FurnishedChance(float normal) => Chance(normal, InfluenceKind.FurnishedRooms);
         public float LootChance(float normal) => Chance(normal, InfluenceKind.LootChance);
+
+        /// <summary>How many times as likely an item type is as normal, for entads and ordinary loot alike; 0 at the
+        /// bottom, which means never.</summary>
+        public float TypeFactor(InfluenceKind k) => Mathf.Max(0f, 1f + this[k] * ValueStep);
+        public bool AnyTypeSteps => TypeRows.Any(k => this[k] != 0);
+        /// <summary>Paying for more furniture guarantees a furnished room, the only place entad furniture can be.</summary>
+        public bool NeedsFurnishedRoom => this[InfluenceKind.Furniture] > 0;
         /// <summary>No upper bound: the player paid for it. Never below the smallest dungeon.</summary>
         public IntVec3 MapSize(IntVec3 normal)
         {
@@ -292,6 +297,10 @@ namespace DungeonMadness
                 case InfluenceKind.DungeonSize:
                     return new IntRange(-Mathf.CeilToInt((NormalSide(t) - DungeonEntry.MinMapSize) / (float)SizeStep), MaxSteps);
                 case InfluenceKind.LootChance: return ChanceLimits(s.lootChance);
+                case InfluenceKind.MeleeWeapons:
+                case InfluenceKind.RangedWeapons:
+                case InfluenceKind.Apparel:
+                case InfluenceKind.Furniture: return new IntRange(-Mathf.RoundToInt(1f / ValueStep), MaxSteps);
                 default: return new IntRange(0, MaxSteps); // entad value, loot value
             }
         }
@@ -384,7 +393,10 @@ namespace DungeonMadness
                 case InfluenceKind.DungeonSize:
                     int side = MapSize(new IntVec3(NormalSide(t), 1, NormalSide(t))).x;
                     return side + "x" + side;
-                default: return LootChance(s.lootChance).ToStringPercent();
+                case InfluenceKind.LootChance: return LootChance(s.lootChance).ToStringPercent();
+                default:
+                    if (TypeFactor(k) <= 0f) return "DMAD_Influence_Never".Translate();
+                    return (this[k] > 0 ? "+" : "") + (this[k] * ValueStep).ToStringPercent();
             }
         }
 

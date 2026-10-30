@@ -60,7 +60,7 @@ namespace DungeonMadness
             Rand.PushState(site != null && site.layoutSeed != 0 ? site.layoutSeed : Rand.Int);
             try
             {
-                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, map.Biome, builtChance);
+                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, map.Biome, builtChance, influence.NeedsFurnishedRoom);
                 if (site != null) site.layout = layout.data;
                 Dress(map, layout, theme, rocks, info);
                 if (Prefs.DevMode)
@@ -140,7 +140,8 @@ namespace DungeonMadness
             // ---- Structure. The map generator has already put thick rock roof everywhere (isUnderground).
             // Walls touching a furnished room carry power, so its lights and heaters run (and anything the party
             // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
-            var furnishedIds = AssignUses(layout, DungeonInfluence.Of(map).FurnishedChance(Mathf.Clamp01(theme.furnishedChance)));
+            var influence = DungeonInfluence.Of(map);
+            var furnishedIds = AssignUses(layout, influence.FurnishedChance(Mathf.Clamp01(theme.furnishedChance)), influence.NeedsFurnishedRoom);
             IntVec3 exitCell = data.exitCell;
             var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.DMAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
@@ -191,22 +192,37 @@ namespace DungeonMadness
         }
 
         /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at
-        /// least 5x5 inside can be furnished, and never the entrance room.</summary>
-        static HashSet<int> AssignUses(DungeonLayoutResult layout, float furnishedChance)
+        /// least 5x5 inside can be furnished, and never the entrance room. needOne: when the roll furnishes none, one
+        /// that can be is furnished anyway.</summary>
+        static HashSet<int> AssignUses(DungeonLayoutResult layout, float furnishedChance, bool needOne)
         {
             var ids = new HashSet<int>();
             bool force = DungeonDebugActions.forceFurnished;
+            var eligible = new List<DungeonChamber>();
+            var interiors = new List<CellRect>();
             foreach (var ch in layout.data.chambers)
             {
                 if (ch.Cave) continue;
                 ch.use = RoomUse.Ruin;
                 if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
                 if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
+                eligible.Add(ch);
+                interiors.Add(r);
                 if (!force && !Rand.Chance(furnishedChance)) continue;
-                ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
-                ids.Add(ch.id);
+                Furnish(ch, r, ids);
+            }
+            if (needOne && ids.Count == 0 && eligible.Count > 0)
+            {
+                int i = Rand.Range(0, eligible.Count);
+                Furnish(eligible[i], interiors[i], ids);
             }
             return ids;
+        }
+
+        static void Furnish(DungeonChamber ch, CellRect r, HashSet<int> ids)
+        {
+            ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
+            ids.Add(ch.id);
         }
 
         /// <summary>The bounding box of a built room's floor, when that box is all floor (a plain rectangle).</summary>

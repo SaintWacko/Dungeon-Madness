@@ -221,7 +221,7 @@ namespace DungeonMadness
             Scribe_Values.Look(ref influenceFeeSteps, "influenceFeeSteps", DefaultInfluenceFeeSteps);
             influenceFeeSteps = Mathf.Clamp(influenceFeeSteps, 0, 20);
             Scribe_Values.Look(ref influenceRowCount, "influenceRowCount", DefaultInfluenceRowCount);
-            influenceRowCount = Mathf.Clamp(influenceRowCount, 0, DungeonInfluence.Slots.Length);
+            influenceRowCount = Mathf.Clamp(influenceRowCount, 0, DungeonInfluence.GroupCount);
             Scribe_Values.Look(ref influenceThemeSteps, "influenceThemeSteps", DefaultInfluenceThemeSteps);
             influenceThemeSteps = Mathf.Clamp(influenceThemeSteps, 0, 30);
             Scribe_Values.Look(ref influenceTheme, "influenceTheme", true);

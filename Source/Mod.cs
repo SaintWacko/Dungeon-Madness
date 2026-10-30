@@ -215,7 +215,7 @@ namespace DungeonMadness
             list.Gap();
 
             Section(list, "DMAD_Settings_InfluenceRows");
-            int slots = DungeonInfluence.Slots.Length;
+            int slots = DungeonInfluence.GroupCount;
             list.Label("DMAD_Settings_InfluenceRowCount".Translate(s.influenceRowCount >= slots
                 ? "DMAD_Settings_InfluenceRowCount_All".Translate().ToString() : s.influenceRowCount.ToString()));
             s.influenceRowCount = Mathf.RoundToInt(list.Slider(s.influenceRowCount, 0f, slots));

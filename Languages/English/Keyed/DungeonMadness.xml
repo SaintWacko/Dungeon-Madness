@@ -291,6 +291,16 @@ The colony has {2} verity.</DMAD_Attune_Confirm>
   <DMAD_Influence_Row_DungeonSize_Tip>The map's side length, 5 cells a step. A bigger dungeon has more chambers, so more packs and more loot. Very large maps take longer to generate and run slower.</DMAD_Influence_Row_DungeonSize_Tip>
   <DMAD_Influence_Row_LootChance>Loot chance</DMAD_Influence_Row_LootChance>
   <DMAD_Influence_Row_LootChance_Tip>Chance each chamber other than the entrance has a loot pile.</DMAD_Influence_Row_LootChance_Tip>
+  <DMAD_Influence_Row_MeleeWeapons>Melee weapons</DMAD_Influence_Row_MeleeWeapons>
+  <DMAD_Influence_Row_MeleeWeapons_Tip>How likely an entad, or an item in a loot pile, is to be a melee weapon, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_MeleeWeapons_Tip>
+  <DMAD_Influence_Row_RangedWeapons>Ranged weapons</DMAD_Influence_Row_RangedWeapons>
+  <DMAD_Influence_Row_RangedWeapons_Tip>How likely an entad, or an item in a loot pile, is to be a ranged weapon, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_RangedWeapons_Tip>
+  <DMAD_Influence_Row_Apparel>Apparel</DMAD_Influence_Row_Apparel>
+  <DMAD_Influence_Row_Apparel_Tip>How likely an entad, or an item in a loot pile, is to be apparel, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_Apparel_Tip>
+  <DMAD_Influence_Row_Furniture>Furniture</DMAD_Influence_Row_Furniture>
+  <DMAD_Influence_Row_Furniture_Tip>How likely an entad, or an item in a loot pile, is to be furniture, compared with normal. Each step adds or takes away 10%; at -100% none appear. Entad furniture only appears in furnished rooms, so raising this guarantees the dungeon at least one.</DMAD_Influence_Row_Furniture_Tip>
+  <DMAD_Influence_TypeNote>than normal</DMAD_Influence_TypeNote>
+  <DMAD_Influence_Never>never</DMAD_Influence_Never>
 
   <DMAD_Tab_Influence>Influence</DMAD_Tab_Influence>
   <DMAD_Settings_InfluenceEnabled>Allow influencing dungeons</DMAD_Settings_InfluenceEnabled>
@@ -309,6 +319,6 @@ The colony has {2} verity.</DMAD_Attune_Confirm>
   <DMAD_Settings_InfluenceRows_Desc>Which influences can be offered. A dungeon attuned before a row was switched on does not gain it; one switched off is hidden everywhere.</DMAD_Settings_InfluenceRows_Desc>
   <DMAD_Settings_InfluenceRowCount>Influences per dungeon: {0}</DMAD_Settings_InfluenceRowCount>
   <DMAD_Settings_InfluenceRowCount_All>all</DMAD_Settings_InfluenceRowCount_All>
-  <DMAD_Settings_InfluenceRowCount_Desc>Besides level and theme, each dungeon offers this many influences, fixed for its tile. The colony pays the influence fee once to attune to a dungeon, which reveals them for good. At "all", every dungeon offers every influence, nothing is attuned, and the fee is paid on each influenced visit instead. Dungeons already attuned keep the influences they were given.</DMAD_Settings_InfluenceRowCount_Desc>
+  <DMAD_Settings_InfluenceRowCount_Desc>Besides level and theme, each dungeon offers this many influences, fixed for its tile, and at most one creature type and one item type among them. The colony pays the influence fee once to attune to a dungeon, which reveals them for good. At "all", every dungeon offers every influence, nothing is attuned, and the fee is paid on each influenced visit instead. Dungeons already attuned keep the influences they were given.</DMAD_Settings_InfluenceRowCount_Desc>
   <DMAD_Settings_InfluenceFee_Desc>Paid once to attune to a dungeon, or on each influenced visit when every dungeon offers every influence.</DMAD_Settings_InfluenceFee_Desc>
 </LanguageData>

@@ -39,7 +39,11 @@ namespace DungeonMadness
         public float LootValueFactor => influence.LootValueFactor;
         // Entad furniture made while rooms were still being furnished, set up once they all are
         private readonly List<Thing> furnitureQueue = new List<Thing>();
-        private EntadItemRequest request;
+        // Keyed by item type, or by -1 for no type and -2 for any type the influence has not ruled out
+        private readonly Dictionary<int, EntadItemRequest> requests = new Dictionary<int, EntadItemRequest>();
+        // How likely an entad is to be of each type once the item type rows have weighed in: the normal candidate
+        // count times the row's factor
+        private Dictionary<InfluenceKind, float> entadTypeWeights;
         // Every entad made here, so setting up furniture never replaces or wipes one
         private readonly HashSet<Thing> entads = new HashSet<Thing>();
 
@@ -91,25 +95,75 @@ namespace DungeonMadness
             return true;
         }
 
-        EntadItemRequest Request()
+        /// <summary>The item type rows' type of a def: a weapon by how it attacks, apparel, or a building (furniture,
+        /// minified or not). Null for everything else, which the rows leave alone.</summary>
+        public static InfluenceKind? ItemTypeOf(ThingDef d)
         {
-            if (request != null) return request;
+            if (d == null) return null;
+            if (d.IsWeapon) return d.IsRangedWeapon ? InfluenceKind.RangedWeapons : InfluenceKind.MeleeWeapons;
+            if (d.IsApparel) return InfluenceKind.Apparel;
+            if (d.category == ThingCategory.Building) return InfluenceKind.Furniture;
+            return null;
+        }
+
+        static ThingDef ItemDefOf(Thing t) => (t as MinifiedThing)?.InnerThing?.def ?? t.def;
+
+        float TypeFactor(Thing t)
+        {
+            var k = ItemTypeOf(ItemDefOf(t));
+            return k == null ? 1f : influence.TypeFactor(k.Value);
+        }
+
+        // type: one item type only; null: what the dungeon allows; anyAllowed: every type the influence left a chance
+        EntadItemRequest Request(InfluenceKind? type = null, bool anyAllowed = false)
+        {
+            int key = type.HasValue ? (int)type.Value : anyAllowed ? -2 : -1;
+            if (requests.TryGetValue(key, out var request)) return request;
             TechLevel tech = Tech;
             bool furniture = furnitureAllowed;
+            var inf = influence;
             request = new EntadItemRequest
             {
                 kinds = furniture ? EntadItemKind.All : EntadItemKind.Weapon | EntadItemKind.Apparel,
                 thingPredicate = d => (d.techLevel == TechLevel.Undefined || d.techLevel <= tech)
-                    && (d.category != ThingCategory.Building || (furniture && FurnitureFits(d))),
+                    && (d.category != ThingCategory.Building || (furniture && FurnitureFits(d)))
+                    && (type == null && !anyAllowed
+                        || ItemTypeOf(d) is InfluenceKind k && (type.HasValue ? k == type.Value : inf.TypeFactor(k) > 0f)),
             };
+            requests[key] = request;
             return request;
+        }
+
+        /// <summary>The item type an entad is made as: weighted by how many items of each type could be one, times the
+        /// influence's factor, so +30% melee weapons makes a melee entad 1.3 times as likely as it would have been.
+        /// Null when every type is ruled out.</summary>
+        InfluenceKind? RollEntadType()
+        {
+            if (entadTypeWeights == null)
+            {
+                entadTypeWeights = DungeonInfluence.TypeRows.ToDictionary(k => k, k => 0f);
+                foreach (var d in EntadApi.GetCandidateItemDefs(Request()))
+                    if (ItemTypeOf(d) is InfluenceKind k) entadTypeWeights[k] += 1f;
+                foreach (var k in DungeonInfluence.TypeRows) entadTypeWeights[k] *= influence.TypeFactor(k);
+            }
+            if (!entadTypeWeights.Values.Any(w => w > 0f)) return null;
+            return entadTypeWeights.Keys.RandomElementByWeight(k => entadTypeWeights[k]);
         }
 
         /// <summary>An unspawned entad at this dungeon's level, registered to be bound on the way out; null when no
         /// item fits.</summary>
         public Thing MakeEntad()
         {
-            Thing t = EntadApi.GenerateEntadItem(DungeonsMod.Settings.entadPointsPerLevel * level * influence.EntadValueFactor, Request());
+            float points = DungeonsMod.Settings.entadPointsPerLevel * level * influence.EntadValueFactor;
+            Thing t;
+            if (!influence.AnyTypeSteps) t = EntadApi.GenerateEntadItem(points, Request());
+            else
+            {
+                var type = RollEntadType();
+                if (type == null) return null;
+                // No item of the rolled type took a trait at these points: any type the influence allows
+                t = EntadApi.GenerateEntadItem(points, Request(type)) ?? EntadApi.GenerateEntadItem(points, Request(anyAllowed: true));
+            }
             if (t != null)
             {
                 site?.RegisterEntad(t);
@@ -157,13 +211,64 @@ namespace DungeonMadness
             if (funded.Count == 0 || total <= 0f) return;
 
             float rollValue = Mathf.Max(1f, DungeonsMod.Settings.lootRollValuePerLevel * level);
+            var goods = new List<Thing>();
+            int rolls = Roll(total, slots, rollValue, goods);
+            float each = total / rolls;
+            int rejected = 0;
+
+            // Item type rows, by rejection: each item is kept at its type's factor over the largest factor, and what
+            // is thrown back is rolled again. Kept odds then go as the factors, whatever vanilla's own odds were. A
+            // few passes only; the last keeps everything not ruled out, so at extreme factors the bias falls a little
+            // short rather than generation running long.
+            if (influence.AnyTypeSteps)
+            {
+                float top = Mathf.Max(1f, DungeonInfluence.TypeRows.Max(k => influence.TypeFactor(k)));
+                var batch = goods;
+                goods = new List<Thing>();
+                for (int pass = 0; batch.Count > 0; pass++)
+                {
+                    bool last = pass >= TypeRerollPasses;
+                    float thrown = 0f;
+                    foreach (var t in batch)
+                    {
+                        float f = TypeFactor(t);
+                        if (f > 0f && (last || Rand.Chance(f / top))) { goods.Add(t); continue; }
+                        thrown += t.MarketValue * t.stackCount;
+                        rejected++;
+                        t.Destroy();
+                    }
+                    batch = new List<Thing>();
+                    if (last || thrown < total * 0.05f) break;
+                    Roll(thrown, Mathf.Max(1, Mathf.RoundToInt(slots * thrown / total)), rollValue, batch);
+                }
+            }
+
+            foreach (var t in goods.OrderByDescending(t => t.MarketValue * t.stackCount))
+            {
+                var pile = funded.MaxBy(p => p.budget - p.given);
+                pile.things.Add(t);
+                pile.given += t.MarketValue * t.stackCount;
+            }
+
+            if (Prefs.DevMode)
+                Log.Message($"[Dungeon Madness] Loot: {piles.Count} piles, {total:0} silver in {rolls} rolls of about {each:0}" +
+                    (rejected > 0 ? $", {rejected} items rerolled for item type influence" : "") + ": " +
+                    string.Join(", ", goods.Select(t => t.LabelCap)));
+        }
+
+        // Rolls after the first made by the item type rows; the pass after them keeps what it gets
+        const int TypeRerollPasses = 4;
+
+        /// <summary>Vanilla's standard rewards worth about `total`, in rolls of at most `rollValue` each, added to
+        /// `goods`; returns the number of rolls.</summary>
+        int Roll(float total, int slots, float rollValue, List<Thing> goods)
+        {
             // Rounded up, so a roll is never over the cap. No more rolls than slots, which keeps generation to what
             // per-pile rolls cost; only a roll setting far below the pile value then leaves some value unrolled.
             int rolls = Mathf.Clamp(Mathf.CeilToInt(total / rollValue), 1, slots);
             float each = total / rolls;
             var range = new FloatRange(Mathf.Min(each * 0.8f, rollValue * 0.8f), Mathf.Min(each * 1.2f, rollValue));
             TechLevel tech = Tech;
-            var goods = new List<Thing>();
             for (int r = 0; r < rolls; r++)
             {
                 int count = Mathf.Max(1, slots * (r + 1) / rolls - slots * r / rolls);
@@ -175,17 +280,7 @@ namespace DungeonMadness
                 };
                 goods.AddRange(ThingSetMakerDefOf.Reward_ItemsStandard.root.Generate(parms));
             }
-
-            foreach (var t in goods.OrderByDescending(t => t.MarketValue * t.stackCount))
-            {
-                var pile = funded.MaxBy(p => p.budget - p.given);
-                pile.things.Add(t);
-                pile.given += t.MarketValue * t.stackCount;
-            }
-
-            if (Prefs.DevMode)
-                Log.Message($"[Dungeon Madness] Loot: {piles.Count} piles, {total:0} silver in {rolls} rolls of about {each:0}: " +
-                    string.Join(", ", goods.Select(t => t.LabelCap)));
+            return rolls;
         }
 
         /// <summary>Fills every bookcase standing in a furnished room with books: half full to full, quality rising

@@ -186,6 +186,8 @@ namespace DungeonMadness
             public int id, x, z, hw, hh;
             public float r;
             public bool built;
+            // Stamped as a plain rectangle, so it can be furnished
+            public bool furnishable;
             public RoomShape shape = RoomShape.Cave;
             public List<int> border = new List<int>();
         }
@@ -198,6 +200,7 @@ namespace DungeonMadness
         readonly DungeonThemeDef theme;
         readonly BiomeDef biome;
         readonly float builtChance;
+        readonly bool needFurnishable;
         readonly bool[] open, keep, locked, exitMask;
         readonly int[] owner, built;
         readonly CellFeature[] feature;
@@ -212,13 +215,14 @@ namespace DungeonMadness
         readonly int[] cameFrom, visitStamp;
         int stamp;
 
-        DungeonLayoutGenerator(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance)
+        DungeonLayoutGenerator(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance, bool needFurnishable)
         {
             n = size;
             s = size / 100f;
             this.theme = theme;
             this.biome = biome;
             this.builtChance = builtChance;
+            this.needFurnishable = needFurnishable;
             int len = n * n;
             open = new bool[len]; keep = new bool[len]; locked = new bool[len]; exitMask = new bool[len];
             owner = new int[len]; built = new int[len];
@@ -227,9 +231,11 @@ namespace DungeonMadness
             for (int i = 0; i < len; i++) { owner[i] = -1; built[i] = -1; }
         }
 
-        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance)
+        /// <summary>needFurnishable: at least one room other than the entrance is a built rectangle that can be
+        /// furnished, whatever the built chance (an influence paid for entad furniture).</summary>
+        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance, bool needFurnishable = false)
         {
-            return new DungeonLayoutGenerator(size, theme, biome, builtChance).Build();
+            return new DungeonLayoutGenerator(size, theme, biome, builtChance, needFurnishable).Build();
         }
 
         int I(int x, int z) => z * n + x;
@@ -274,6 +280,13 @@ namespace DungeonMadness
                 if (Fits(x, z, r)) ch.Add(new Proto { id = ch.Count, x = x, z = z, r = r, built = b });
                 else fails++;
             }
+            if (needFurnishable && ch.Count > 1)
+            {
+                var pick = ch.Where(c => c.id != 0 && c.built).RandomElementWithFallback() ?? ch.Where(c => c.id != 0).RandomElement();
+                pick.built = true;
+                pick.furnishable = true;
+                pick.r = Mathf.Min(pick.r, Mathf.Max(6f, 10f * s));
+            }
         }
 
         bool Fits(int x, int z, float r)
@@ -289,6 +302,7 @@ namespace DungeonMadness
             c.hw = Mathf.Max(3, Mathf.RoundToInt(c.r * Rand.Range(0.7f, 1f)));
             c.hh = Mathf.Max(3, Mathf.RoundToInt(c.r * Rand.Range(0.7f, 1f)));
             if (c.id == 0) c.shape = RoomShape.Hall;
+            else if (c.furnishable) c.shape = RoomShape.Rect;
             else if (theme.cryptRooms) c.shape = Pick((RoomShape.Hall, 2f), (RoomShape.Rect, 2f), (RoomShape.Cross, 1f));
             else c.shape = Pick((RoomShape.Rect, 2f), (RoomShape.Hall, 1.5f), (RoomShape.Round, 1f), (RoomShape.L, 1.5f), (RoomShape.Cross, 1f));
             int fx = Rand.Bool ? 1 : -1, fz = Rand.Bool ? 1 : -1;
