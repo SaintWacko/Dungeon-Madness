@@ -191,7 +191,7 @@ namespace DungeonMadness
                 GUI.color = ColoredText.SubtleGrayColor;
                 string normal = k == InfluenceKind.PackSize
                     ? "DMAD_Influence_PackNote".Translate().ToString()
-                    : DungeonInfluence.IsTypeRow(k) ? "DMAD_Influence_TypeNote".Translate().ToString()
+                    : DungeonInfluence.IsTypeRow(k) ? (influence.TypeFactor(k) > 0f ? "DMAD_Influence_TypeNote".Translate().ToString() : "")
                     : "DMAD_Influence_Normal".Translate(influence.NormalText(k, target)).ToString();
                 Widgets.Label(new Rect(v.x, v.y + 20f, v.width, 16f), normal);
                 int away = Mathf.Abs(cur) + 1;

@@ -211,10 +211,14 @@ namespace DungeonMadness
                 if (!force && !Rand.Chance(furnishedChance)) continue;
                 Furnish(ch, r, ids);
             }
-            if (needOne && ids.Count == 0 && eligible.Count > 0)
+            if (needOne && ids.Count == 0)
             {
-                int i = Rand.Range(0, eligible.Count);
-                Furnish(eligible[i], interiors[i], ids);
+                if (eligible.Count > 0)
+                {
+                    int i = Rand.Range(0, eligible.Count);
+                    Furnish(eligible[i], interiors[i], ids);
+                }
+                else if (Prefs.DevMode) Log.Warning("[Dungeon Madness] Furniture influence paid for, but no room could be furnished.");
             }
             return ids;
         }
