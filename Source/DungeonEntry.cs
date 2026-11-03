@@ -68,7 +68,6 @@ namespace DungeonMadness
         public static float WealthMultiplier(float wealth) => 1f + wealth / DungeonsMod.Settings.wealthToDouble;
         public static float EffectiveLevel(int level, float wealth) => level * WealthMultiplier(wealth);
 
-        /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
         /// <summary>The colony's prisoners in this caravan, including any stowed in a pawn's inventory (Vehicle
         /// Framework cargo). Prisoners never enter a dungeon: a humanlike going in has to count toward the party cap.</summary>
         public static List<Pawn> Prisoners(Caravan caravan)
@@ -81,6 +80,7 @@ namespace DungeonMadness
             return list;
         }
 
+        /// <summary>Whether someone able to lead the caravan stays outside when these pawns go in.</summary>
         public static bool AnyoneStaysOutside(Caravan caravan, ICollection<Pawn> party) =>
             caravan.PawnsListForReading.Any(p => !party.Contains(p) && CaravanUtility.IsOwner(p, Faction.OfPlayer) && !p.Downed);
 
@@ -89,11 +89,25 @@ namespace DungeonMadness
         /// items with how many of each go in. When nobody able stays outside, every pawn goes in and the items
         /// left behind wait in the site's stash for the party to come back out.
         /// </summary>
-        public static void Enter(Caravan caravan, List<Pawn> party, List<TransferableOneWay> itemTransferables)
+        // Only when a VF call throws: the dialog already refuses a rider when VF's RemovePawn cannot be found
+        static List<Pawn> StayAboard(List<Pawn> party, List<Pawn> stuck)
+        {
+            Messages.Message("DMAD_Enter_StayedAboard".Translate(stuck.Select(p => p.LabelShort).ToCommaList(useAnd: true)),
+                MessageTypeDefOf.NegativeEvent, false);
+            return party.Except(stuck).ToList();
+        }
+
+        public static void Enter(Caravan caravan, List<Pawn> party, List<TransferableOneWay> itemTransferables, DungeonInfluence influence = null)
         {
             PlanetTile tile = caravan.Tile;
-            if (!CanEnterAt(tile, out int level).Accepted) return;
+            if (!CanEnterAt(tile, out int baseLevel).Accepted) return;
             float wealth = PartyWealth(party);
+            // Influence was paid for by the dialog just before this; the level row moves the dungeon's own level, so
+            // map size, the wealth multiplier and everything after it see the influenced one
+            var target = new InfluenceTarget(tile, baseLevel);
+            if (influence != null && !influence.Any(target.normalTheme)) influence = null;
+            int level = influence?.Level(baseLevel) ?? baseLevel;
+            IntVec3 size = influence?.MapSize(MapSizeFor(level)) ?? MapSizeFor(level);
 
             LongEventHandler.QueueLongEvent(() =>
             {
@@ -101,13 +115,37 @@ namespace DungeonMadness
                 site.Tile = tile;
                 site.SetFaction(null);
                 site.level = level;
+                site.baseLevel = baseLevel;
+                site.influence = influence;
+                // GenStep_DungeonLayout keeps a theme already on the site
+                if (influence?.theme != null) site.theme = influence.theme;
                 site.partyWealth = wealth;
                 site.effectiveLevel = EffectiveLevel(level, wealth);
                 site.layoutSeed = Rand.Int | 1;
                 // Doors are made without a faction, which animals cannot open; the party's animals must follow it
                 site.doorsAlwaysOpenForPlayerPawns = true;
                 Find.WorldObjects.Add(site);
-                Map map = MapGenerator.GenerateMap(MapSizeFor(level), site, site.MapGeneratorDef);
+                // Generation failing leaves the party in its caravan (nobody has moved yet) and refunds the influence.
+                // Vanilla catches and logs a GenStep's exception itself and returns a half-built map, so a missing
+                // map with no exit counts as failure too. (A throw later, in loot or creatures, still leaves a playable
+                // dungeon with a way out, and the party goes in.)
+                Map map = null;
+                System.Exception error = null;
+                try { map = MapGenerator.GenerateMap(size, site, site.MapGeneratorDef); }
+                catch (System.Exception e) { error = e; }
+                if (error != null || site.layout == null || map == null || !map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).Any())
+                {
+                    Log.Error("[Dungeon Madness] Generating the dungeon failed; the party stays outside." + (error != null ? " " + error : ""));
+                    if (influence != null)
+                        EntadFramework.EntadApi.AddVerity(influence.TotalCost(target));
+                    // Nobody went in, so removing the half-built map must not read as the party lost inside
+                    site.Notify_PawnLeft();
+                    try { if (site.HasMap) Current.Game.DeinitAndRemoveMap(site.Map, false); }
+                    catch (System.Exception e) { Log.Error("[Dungeon Madness] Removing the failed dungeon map: " + e); }
+                    if (!site.Destroyed) site.Destroy();
+                    Messages.Message("DMAD_Enter_GenerationFailed".Translate(), MessageTypeDefOf.RejectInput, false);
+                    return;
+                }
 
                 bool everyone = !AnyoneStaysOutside(caravan, party);
                 Caravan partyCaravan;
@@ -148,7 +186,9 @@ namespace DungeonMadness
                     foreach (var v in vehicles)
                         foreach (var stowed in v.inventory.innerContainer.OfType<Pawn>().ToList())
                             if (!party.Contains(stowed) && !stowed.IsPrisonerOfColony) party.Add(stowed);
-                    VehicleCompat.Disembark(caravan, party);
+                    // A rider VF would not let off stays with the vehicles, in the stash
+                    var stuck = VehicleCompat.Disembark(caravan, party);
+                    if (stuck.Count > 0) party = StayAboard(party, stuck);
                     // People before vehicles: VF converts or destroys a vehicle caravan as its last vehicle leaves, and
                     // destroys any vehicle still in one that is destroyed
                     foreach (var p in party) caravan.RemovePawn(p);
@@ -169,7 +209,8 @@ namespace DungeonMadness
                     // Vanilla's caravan split (Dialog_SplitCaravan.TrySplitCaravan). Vehicles stay outside; anyone going
                     // in who rides one gets off first, since the caravan does not hold them.
                     foreach (var p in party) CaravanInventoryUtility.MoveAllInventoryToSomeoneElse(p, caravan.PawnsListForReading, party);
-                    VehicleCompat.Disembark(caravan, party);
+                    var stuck = VehicleCompat.Disembark(caravan, party);
+                    if (stuck.Count > 0) party = StayAboard(party, stuck);
                     foreach (var p in party) caravan.RemovePawn(p);
                     partyCaravan = CaravanMaker.MakeCaravan(party, Faction.OfPlayer, tile, addToWorldPawnsIfNotAlready: true);
                     foreach (var tr in itemTransferables)
@@ -193,7 +234,10 @@ namespace DungeonMadness
                 CaravanEnterMapUtility.Enter(partyCaravan, map, p => CellFinder.RandomClosewalkCellNear(entrance, map, 4),
                     CaravanDropInventoryMode.DoNotDrop, draftColonists: false);
                 CameraJumper.TryJump(entrance, map);
-                Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#")),
+                string text = "DMAD_Entered_Text".Translate(level, site.effectiveLevel.ToString("0.#"));
+                if (influence != null)
+                    text += "\n\n" + "DMAD_Entered_Influenced".Translate() + "\n" + string.Join("\n", influence.Describe(target).Select(l => "  - " + l));
+                Find.LetterStack.ReceiveLetter("DMAD_Entered_Label".Translate(), text,
                     LetterDefOf.NeutralEvent, new LookTargets(entrance, map));
             }, "GeneratingMapForNewEncounter", false, null);
         }

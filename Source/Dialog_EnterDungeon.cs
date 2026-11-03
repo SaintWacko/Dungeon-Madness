@@ -26,6 +26,10 @@ namespace DungeonMadness
 
         private readonly Caravan caravan;
         private readonly int level;
+        // Verity to spend on this visit, edited by Dialog_InfluenceDungeon and paid on entry. Kept through Reset.
+        private readonly DungeonInfluence influence = new DungeonInfluence();
+        private readonly InfluenceTarget target;
+        private DungeonThemeDef NormalTheme => target.normalTheme;
         private List<TransferableOneWay> transferables;
         private TransferableOneWayWidget pawnsTransfer, itemsTransfer, suppliesTransfer;
         private Tab tab;
@@ -45,6 +49,7 @@ namespace DungeonMadness
         {
             this.caravan = caravan;
             this.level = level;
+            target = new InfluenceTarget(caravan.Tile, level);
             forcePause = true;
             absorbInputAroundWindow = true;
         }
@@ -295,14 +300,28 @@ namespace DungeonMadness
             int cap = DungeonsMod.Settings.maxPartySize;
             int people = DungeonEntry.HumanlikeCount(party);
             float mult = DungeonEntry.WealthMultiplier(wealth);
+            // What Enter will charge: rows switched off in the settings since the Influence screen closed are dropped
+            if (DungeonsMod.Settings.influenceEnabled) influence.Restrict(target);
+            bool influenced = DungeonsMod.Settings.influenceEnabled && influence.Any(NormalTheme);
+            int lvl = influenced ? influence.Level(level) : level;
             partyExtra.Clear();
             partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_People".Translate(), people + " / " + cap,
                 people > cap ? ColorLibrary.RedReadable : Color.white, "DMAD_Enter_People_Tip".Translate(cap)));
             partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_Wealth".Translate(), wealth.ToStringMoney(), Color.white,
                 "DMAD_Enter_Wealth_Tip".Translate()));
+            string effTip = "DMAD_Enter_Effective_Tip".Translate(lvl, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney());
+            if (influenced)
+                effTip += "\n\n" + "DMAD_Enter_Influenced_Tip".Translate() + "\n" + string.Join("\n", influence.Describe(target).Select(l => "  - " + l));
             partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_Effective".Translate(),
-                (level * mult).ToString("0.#") + " (x" + mult.ToString("0.00") + ")", Color.white,
-                "DMAD_Enter_Effective_Tip".Translate(level, wealth.ToStringMoney(), mult.ToString("0.00"), DungeonsMod.Settings.wealthToDouble.ToStringMoney())));
+                (lvl * mult).ToString("0.#") + " (x" + mult.ToString("0.00") + ")" + (influenced ? "*" : ""),
+                influenced ? ColoredText.ImpactColor : Color.white, effTip));
+            if (influenced)
+            {
+                long cost = influence.TotalCost(target);
+                partyExtra.Add(new TransferableUIUtility.ExtraInfo("DMAD_Enter_Influence".Translate(), cost.ToString(),
+                    cost > EntadFramework.EntadApi.Verity + 0.0001f ? ColorLibrary.RedReadable : Color.white,
+                    "DMAD_Enter_Influence_Tip".Translate(cost, EntadFramework.EntadApi.Verity.ToString("0.#"))));
+            }
             TransferableUIUtility.DrawExtraInfo(partyExtra, new Rect(partyRow.x + col * 2f, partyRow.y, col * 3f, RowHeight));
             GenUI.ResetLabelAlign();
             GUI.color = Color.white;
@@ -333,13 +352,59 @@ namespace DungeonMadness
                 SoundDefOf.Tick_High.PlayOneShotOnCamera();
                 Close(doCloseSound: false);
             }
-            if (Widgets.ButtonText(new Rect(accept.x - 10f - ButtonSize.x, accept.y, ButtonSize.x, ButtonSize.y), "ResetButton".Translate()))
+            var resetRect = new Rect(accept.x - 10f - ButtonSize.x, accept.y, ButtonSize.x, ButtonSize.y);
+            if (Widgets.ButtonText(resetRect, "ResetButton".Translate()))
             {
                 SoundDefOf.Tick_Low.PlayOneShotOnCamera();
                 Recache();
             }
+            if (DungeonsMod.Settings.influenceEnabled)
+            {
+                // Right of Cancel
+                var infRect = new Rect(accept.xMax + 20f + ButtonSize.x, accept.y, ButtonSize.x, ButtonSize.y);
+                string verity = EntadFramework.EntadApi.Verity.ToString("0.#");
+                if (DungeonInfluence.NeedsAttuning(caravan.Tile))
+                {
+                    long fee = DungeonInfluence.Fee(target.BaseStep);
+                    TooltipHandler.TipRegion(infRect, "DMAD_AttuneButton_Tip".Translate(fee, DungeonsMod.Settings.influenceRowCount, verity));
+                    if (Widgets.ButtonText(infRect, "DMAD_AttuneButton".Translate())) Attune(fee);
+                }
+                else
+                {
+                    TooltipHandler.TipRegion(infRect, "DMAD_InfluenceButton_Tip".Translate(verity));
+                    if (Widgets.ButtonText(infRect, "DMAD_InfluenceButton".Translate()))
+                        Find.WindowStack.Add(new Dialog_InfluenceDungeon(influence, target));
+                }
+            }
             if (Widgets.ButtonText(new Rect(accept.xMax + 10f, accept.y, ButtonSize.x, ButtonSize.y), "CancelButton".Translate()))
                 Close();
+        }
+
+        /// <summary>Pays the fee at once, since what it buys (the tile's rows) cannot be handed back, then opens the
+        /// Influence screen. Attuning is the colony's for good, whether or not this party goes in.</summary>
+        private void Attune(long fee)
+        {
+            if (fee > EntadFramework.EntadApi.Verity + 0.0001f)
+            {
+                Messages.Message("DMAD_Attune_CannotAfford".Translate(fee, EntadFramework.EntadApi.Verity.ToString("0.#")), MessageTypeDefOf.RejectInput, false);
+                return;
+            }
+            void Pay()
+            {
+                var world = DungeonWorldComponent.Instance;
+                if (world == null) return;
+                if (fee > 0 && !EntadFramework.EntadApi.TrySpendVerity(fee))
+                {
+                    Messages.Message("DMAD_Attune_CannotAfford".Translate(fee, EntadFramework.EntadApi.Verity.ToString("0.#")), MessageTypeDefOf.RejectInput, false);
+                    return;
+                }
+                world.Attune(caravan.Tile.tileId, DungeonInfluence.RollRows(caravan.Tile));
+                SoundDefOf.Tick_High.PlayOneShotOnCamera();
+                Find.WindowStack.Add(new Dialog_InfluenceDungeon(influence, target));
+            }
+            if (fee <= 0) Pay();
+            else Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(
+                "DMAD_Attune_Confirm".Translate(fee, DungeonsMod.Settings.influenceRowCount, EntadFramework.EntadApi.Verity.ToString("0.#")), Pay));
         }
 
         private bool TryAccept()
@@ -386,8 +451,25 @@ namespace DungeonMadness
                 if (!report.Reason.NullOrEmpty()) Messages.Message(report.Reason, MessageTypeDefOf.RejectInput, false);
                 return false;
             }
+            // Influence is paid last, once nothing else can refuse the entry
+            DungeonInfluence paid = null;
+            if (DungeonsMod.Settings.influenceEnabled)
+            {
+                influence.Restrict(target);
+                if (influence.Any(NormalTheme))
+                {
+                    long cost = influence.TotalCost(target);
+                    if (!EntadFramework.EntadApi.TrySpendVerity(cost))
+                    {
+                        Messages.Message("DMAD_Enter_CannotAffordInfluence".Translate(cost, EntadFramework.EntadApi.Verity.ToString("0.#")),
+                            MessageTypeDefOf.RejectInput, false);
+                        return false;
+                    }
+                    paid = influence.Copy();
+                }
+            }
             // Everyone going in counts toward the effective level shown above; a copy, since Enter empties the caravan
-            DungeonEntry.Enter(caravan, going.ToList(), transferables.Where(t => !(t.AnyThing is Pawn)).ToList());
+            DungeonEntry.Enter(caravan, going.ToList(), transferables.Where(t => !(t.AnyThing is Pawn)).ToList(), paid);
             return true;
         }
     }

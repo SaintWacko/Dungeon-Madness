@@ -84,18 +84,28 @@ namespace DungeonMadness
             Active && !IsVehicle(p) && p.holdingOwner != null && p.holdingOwner != caravan.pawns;
 
         /// <summary>Takes these pawns out of whatever vehicle in the caravan holds them, leaving them in no container,
-        /// ready for CaravanMaker.MakeCaravan or Caravan.AddPawn. Pawns not aboard are left alone.</summary>
-        public static void Disembark(Caravan caravan, IEnumerable<Pawn> pawns)
+        /// ready for CaravanMaker.MakeCaravan or Caravan.AddPawn. Pawns not aboard are left alone. Returns the riders VF
+        /// would not let off, who must not go in.</summary>
+        public static List<Pawn> Disembark(Caravan caravan, IEnumerable<Pawn> pawns)
         {
-            if (!Active || removePawn == null) return;
+            var stuck = new List<Pawn>();
+            if (!Active || removePawn == null) return stuck;
             var vehicles = caravan.PawnsListForReading.Where(IsVehicle).ToList();
-            if (vehicles.Count == 0) return;
+            if (vehicles.Count == 0) return stuck;
             foreach (var p in pawns.ToList())
             {
+                // RemovePawn takes a pawn off a seat or out of the cargo
                 if (!IsAboard(p, caravan)) continue;
+                // Checked by IsAboard rather than RemovePawn's return value, which may change between VF versions
                 foreach (var v in vehicles)
-                    if (removePawn.Invoke(v, new object[] { p }) is bool removed && removed) break;
+                {
+                    try { removePawn.Invoke(v, new object[] { p }); }
+                    catch (Exception e) { Log.Warning("[Dungeon Madness] Could not take " + p.LabelShort + " out of " + v.LabelShort + ": " + (e.InnerException ?? e).Message); }
+                    if (!IsAboard(p, caravan)) break;
+                }
+                if (IsAboard(p, caravan)) stuck.Add(p);
             }
+            return stuck;
         }
 
         /// <summary>Stashes vehicles on the world map the way VF's own "stash vehicle" does, so any caravan can recover
@@ -133,13 +143,17 @@ namespace DungeonMadness
         public static bool StashStillThere(WorldObject stash) => stash != null && stash.Spawned && !stash.Destroyed;
 
         /// <summary>The caravan collects the stashed vehicles, seated by VF. Returns the caravan that now holds
-        /// everyone: VF's new vehicle caravan, or the same caravan if the stash is gone or VF refused.</summary>
+        /// everyone: VF's new vehicle caravan, or the same caravan if the stash is gone or VF refused. Null when VF
+        /// destroyed the caravan without handing back another.</summary>
         public static Caravan RetrieveStash(WorldObject stash, Caravan caravan)
         {
+            // After a load nothing else may have looked VF up yet
+            Init();
             if (caravan == null || !StashStillThere(stash) || stashArrived == null) return caravan;
             try
             {
-                return stashArrived.Invoke(stash, new object[] { caravan }) as Caravan ?? caravan;
+                Caravan result = stashArrived.Invoke(stash, new object[] { caravan }) as Caravan ?? caravan;
+                return result.Destroyed ? null : result;
             }
             catch (Exception e)
             {
@@ -187,8 +201,10 @@ namespace DungeonMadness
                 var typed = (System.Collections.IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(vehiclePawnType));
                 foreach (var v in vehicles) typed.Add(v);
                 try { distribute.Invoke(null, new object[] { typed, people }); }
-                catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + e.InnerException?.Message); }
+                catch (Exception e) { Log.Warning("[Dungeon Madness] Could not seat the party in their vehicles; they will have to board by hand: " + (e.InnerException ?? e).Message); }
             }
+            // Order does not matter: VF's MakeCaravan prefix turns any list with a vehicle into a vehicle caravan and
+            // filters out the passengers Distribute seated (CaravanHelper.MakeVehicleCaravan)
             var all = people.Concat(vehicles).ToList();
             Caravan made = CaravanMaker.MakeCaravan(all, faction, tile, addToWorldPawnsIfNotAlready: true);
             if (!caravan.Destroyed) caravan.Destroy();

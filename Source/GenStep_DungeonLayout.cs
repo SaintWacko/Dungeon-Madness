@@ -51,7 +51,8 @@ namespace DungeonMadness
             DungeonThemeDef theme = site?.theme ?? DungeonThemeUtility.ThemeFor(tile);
             if (site != null) site.theme = theme;
             List<ThingDef> rocks = DungeonThemeUtility.RocksFor(tile);
-            float builtChance = Mathf.Clamp01(theme.builtChance * DungeonThemeUtility.HillinessBuiltFactor(info.hilliness));
+            var influence = DungeonInfluence.Of(map);
+            float builtChance = influence.BuiltChance(Mathf.Clamp01(theme.builtChance * DungeonThemeUtility.HillinessBuiltFactor(info.hilliness)));
             if (DungeonDebugActions.forceFurnished) builtChance = Mathf.Max(builtChance, 0.5f);
 
             // MapGenerator seeds from the world and the tile, which would give every party the same dungeon. The
@@ -59,7 +60,7 @@ namespace DungeonMadness
             Rand.PushState(site != null && site.layoutSeed != 0 ? site.layoutSeed : Rand.Int);
             try
             {
-                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, builtChance);
+                var layout = DungeonLayoutGenerator.Generate(map.Size.x, theme, map.Biome, builtChance, influence.NeedsFurnishedRoom);
                 if (site != null) site.layout = layout.data;
                 Dress(map, layout, theme, rocks, info);
                 if (Prefs.DevMode)
@@ -69,6 +70,21 @@ namespace DungeonMadness
                         $"{layout.data.dividers.Count} dividers on {map.Size.x}x{map.Size.z}.");
             }
             finally { Rand.PopState(); }
+        }
+
+        const int CollapsedRocksHitPoints = 200;
+
+        // Thickest at the plug's mouths and thinning out over a few cells, so it reads as spill from the squeeze
+        static void ScatterFilth(Map map, DungeonLayoutResult layout, DungeonDivider d)
+        {
+            foreach (var plugCell in d.cells)
+                foreach (var c in GenRadial.RadialCellsAround(plugCell, 3.5f, false))
+                {
+                    if (!c.InBounds(map) || !layout.open[layout.Index(c)] || layout.feature[layout.Index(c)] == CellFeature.Plug) continue;
+                    if (c.GetEdifice(map) != null) continue;
+                    float chance = Mathf.Lerp(0.85f, 0.15f, (c - plugCell).LengthHorizontal / 3.5f);
+                    if (Rand.Chance(chance)) FilthMaker.TryMakeFilth(c, map, d.filth, Rand.RangeInclusive(1, 3));
+                }
         }
 
         static void Dress(Map map, DungeonLayoutResult layout, DungeonThemeDef theme, List<ThingDef> rocks, Tile info)
@@ -124,7 +140,8 @@ namespace DungeonMadness
             // ---- Structure. The map generator has already put thick rock roof everywhere (isUnderground).
             // Walls touching a furnished room carry power, so its lights and heaters run (and anything the party
             // plugs in near them); a fixture carried out of the room is just an unpowered fixture.
-            var furnishedIds = AssignUses(layout, theme);
+            var influence = DungeonInfluence.Of(map);
+            var furnishedIds = AssignUses(layout, influence.FurnishedChance(Mathf.Clamp01(theme.furnishedChance)), influence.NeedsFurnishedRoom);
             IntVec3 exitCell = data.exitCell;
             var exitRect = GenAdj.OccupiedRect(exitCell, Rot4.North, DungeonDefOf.DMAD_DungeonExit.size);
             for (int z = 0; z < n; z++)
@@ -138,17 +155,25 @@ namespace DungeonMadness
             foreach (var d in data.dividers)
                 foreach (var c in d.cells)
                 {
-                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? DungeonDefOf.DMAD_DungeonRubble);
-                    // A plant plug (root tangle) spawns at its starting growth, which would draw it tiny and
-                    // halve its wood; it never grows underground, so set it mature here. Its fog-holding core goes
-                    // in first: a new plant never wipes an edifice, the other way round it would.
+                    Thing thing = d.door ? ThingMaker.MakeThing(ThingDefOf.Door, blocks) : ThingMaker.MakeThing(d.def ?? ThingDefOf.CollapsedRocks);
+                    // A plant plug spawns at its starting growth, which would draw it tiny and shrink its yield; it
+                    // never grows underground, so set it mature here. Its fog-holding core goes in first: a new plant
+                    // never wipes an edifice, the other way round it would.
                     if (thing is Plant plant)
                     {
                         plant.Growth = 1f;
-                        if (thing is Plant_RootTangle) GenSpawn.Spawn(DungeonDefOf.DMAD_TangleCore, c, map);
+                        GenSpawn.Spawn(DungeonDefOf.DMAD_PlantCore, c, map);
                     }
-                    GenSpawn.Spawn(thing, c, map);
+                    // As a thick roof's collapse leaves them: turned at random, and already knocked about
+                    else if (thing.def == ThingDefOf.CollapsedRocks)
+                    {
+                        thing.Rotation = Rot4.Random;
+                        thing.HitPoints = Mathf.Min(CollapsedRocksHitPoints, thing.MaxHitPoints);
+                    }
+                    GenSpawn.Spawn(thing, c, map, thing.Rotation);
                 }
+            foreach (var d in data.dividers)
+                if (d.filth != null) ScatterFilth(map, layout, d);
             GenSpawn.Spawn(DungeonDefOf.DMAD_DungeonExit, exitCell, map);
             MapGenerator.PlayerStartSpot = DungeonExit.InsideCellFor(exitCell);
 
@@ -167,22 +192,41 @@ namespace DungeonMadness
         }
 
         /// <summary>Every built room is a ruin unless it is rolled as a furnished room. Only plain rectangles of at
-        /// least 5x5 inside can be furnished, and never the entrance room.</summary>
-        static HashSet<int> AssignUses(DungeonLayoutResult layout, DungeonThemeDef theme)
+        /// least 5x5 inside can be furnished, and never the entrance room. needOne: when the roll furnishes none, one
+        /// that can be is furnished anyway.</summary>
+        static HashSet<int> AssignUses(DungeonLayoutResult layout, float furnishedChance, bool needOne)
         {
             var ids = new HashSet<int>();
             bool force = DungeonDebugActions.forceFurnished;
+            var eligible = new List<DungeonChamber>();
+            var interiors = new List<CellRect>();
             foreach (var ch in layout.data.chambers)
             {
                 if (ch.Cave) continue;
                 ch.use = RoomUse.Ruin;
                 if (ch.id == 0 || (ch.shape != RoomShape.Rect && ch.shape != RoomShape.Hall)) continue;
                 if (!Interior(layout, ch, out var r) || r.Width < 5 || r.Height < 5) continue;
-                if (!force && !Rand.Chance(theme.furnishedChance)) continue;
-                ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
-                ids.Add(ch.id);
+                eligible.Add(ch);
+                interiors.Add(r);
+                if (!force && !Rand.Chance(furnishedChance)) continue;
+                Furnish(ch, r, ids);
+            }
+            if (needOne && ids.Count == 0)
+            {
+                if (eligible.Count > 0)
+                {
+                    int i = Rand.Range(0, eligible.Count);
+                    Furnish(eligible[i], interiors[i], ids);
+                }
+                else if (Prefs.DevMode) Log.Warning("[Dungeon Madness] Furniture influence paid for, but no room could be furnished.");
             }
             return ids;
+        }
+
+        static void Furnish(DungeonChamber ch, CellRect r, HashSet<int> ids)
+        {
+            ch.use = r.Width > MaxLeaf || r.Height > MaxLeaf ? RoomUse.Suite : PickUse(r, new List<RoomUse>());
+            ids.Add(ch.id);
         }
 
         /// <summary>The bounding box of a built room's floor, when that box is all floor (a plain rectangle).</summary>
@@ -430,17 +474,17 @@ namespace DungeonMadness
             int ordinary = 0;
             for (int k = 0; k < count; k++)
             {
-                Thing entad = Rand.Chance(DungeonsMod.Settings.entadChance) ? loot.MakeEntad() : null;
+                Thing entad = Rand.Chance(loot.EntadChance) ? loot.MakeEntad() : null;
                 if (entad == null) ordinary++;
                 else if (entad.def.category == ThingCategory.Building) loot.QueueFurniture(entad);
                 else goods.Add(entad);
             }
             if (ordinary > 0)
             {
-                float value = Mathf.Min(ordinary * 40f, 600f);
+                float value = Mathf.Min(ordinary * 40f, 600f) * loot.LootValueFactor;
                 var parms = new ThingSetMakerParams
                 {
-                    techLevel = DungeonLootContext.ColonyTech,
+                    techLevel = loot.Tech,
                     totalMarketValueRange = new FloatRange(value, value),
                     countRange = new IntRange(ordinary, ordinary),
                 };

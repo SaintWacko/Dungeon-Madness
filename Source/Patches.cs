@@ -231,6 +231,8 @@ namespace DungeonMadness
             PlanetTile tile = Find.WorldSelector.SelectedTile;
             if (comp == null || !comp.TryGetLevel(tile, out int level) || comp.IsBlocked(tile)) return;
             __result += "\n" + "DMAD_TileDungeon".Translate(level);
+            string attuned = DungeonInfluence.AttunedSummary(tile);
+            if (attuned != null) __result += "\n" + "DMAD_TileAttuned".Translate(attuned);
         }
     }
 }

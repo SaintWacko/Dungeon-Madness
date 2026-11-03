@@ -251,6 +251,9 @@ namespace DungeonMadness
             float level = site == null ? 1f : Mathf.Max(1f, site.effectiveLevel > 0f ? site.effectiveLevel : site.level);
             float average = s.pointsPerLevel * level;
             float ceiling = s.PowerCeiling(level);
+            var influence = DungeonInfluence.Of(map);
+            float occupancy = influence.Occupancy(s.occupancy);
+            float madChance = influence.MadChance(s.madChance);
 
             // Floor cells by chamber: open, owned by the chamber, not a door or plug
             var byChamber = new Dictionary<int, List<IntVec3>>();
@@ -264,10 +267,10 @@ namespace DungeonMadness
 
             foreach (var ch in layout.data.chambers)
             {
-                if (!Rand.Chance(ch.id == 0 ? s.entranceChance : s.occupancy)) continue;
+                if (!Rand.Chance(ch.id == 0 ? s.entranceChance : occupancy)) continue;
                 if (!byChamber.TryGetValue(ch.id, out var cells) || cells.Count == 0) continue;
 
-                PackType type = PickType(ch, theme);
+                PackType type = PickType(ch, theme, influence);
                 PawnKindDef kind = PickKind(type, map.Biome, ceiling);
                 if (kind == null && type != PackType.Animal)
                 {
@@ -283,7 +286,8 @@ namespace DungeonMadness
                 int rolled = SizeRange(kind, type).RandomInRange;
                 if (type != PackType.Humanlike)
                     rolled = Mathf.RoundToInt(rolled * Mathf.Sqrt(Mathf.Max(1f, ceiling / kind.combatPower)));
-                int count = Mathf.Clamp(rolled, 1, s.maxPackSize);
+                // Influence moves it after the cap, so a party that paid for big packs gets them
+                int count = influence.PackSize(Mathf.Clamp(rolled, 1, s.maxPackSize));
                 float total = Mathf.Max(0.01f, average * Rand.Range(1f - s.pointNoise, 1f + s.pointNoise));
                 IntVec3 home = cells.MinBy(c => c.DistanceToSquared(ch.center));
                 comp.packs.Add(new DungeonPack
@@ -293,7 +297,7 @@ namespace DungeonMadness
                     kind = kind,
                     count = count,
                     points = Mathf.Ceil(total / count),
-                    mad = (type == PackType.Animal || type == PackType.Humanlike) && Rand.Chance(s.madChance),
+                    mad = (type == PackType.Animal || type == PackType.Humanlike) && Rand.Chance(madChance),
                     stone = type != PackType.Mech && Rand.Chance(s.stoneChance),
                     rock = rockStuff,
                     seed = Rand.Int,
@@ -304,15 +308,25 @@ namespace DungeonMadness
             }
             if (Prefs.DevMode)
                 Log.Message($"[Dungeon Madness] Effective level {level:0.#}: {average:0.##} points per pack, species up to {ceiling:0} combat power. " +
+                    $"Odds animal/insect/mech: caverns {Odds(theme, influence, false)}, ruins {Odds(theme, influence, true)}. " +
                     $"{comp.packs.Count} packs: {string.Join("; ", comp.packs)}");
         }
 
-        static PackType PickType(DungeonChamber ch, DungeonThemeDef theme)
+        static PackType PickType(DungeonChamber ch, DungeonThemeDef theme, DungeonInfluence influence)
         {
             if (ch.Furnished) return PackType.Humanlike;
-            if (ch.use == RoomUse.Ruin && Faction.OfMechanoids != null && Rand.Chance(theme.mechChance)) return PackType.Mech;
-            if (Faction.OfInsects != null && Rand.Chance(theme.insectChance)) return PackType.Insect;
+            influence.CreatureWeights(theme, ch.use == RoomUse.Ruin, out float animal, out float insect, out float mech);
+            float r = Rand.Value * (animal + insect + mech);
+            if (r < mech) return PackType.Mech;
+            if (r < mech + insect) return PackType.Insect;
             return PackType.Animal;
+        }
+
+        static string Odds(DungeonThemeDef theme, DungeonInfluence influence, bool ruin)
+        {
+            influence.CreatureWeights(theme, ruin, out float a, out float i, out float m);
+            float t = a + i + m;
+            return t <= 0f ? "all animals" : $"{a / t:P0}/{i / t:P0}/{m / t:P0}";
         }
 
         static IntRange SizeRange(PawnKindDef kind, PackType type)
@@ -384,7 +398,8 @@ namespace DungeonMadness
                             BastleUtility.RollMaterial(p);
                         BastleUtility.RollTraits(p, pack.points);
                     }
-                    else BastleUtility.CopyBastle(leader, p);
+                    // Linked, so a trait found on one packmate is known on all of them
+                    else BastleUtility.CopyBastle(leader, p, linkDiscovery: true);
                     pawns.Add(p);
                 }
             }

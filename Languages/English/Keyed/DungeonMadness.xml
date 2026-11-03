@@ -5,6 +5,7 @@
   <!-- World map -->
   <DMAD_ToggleIcons>Show dungeon icons.</DMAD_ToggleIcons>
   <DMAD_TileDungeon>Dungeon: level {0}</DMAD_TileDungeon>
+  <DMAD_TileAttuned>Attuned: {0}</DMAD_TileAttuned>
   <DMAD_SearchLabel>Dungeon (level {0})</DMAD_SearchLabel>
   <DMAD_River>river</DMAD_River>
   <DMAD_Coastal>coastal</DMAD_Coastal>
@@ -26,6 +27,7 @@
   <DMAD_Finder_Matches>Matching dungeons: {0}</DMAD_Finder_Matches>
   <DMAD_Finder_LevelShort>Lv {0}</DMAD_Finder_LevelShort>
   <DMAD_Finder_Tiles>{0} tiles</DMAD_Finder_Tiles>
+  <DMAD_Finder_Attuned>attuned</DMAD_Finder_Attuned>
 
   <!-- Entering -->
   <DMAD_SiteLabel>dungeon (level {0})</DMAD_SiteLabel>
@@ -56,6 +58,7 @@
   <DMAD_Enter_VehicleShort>vehicle</DMAD_Enter_VehicleShort>
   <DMAD_Enter_VehicleTip>Vehicles cannot go into dungeons. Anyone riding it who goes in gets off at the entrance, and cargo you select goes in with the party.\n\nIf someone stays outside, the vehicle stays in their caravan. If everyone goes in, the vehicle is stashed at the entrance with the rest of its cargo, and the party takes it back on the way out unless another caravan has already recovered it. If the whole party is lost, it stays stashed and can be recovered like any stashed vehicle before its timer runs out.</DMAD_Enter_VehicleTip>
   <DMAD_Enter_CannotDisembark>Someone in the party is riding a vehicle, and this version of Vehicle Framework does not let Dungeon Madness take them off it. Disembark them first.</DMAD_Enter_CannotDisembark>
+  <DMAD_Enter_StayedAboard>{0} could not get out of their vehicle and stayed outside with it.</DMAD_Enter_StayedAboard>
   <DMAD_Enter_LockedTip>Cannot stay outside on their own. Leave a non-downed colonist with them to allow them to stay outside.</DMAD_Enter_LockedTip>
   <DMAD_Enter_Everyone>No caravan left outside. Only the items and supplies you select enter the dungeon; the rest wait at the entrance and are lost if the whole party dies.</DMAD_Enter_Everyone>
   <DMAD_Enter_NeedColonist>The party needs at least one colonist who is not downed.</DMAD_Enter_NeedColonist>
@@ -107,6 +110,58 @@
   <DMAD_Settings_WealthToDouble_Desc>A dungeon is generated at its level times 1 + party wealth / this value. Party wealth is the pawns going in plus what they wear and wield. Example: a party worth {0} entering a level 10 dungeon meets effective level {1}.</DMAD_Settings_WealthToDouble_Desc>
   <DMAD_Tab_World>World</DMAD_Tab_World>
   <DMAD_Settings_Reset>Reset to defaults</DMAD_Settings_Reset>
+  <DMAD_Settings_WorldSetup>Bastles and entads outside dungeons</DMAD_Settings_WorldSetup>
+  <DMAD_Settings_AskWorldSetup>Ask when starting a new colony</DMAD_Settings_AskWorldSetup>
+  <DMAD_Settings_AskWorldSetup_Tip>Shows a window once for each new colony, and once for a save that has never had Dungeon Madness, to choose whether bastles and entads turn up outside dungeons in that game. Off: new games follow Bastle Framework's and Entad Framework's mod settings. A game started while this was off is asked the next time it loads with this on.</DMAD_Settings_AskWorldSetup_Tip>
+  <DMAD_Settings_ConfigureWorld>Configure this game's world</DMAD_Settings_ConfigureWorld>
+  <DMAD_Settings_ConfigureWorld_NoGame>Load a game to change where bastles and entads turn up in it.</DMAD_Settings_ConfigureWorld_NoGame>
+
+  <DMAD_WorldSetup_Source>Dungeon Madness's mod settings (Configure this game's world)</DMAD_WorldSetup_Source>
+  <DMAD_WorldSetup_Title>Dungeon Madness: this colony's world</DMAD_WorldSetup_Title>
+  <DMAD_WorldSetup_Intro>Dungeons always hold bastles and entads. These switches decide whether they also turn up everywhere else in this game. You can change them later from Dungeon Madness's mod settings while this game is loaded.</DMAD_WorldSetup_Intro>
+  <DMAD_WorldSetup_PresetDungeonsOnly>Dungeons only</DMAD_WorldSetup_PresetDungeonsOnly>
+  <DMAD_WorldSetup_PresetDungeonsOnly_Tip>Bastles and entads come only from dungeons. Turns off both master switches; the rows below keep their ticks.</DMAD_WorldSetup_PresetDungeonsOnly_Tip>
+  <DMAD_WorldSetup_PresetLivingWorld>Living world</DMAD_WorldSetup_PresetLivingWorld>
+  <DMAD_WorldSetup_PresetLivingWorld_Tip>Every source on: bastles and entads can turn up anywhere.</DMAD_WorldSetup_PresetLivingWorld_Tip>
+  <DMAD_WorldSetup_PresetSettings>Mod settings</DMAD_WorldSetup_PresetSettings>
+  <DMAD_WorldSetup_PresetSettings_Tip>What Bastle Framework's and Entad Framework's mod settings say.</DMAD_WorldSetup_PresetSettings_Tip>
+  <DMAD_WorldSetup_Footnote>* differs from the mod settings. Every row is saved with this game, so later changes to the mod settings don't reach it.</DMAD_WorldSetup_Footnote>
+  <DMAD_WorldSetup_Greyed>Greyed rows keep their ticks. They apply again if their master switch goes back on.</DMAD_WorldSetup_Greyed>
+  <DMAD_WorldSetup_Bastles>Bastles</DMAD_WorldSetup_Bastles>
+  <DMAD_WorldSetup_Bastle_World>Bastles appear in the world</DMAD_WorldSetup_Bastle_World>
+  <DMAD_WorldSetup_Bastle_World_Tip>Every bastle source in this column. Off: bastles come only from dungeons.</DMAD_WorldSetup_Bastle_World_Tip>
+  <DMAD_WorldSetup_BastleConverted>Animals the game already makes</DMAD_WorldSetup_BastleConverted>
+  <DMAD_WorldSetup_BastleEvents>Bastle events</DMAD_WorldSetup_BastleEvents>
+  <DMAD_WorldSetup_Bastle_WildAnimals>Wild animals</DMAD_WorldSetup_Bastle_WildAnimals>
+  <DMAD_WorldSetup_Bastle_WildAnimals_Tip>On a new map and for every animal that wanders in later.</DMAD_WorldSetup_Bastle_WildAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_AnimalEvents>Animal events</DMAD_WorldSetup_Bastle_AnimalEvents>
+  <DMAD_WorldSetup_Bastle_AnimalEvents_Tip>Manhunter packs and ambushes, herd migrations, thrumbo passes, farm animals wandering in, alphabeavers and frenzied animals. The whole group is one kind of bastle and shares what you learn about it.</DMAD_WorldSetup_Bastle_AnimalEvents_Tip>
+  <DMAD_WorldSetup_Bastle_GroupAnimals>Animals with raiders and caravans</DMAD_WorldSetup_Bastle_GroupAnimals>
+  <DMAD_WorldSetup_Bastle_GroupAnimals_Tip>Pack animals and fighting animals in raids, caravans and settlement defences. They are added danger: the group keeps its size.</DMAD_WorldSetup_Bastle_GroupAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_TraderAnimals>Animals for sale</DMAD_WorldSetup_Bastle_TraderAnimals>
+  <DMAD_WorldSetup_Bastle_TraderAnimals_Tip>The trader knows some of each one's traits (none to all, at random).</DMAD_WorldSetup_Bastle_TraderAnimals_Tip>
+  <DMAD_WorldSetup_Bastle_Sighting>Bastle sighting</DMAD_WorldSetup_Bastle_Sighting>
+  <DMAD_WorldSetup_Bastle_Sighting_Tip>One strong wild bastle passes through. It leaves if you let it be.</DMAD_WorldSetup_Bastle_Sighting_Tip>
+  <DMAD_WorldSetup_Bastle_Pack>Bastle pack</DMAD_WorldSetup_Bastle_Pack>
+  <DMAD_WorldSetup_Bastle_Pack_Tip>A manhunter pack of one bastle kind.</DMAD_WorldSetup_Bastle_Pack_Tip>
+  <DMAD_WorldSetup_Bastle_Rampage>Rampage</DMAD_WorldSetup_Bastle_Rampage>
+  <DMAD_WorldSetup_Bastle_Rampage_Tip>A single bastle goes manhunter, with the pack's threat in its traits.</DMAD_WorldSetup_Bastle_Rampage_Tip>
+  <DMAD_WorldSetup_Bastle_HuntQuest>Hunt quests</DMAD_WorldSetup_Bastle_HuntQuest>
+  <DMAD_WorldSetup_Bastle_HuntQuest_Tip>A faction asks you to kill a bastle and its pack at a site, for vanilla rewards.</DMAD_WorldSetup_Bastle_HuntQuest_Tip>
+  <DMAD_WorldSetup_Entads>Entads</DMAD_WorldSetup_Entads>
+  <DMAD_WorldSetup_Entad_World>Entads appear in the world</DMAD_WorldSetup_Entad_World>
+  <DMAD_WorldSetup_Entad_World_Tip>Every entad source in this column. Off: entads come only from dungeons.</DMAD_WorldSetup_Entad_World_Tip>
+  <DMAD_WorldSetup_Entad_Carriers>NPC groups carry entads</DMAD_WorldSetup_Entad_Carriers>
+  <DMAD_WorldSetup_Entad_Carriers_Tip>Raids, visitors, trade caravans and settlement defenders can have members whose own weapon or apparel is an entad. Only humanlike members. Their entads start unidentified.</DMAD_WorldSetup_Entad_Carriers_Tip>
+  <DMAD_WorldSetup_Entad_Traders>Trader stock</DMAD_WorldSetup_Entad_Traders>
+  <DMAD_WorldSetup_Entad_Traders_Tip>Traders can stock entads. Items they would have stocked anyway become entads: nothing extra is added.</DMAD_WorldSetup_Entad_Traders_Tip>
+  <DMAD_WorldSetup_Entad_Rewards>Quest rewards</DMAD_WorldSetup_Entad_Rewards>
+  <DMAD_WorldSetup_Entad_Rewards_Tip>Quest rewards can include entads, turned from items the reward already held.</DMAD_WorldSetup_Entad_Rewards_Tip>
+  <DMAD_WorldSetup_Entad_Loot>Loot at sites and settlements</DMAD_WorldSetup_Entad_Loot>
+  <DMAD_WorldSetup_Entad_Loot_Tip>Loot at sites, ancient complexes, faction settlements and item stashes can turn up entads.</DMAD_WorldSetup_Entad_Loot_Tip>
+  <DMAD_WorldSetup_Entad_Appraisers>Appraisers</DMAD_WorldSetup_Entad_Appraisers>
+  <DMAD_WorldSetup_Entad_Appraisers_Tip>Caravans and settlements can have appraisers who identify entads for silver. Off: no new appraisers turn up and existing ones are hidden until it goes back on.</DMAD_WorldSetup_Entad_Appraisers_Tip>
+
   <DMAD_Settings_Display>Display</DMAD_Settings_Display>
   <DMAD_Settings_ShowIcons>Show dungeon icons on the world map</DMAD_Settings_ShowIcons>
   <DMAD_Settings_ShowIcons_Tip>Also toggled by the dungeon button with the other world map toggles in the bottom right.</DMAD_Settings_ShowIcons_Tip>
@@ -150,7 +205,9 @@
   <DMAD_Settings_LootPiles>Loot piles</DMAD_Settings_LootPiles>
   <DMAD_Settings_LootChance>Chance a chamber has a loot pile: {0}</DMAD_Settings_LootChance>
   <DMAD_Settings_LootValue>Pile value per level: {0}</DMAD_Settings_LootValue>
-  <DMAD_Settings_LootValue_Desc>Each pile holds 2 to 4 things. Example: at effective level 10 a pile is worth about {0}, not counting entads.</DMAD_Settings_LootValue_Desc>
+  <DMAD_Settings_LootValue_Desc>Each pile adds this much to the dungeon's loot. Example: at effective level 10 a pile adds about {0}, not counting entads. The goods are rolled for the whole dungeon and shared out, so one pile can hold a single valuable item and another a few small ones.</DMAD_Settings_LootValue_Desc>
+  <DMAD_Settings_LootRoll>Largest item value per level: {0}</DMAD_Settings_LootRoll>
+  <DMAD_Settings_LootRoll_Desc>The piles' goods are rolled for the whole dungeon in rolls of this size and shared out between the piles, largest first. No single item is worth more than one roll. Larger rolls give a wider choice of items but fewer, bigger ones; at or below the pile value, each pile gets about one roll of its own. Example: at effective level 10 a roll is worth about {0}.</DMAD_Settings_LootRoll_Desc>
   <DMAD_Settings_Entads>Entads</DMAD_Settings_Entads>
   <DMAD_Settings_EntadChance>Chance a piece of loot is an entad: {0}</DMAD_Settings_EntadChance>
   <DMAD_Settings_EntadChance_Desc>Rolled for each thing in a loot pile and each stack on a storeroom shelf.</DMAD_Settings_EntadChance_Desc>
@@ -163,4 +220,105 @@
   <DMAD_Settings_Binding_Desc>Rolled when an entad leaves the dungeon. One pawn means whoever has it equipped, worn or in their inventory as they leave. An entad that is only hauled out binds to a random member of the party. The party is the people who entered together, not dwellers who joined later. A letter lists every entad and its binding when the visit ends.</DMAD_Settings_Binding_Desc>
 
   <DMAD_Settings_Power_Desc>Species are random, but none stronger than this. Weak species can still turn up at any level, carrying more bastle points. Now: up to {0} at level 1, {1} at level 10, {2} at level 30. A wolf is 75, a megaspider 150, a thrumbo 500.</DMAD_Settings_Power_Desc>
+
+  <!-- Influence: spending verity on a visit (Dialog_InfluenceDungeon) -->
+  <DMAD_InfluenceButton>Influence dungeon</DMAD_InfluenceButton>
+  <DMAD_InfluenceButton_Tip>Spend verity to change this visit: level, packs, madness, loot and theme. Nothing is spent until the party enters. The colony has {0} verity.</DMAD_InfluenceButton_Tip>
+  <DMAD_Enter_Influence>Influence</DMAD_Enter_Influence>
+  <DMAD_Enter_Influence_Tip>Verity spent when the party enters: {0}. The colony has {1}. It is not refunded if the party is lost.</DMAD_Enter_Influence_Tip>
+  <DMAD_Enter_Influenced_Tip>Influenced with verity:</DMAD_Enter_Influenced_Tip>
+  <DMAD_Enter_CannotAffordInfluence>The influence costs {0} verity and the colony has {1}. Lower it on the Influence screen.</DMAD_Enter_CannotAffordInfluence>
+  <DMAD_Enter_GenerationFailed>The dungeon could not be generated, so the party stays outside. Any verity spent on influence was returned. Details are in the log.</DMAD_Enter_GenerationFailed>
+  <DMAD_Entered_Influenced>Influenced with verity:</DMAD_Entered_Influenced>
+  <DMAD_Influence_Title>Influence dungeon</DMAD_Influence_Title>
+  <DMAD_Influence_Header>Level {0}, {1}. Base step {2} verity</DMAD_Influence_Header>
+  <DMAD_Influence_Intro>Each step away from normal costs more than the last ({0}, ...), and each row counts its own steps. Changing anything adds a one-time fee of {1}. Verity is spent when the party enters; cancelling the entry spends nothing. The changes apply to this party's visit only.</DMAD_Influence_Intro>
+  <DMAD_Influence_Less>Less</DMAD_Influence_Less>
+  <DMAD_Influence_More>More</DMAD_Influence_More>
+  <DMAD_Influence_Value>Value</DMAD_Influence_Value>
+  <DMAD_Influence_Spent>Spent</DMAD_Influence_Spent>
+  <DMAD_Influence_Normal>normal {0}</DMAD_Influence_Normal>
+  <DMAD_Influence_PackNote>creatures per pack</DMAD_Influence_PackNote>
+  <DMAD_Influence_Next>next step: {0}</DMAD_Influence_Next>
+  <DMAD_Influence_AtLimit>at its limit</DMAD_Influence_AtLimit>
+  <DMAD_Influence_BtnCost>Costs {0} more verity (total {1}).</DMAD_Influence_BtnCost>
+  <DMAD_Influence_BtnRefund>Saves {0} verity (total {1}).</DMAD_Influence_BtnRefund>
+  <DMAD_Influence_Fee>Influence fee: {0}</DMAD_Influence_Fee>
+  <DMAD_Influence_FeeAttuned>Influence fee: none (attuned)</DMAD_Influence_FeeAttuned>
+  <DMAD_Influence_IntroAttuned>Each step away from normal costs more than the last ({0}, ...), and each row counts its own steps. The colony is attuned to this dungeon, so it offers these influences to every visit with no fee. Verity is spent when the party enters; cancelling the entry spends nothing. The changes apply to this party's visit only.</DMAD_Influence_IntroAttuned>
+  <DMAD_Influence_Shares>{0} caverns, {1} ruins</DMAD_Influence_Shares>
+  <DMAD_AttuneButton>Attune dungeon</DMAD_AttuneButton>
+  <DMAD_AttuneButton_Tip>Pay {0} verity to attune the colony to this dungeon. That reveals the influences it offers besides level and theme ({1} of them), and lets any party influence its visits from then on with no further fee. The colony has {2} verity.</DMAD_AttuneButton_Tip>
+  <DMAD_Attune_Confirm>Attune to this dungeon for {0} verity?
+
+The verity is spent now, whether or not this party goes in. The dungeon then shows the influences it offers besides level and theme ({1} of them), for every visit, with no further fee.
+
+The colony has {2} verity.</DMAD_Attune_Confirm>
+  <DMAD_Attune_CannotAfford>Attuning to this dungeon costs {0} verity and the colony has {1}.</DMAD_Attune_CannotAfford>
+  <DMAD_Attuned_NoRows>level and theme only</DMAD_Attuned_NoRows>
+  <DMAD_Influence_Total>Total cost: {0}</DMAD_Influence_Total>
+  <DMAD_Influence_Verity>Colony verity: {0} ({1} left)</DMAD_Influence_Verity>
+  <DMAD_Influence_CannotAfford>not enough verity</DMAD_Influence_CannotAfford>
+  <DMAD_Influence_Theme>Theme</DMAD_Influence_Theme>
+  <DMAD_Influence_Theme_Tip>The dungeon's look, its dividers, how many built rooms and skylights it has, and its odds of insects and mechs. Creatures still come from the tile's biome.</DMAD_Influence_Theme_Tip>
+  <DMAD_Influence_ThemeNormal>{0} (normal)</DMAD_Influence_ThemeNormal>
+  <DMAD_Influence_ThemeNote>normal: {0}. Flat fee {1}</DMAD_Influence_ThemeNote>
+  <DMAD_Influence_Row_Level>Level</DMAD_Influence_Row_Level>
+  <DMAD_Influence_Row_Level_Tip>The dungeon's own level, before the party's wealth multiplies it. Changes its size, creature strength and loot.</DMAD_Influence_Row_Level_Tip>
+  <DMAD_Influence_Row_PackSize>Pack size</DMAD_Influence_Row_PackSize>
+  <DMAD_Influence_Row_PackSize_Tip>Creatures added to or taken from every pack, never below 1, and allowed past the usual maximum. A pack's points are shared by its members, so bigger packs are made of weaker creatures and smaller packs of stronger ones.</DMAD_Influence_Row_PackSize_Tip>
+  <DMAD_Influence_Row_Occupancy>Occupancy</DMAD_Influence_Row_Occupancy>
+  <DMAD_Influence_Row_Occupancy_Tip>Chance each chamber other than the entrance has a pack in it.</DMAD_Influence_Row_Occupancy_Tip>
+  <DMAD_Influence_Row_Madness>Madness</DMAD_Influence_Row_Madness>
+  <DMAD_Influence_Row_Madness_Tip>Chance an animal or human pack is dungeon-mad. Sane dwellers can be invited out or arrested; sane animals leave the party alone unless provoked.</DMAD_Influence_Row_Madness_Tip>
+  <DMAD_Influence_Row_EntadChance>Entad chance</DMAD_Influence_Row_EntadChance>
+  <DMAD_Influence_Row_EntadChance_Tip>Chance each loot slot, in a pile or on a storeroom shelf, is an entad.</DMAD_Influence_Row_EntadChance_Tip>
+  <DMAD_Influence_Row_EntadValue>Entad value</DMAD_Influence_Row_EntadValue>
+  <DMAD_Influence_Row_EntadValue_Tip>Trait points each entad is generated with, as a share of normal. More points mean more or rarer traits, and more verity if it is dismantled.</DMAD_Influence_Row_EntadValue_Tip>
+  <DMAD_Influence_Row_LootValue>Loot value</DMAD_Influence_Row_LootValue>
+  <DMAD_Influence_Row_LootValue_Tip>Market value of the ordinary goods in loot piles and on storeroom shelves, as a share of normal.</DMAD_Influence_Row_LootValue_Tip>
+  <DMAD_Influence_Row_Animals>Animals</DMAD_Influence_Row_Animals>
+  <DMAD_Influence_Row_Animals_Tip>How often a pack in a cavern or a ruin is the biome's animals rather than insects or mechanoids. Each step moves the animals' weight by 5 points; the shares shown are after the other types are weighed in. Furnished rooms always hold people.</DMAD_Influence_Row_Animals_Tip>
+  <DMAD_Influence_Row_Insects>Insects</DMAD_Influence_Row_Insects>
+  <DMAD_Influence_Row_Insects_Tip>How often a pack in a cavern or a ruin is insects. Each step moves the insects' weight by 5 points, so insects can be brought into a dungeon whose theme has none. Furnished rooms always hold people.</DMAD_Influence_Row_Insects_Tip>
+  <DMAD_Influence_Row_Mechs>Mechanoids</DMAD_Influence_Row_Mechs>
+  <DMAD_Influence_Row_Mechs_Tip>How often a pack is mechanoids. Normally they only guard ruins; raised, they turn up in caverns too. Each step moves the mechanoids' weight by 5 points. Furnished rooms always hold people.</DMAD_Influence_Row_Mechs_Tip>
+  <DMAD_Influence_Row_BuiltRooms>Built rooms</DMAD_Influence_Row_BuiltRooms>
+  <DMAD_Influence_Row_BuiltRooms_Tip>Chance each chamber is a built room (a ruin, or rarely a furnished room) rather than a natural cavern. Ruins can hold mechanoids.</DMAD_Influence_Row_BuiltRooms_Tip>
+  <DMAD_Influence_Row_FurnishedRooms>Furnished rooms</DMAD_Influence_Row_FurnishedRooms>
+  <DMAD_Influence_Row_FurnishedRooms_Tip>Chance a built room big enough is furnished, with powered walls, furniture, libraries and storerooms, rather than a ruin. Furnished rooms hold people instead of animals, and let entad furniture appear.</DMAD_Influence_Row_FurnishedRooms_Tip>
+  <DMAD_Influence_Row_DungeonSize>Dungeon size</DMAD_Influence_Row_DungeonSize>
+  <DMAD_Influence_Row_DungeonSize_Tip>The map's side length, 5 cells a step. A bigger dungeon has more chambers, so more packs and more loot. Very large maps take longer to generate and run slower.</DMAD_Influence_Row_DungeonSize_Tip>
+  <DMAD_Influence_Row_LootChance>Loot chance</DMAD_Influence_Row_LootChance>
+  <DMAD_Influence_Row_LootChance_Tip>Chance each chamber other than the entrance has a loot pile.</DMAD_Influence_Row_LootChance_Tip>
+  <DMAD_Influence_Row_MeleeWeapons>Melee weapons</DMAD_Influence_Row_MeleeWeapons>
+  <DMAD_Influence_Row_MeleeWeapons_Tip>How likely an entad, or an item in a loot pile, is to be a melee weapon, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_MeleeWeapons_Tip>
+  <DMAD_Influence_Row_RangedWeapons>Ranged weapons</DMAD_Influence_Row_RangedWeapons>
+  <DMAD_Influence_Row_RangedWeapons_Tip>How likely an entad, or an item in a loot pile, is to be a ranged weapon, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_RangedWeapons_Tip>
+  <DMAD_Influence_Row_Apparel>Apparel</DMAD_Influence_Row_Apparel>
+  <DMAD_Influence_Row_Apparel_Tip>How likely an entad, or an item in a loot pile, is to be apparel, compared with normal. Each step adds or takes away 10%; at -100% none appear.</DMAD_Influence_Row_Apparel_Tip>
+  <DMAD_Influence_Row_Furniture>Furniture</DMAD_Influence_Row_Furniture>
+  <DMAD_Influence_Row_Furniture_Tip>How likely an entad, or an item in a loot pile, is to be furniture, compared with normal. Each step adds or takes away 10%; at -100% none appear. Entad furniture only appears in furnished rooms, so raising this guarantees the dungeon at least one.</DMAD_Influence_Row_Furniture_Tip>
+  <DMAD_Influence_TypeNote>than normal</DMAD_Influence_TypeNote>
+  <DMAD_Influence_Never>never</DMAD_Influence_Never>
+
+  <DMAD_Tab_Influence>Influence</DMAD_Tab_Influence>
+  <DMAD_Settings_InfluenceEnabled>Allow influencing dungeons</DMAD_Settings_InfluenceEnabled>
+  <DMAD_Settings_InfluenceEnabled_Tip>Shows the Influence dungeon button on the entry screen, where verity from dismantled entads can be spent on a visit.</DMAD_Settings_InfluenceEnabled_Tip>
+  <DMAD_Settings_InfluenceCosts>Costs</DMAD_Settings_InfluenceCosts>
+  <DMAD_Settings_InfluenceCurve>Cost curve</DMAD_Settings_InfluenceCurve>
+  <DMAD_Settings_InfluenceCurve_Desc>Base steps for each further step away from normal: {0}, ... Five steps on one row cost {1} base steps in all, ten cost {2}.</DMAD_Settings_InfluenceCurve_Desc>
+  <DMAD_Curve_Fibonacci>Fibonacci</DMAD_Curve_Fibonacci>
+  <DMAD_Curve_Linear>Linear</DMAD_Curve_Linear>
+  <DMAD_Curve_Doubling>Doubling</DMAD_Curve_Doubling>
+  <DMAD_Settings_InfluenceLevelsPerStep>Dungeon levels per verity in a base step: {0}</DMAD_Settings_InfluenceLevelsPerStep>
+  <DMAD_Settings_InfluenceLevelsPerStep_Desc>A base step costs the dungeon's own level divided by this, rounded, at least 1. Party wealth does not change it. A base step at level 5: {0}; level 12: {1}; level 30: {2}.</DMAD_Settings_InfluenceLevelsPerStep_Desc>
+  <DMAD_Settings_InfluenceFee>Influence fee: {0} base steps</DMAD_Settings_InfluenceFee>
+  <DMAD_Settings_InfluenceThemeFee>Choosing a theme: {0} base steps</DMAD_Settings_InfluenceThemeFee>
+  <DMAD_Settings_InfluenceRows>Rows</DMAD_Settings_InfluenceRows>
+  <DMAD_Settings_InfluenceRows_Desc>Which influences can be offered. A dungeon attuned before a row was switched on does not gain it; one switched off is hidden everywhere.</DMAD_Settings_InfluenceRows_Desc>
+  <DMAD_Settings_InfluenceRowCount>Influences per dungeon: {0}</DMAD_Settings_InfluenceRowCount>
+  <DMAD_Settings_InfluenceRowCount_All>all</DMAD_Settings_InfluenceRowCount_All>
+  <DMAD_Settings_InfluenceRowCount_Desc>Besides level and theme, each dungeon offers this many influences, fixed for its tile, and at most one creature type and one item type among them. The colony pays the influence fee once to attune to a dungeon, which reveals them for good. At "all", every dungeon offers every influence, nothing is attuned, and the fee is paid on each influenced visit instead. Dungeons already attuned keep the influences they were given.</DMAD_Settings_InfluenceRowCount_Desc>
+  <DMAD_Settings_InfluenceFee_Desc>Paid once to attune to a dungeon, or on each influenced visit when every dungeon offers every influence.</DMAD_Settings_InfluenceFee_Desc>
 </LanguageData>

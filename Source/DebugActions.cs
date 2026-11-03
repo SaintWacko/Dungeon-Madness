@@ -30,6 +30,14 @@ namespace DungeonMadness
             comp.WakeAll();
         }
 
+        // Pins as Actions\Add 100 verity. For trying the Influence screen without dismantling entads first.
+        [DebugAction("Dungeon Madness", "Add 100 verity", allowedGameStates = AllowedGameStates.Playing)]
+        private static void AddVerity()
+        {
+            EntadFramework.EntadApi.AddVerity(100f);
+            Messages.Message($"Colony verity: {EntadFramework.EntadApi.Verity:0.#}", RimWorld.MessageTypeDefOf.NeutralEvent, false);
+        }
+
         // Pins as Actions\Regenerate dungeons
         [DebugAction("Dungeon Madness", "Regenerate dungeons", allowedGameStates = AllowedGameStates.Playing)]
         private static void RegenerateDungeons()

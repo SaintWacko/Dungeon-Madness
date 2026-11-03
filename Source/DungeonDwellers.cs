@@ -103,6 +103,8 @@ namespace DungeonMadness
             var comp = Comp(site.Map);
             if (comp == null || !comp.followers.Contains(dweller)) return false;
             comp.followers.Remove(dweller);
+            // Off the map by now, so GetLord would not find their waiting group
+            site.Map.lordManager.LordOf(dweller)?.Notify_PawnLost(dweller, PawnLostCondition.LeftVoluntarily);
             if (RollJoin(dweller, site)) return false;
             if (!dweller.Dead && !dweller.IsWorldPawn()) Find.WorldPawns.PassToWorld(dweller);
             return true;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -74,6 +75,10 @@ namespace DungeonMadness
         // A pile's market value per effective level
         public const float DefaultLootValuePerLevel = 60f;
         public float lootValuePerLevel = DefaultLootValuePerLevel;
+        // The piles' ordinary goods are rolled for the whole dungeon in rolls of this value per effective level,
+        // which is also the most one item can be worth (about four default piles)
+        public const float DefaultLootRollValuePerLevel = 250f;
+        public float lootRollValuePerLevel = DefaultLootRollValuePerLevel;
         // Chance each loot slot (in a pile or on a storeroom shelf) is an entad
         public const float DefaultEntadChance = 1f / 3f;
         public float entadChance = DefaultEntadChance;
@@ -85,6 +90,31 @@ namespace DungeonMadness
         public float bindSingleChance = DefaultBindSingleChance;
         public const float DefaultBindPartyChance = 0.4f;
         public float bindPartyChance = DefaultBindPartyChance;
+
+        // ---- Influence: spending verity on a visit from the entry dialog. Read when the screen is open.
+        public bool influenceEnabled = true;
+        public InfluenceCurve influenceCurve = InfluenceCurve.Fibonacci;
+        // A base step costs the dungeon's own level / this, rounded, at least 1 (level 12: 2)
+        public const float DefaultInfluenceLevelsPerStep = 6f;
+        public float influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
+        // Rows a dungeon offers besides level and theme. Below the number of slots, each tile is dealt its own and
+        // the fee attunes to it once; at every slot, every row is offered everywhere and the fee is paid per visit.
+        public const int DefaultInfluenceRowCount = 4;
+        public int influenceRowCount = DefaultInfluenceRowCount;
+        // The attunement fee, or the per-visit fee when every row is offered everywhere, in base steps
+        public const int DefaultInfluenceFeeSteps = 3;
+        public int influenceFeeSteps = DefaultInfluenceFeeSteps;
+        // Choosing another theme, in base steps
+        public const int DefaultInfluenceThemeSteps = 5;
+        public int influenceThemeSteps = DefaultInfluenceThemeSteps;
+        public bool influenceTheme = true;
+        // Rows switched off in settings (empty: every row is offered)
+        public List<InfluenceKind> influenceDisabled = new List<InfluenceKind>();
+
+        public bool InfluenceRowEnabled(InfluenceKind k) => !influenceDisabled.Contains(k);
+
+        // ---- This game's world: show Dialog_WorldSetup once per game (new colony, or a save first loaded with this mod)
+        public bool askWorldSetup = true;
 
         // ---- Display: take effect immediately
         public bool showIcons = true;
@@ -114,10 +144,20 @@ namespace DungeonMadness
             joinChance = DefaultJoinChance;
             lootChance = DefaultLootChance;
             lootValuePerLevel = DefaultLootValuePerLevel;
+            lootRollValuePerLevel = DefaultLootRollValuePerLevel;
             entadChance = DefaultEntadChance;
             entadPointsPerLevel = DefaultEntadPointsPerLevel;
             bindSingleChance = DefaultBindSingleChance;
             bindPartyChance = DefaultBindPartyChance;
+            influenceEnabled = true;
+            influenceCurve = InfluenceCurve.Fibonacci;
+            influenceLevelsPerStep = DefaultInfluenceLevelsPerStep;
+            influenceFeeSteps = DefaultInfluenceFeeSteps;
+            influenceRowCount = DefaultInfluenceRowCount;
+            influenceThemeSteps = DefaultInfluenceThemeSteps;
+            influenceTheme = true;
+            influenceDisabled.Clear();
+            askWorldSetup = true;
             showIcons = true;
             iconOpacity = DefaultIconOpacity;
             tintByLevel = true;
@@ -164,6 +204,8 @@ namespace DungeonMadness
             lootChance = Mathf.Clamp01(lootChance);
             Scribe_Values.Look(ref lootValuePerLevel, "lootValuePerLevel", DefaultLootValuePerLevel);
             lootValuePerLevel = Mathf.Clamp(lootValuePerLevel, 0f, 500f);
+            Scribe_Values.Look(ref lootRollValuePerLevel, "lootRollValuePerLevel", DefaultLootRollValuePerLevel);
+            lootRollValuePerLevel = Mathf.Clamp(lootRollValuePerLevel, 20f, 1000f);
             Scribe_Values.Look(ref entadChance, "entadChance", DefaultEntadChance);
             entadChance = Mathf.Clamp01(entadChance);
             Scribe_Values.Look(ref entadPointsPerLevel, "entadPointsPerLevel", DefaultEntadPointsPerLevel);
@@ -172,6 +214,20 @@ namespace DungeonMadness
             bindSingleChance = Mathf.Clamp01(bindSingleChance);
             Scribe_Values.Look(ref bindPartyChance, "bindPartyChance", DefaultBindPartyChance);
             bindPartyChance = Mathf.Clamp(bindPartyChance, 0f, 1f - bindSingleChance);
+            Scribe_Values.Look(ref influenceEnabled, "influenceEnabled", true);
+            Scribe_Values.Look(ref influenceCurve, "influenceCurve", InfluenceCurve.Fibonacci);
+            Scribe_Values.Look(ref influenceLevelsPerStep, "influenceLevelsPerStep", DefaultInfluenceLevelsPerStep);
+            influenceLevelsPerStep = Mathf.Clamp(influenceLevelsPerStep, 1f, 30f);
+            Scribe_Values.Look(ref influenceFeeSteps, "influenceFeeSteps", DefaultInfluenceFeeSteps);
+            influenceFeeSteps = Mathf.Clamp(influenceFeeSteps, 0, 20);
+            Scribe_Values.Look(ref influenceRowCount, "influenceRowCount", DefaultInfluenceRowCount);
+            influenceRowCount = Mathf.Clamp(influenceRowCount, 0, DungeonInfluence.GroupCount);
+            Scribe_Values.Look(ref influenceThemeSteps, "influenceThemeSteps", DefaultInfluenceThemeSteps);
+            influenceThemeSteps = Mathf.Clamp(influenceThemeSteps, 0, 30);
+            Scribe_Values.Look(ref influenceTheme, "influenceTheme", true);
+            Scribe_Collections.Look(ref influenceDisabled, "influenceDisabled", LookMode.Value);
+            if (influenceDisabled == null) influenceDisabled = new List<InfluenceKind>();
+            Scribe_Values.Look(ref askWorldSetup, "askWorldSetup", true);
             Scribe_Values.Look(ref showIcons, "showIcons", true);
             Scribe_Values.Look(ref iconOpacity, "iconOpacity", DefaultIconOpacity);
             iconOpacity = Mathf.Clamp(iconOpacity, 0.1f, 1f);

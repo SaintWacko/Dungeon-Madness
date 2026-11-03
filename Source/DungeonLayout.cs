@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -83,12 +85,14 @@ namespace DungeonMadness
         }
     }
 
-    /// <summary>What stands between two chambers: a door in a built room's wall, or a plug (rubble, ice, roots,
-    /// sand) in a one-cell squeeze between two caverns.</summary>
+    /// <summary>What stands between two chambers: a door in a built room's wall, or a plug (collapsed rocks, ice,
+    /// a biome plant) in a one-cell squeeze between two caverns.</summary>
     public class DungeonDivider : IExposable
     {
         public List<IntVec3> cells = new List<IntVec3>();
         public ThingDef def;
+        // Only read while the map is dressed, so not saved
+        public ThingDef filth;
         public bool door;
         public int a, b;
 
@@ -183,6 +187,8 @@ namespace DungeonMadness
             public int id, x, z, hw, hh;
             public float r;
             public bool built;
+            // Stamped as a plain rectangle, so it can be furnished
+            public bool furnishable;
             public RoomShape shape = RoomShape.Cave;
             public List<int> border = new List<int>();
         }
@@ -193,7 +199,9 @@ namespace DungeonMadness
         readonly int n;
         readonly float s;
         readonly DungeonThemeDef theme;
+        readonly BiomeDef biome;
         readonly float builtChance;
+        readonly bool needFurnishable;
         readonly bool[] open, keep, locked, exitMask;
         readonly int[] owner, built;
         readonly CellFeature[] feature;
@@ -208,12 +216,14 @@ namespace DungeonMadness
         readonly int[] cameFrom, visitStamp;
         int stamp;
 
-        DungeonLayoutGenerator(int size, DungeonThemeDef theme, float builtChance)
+        DungeonLayoutGenerator(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance, bool needFurnishable)
         {
             n = size;
             s = size / 100f;
             this.theme = theme;
+            this.biome = biome;
             this.builtChance = builtChance;
+            this.needFurnishable = needFurnishable;
             int len = n * n;
             open = new bool[len]; keep = new bool[len]; locked = new bool[len]; exitMask = new bool[len];
             owner = new int[len]; built = new int[len];
@@ -222,9 +232,11 @@ namespace DungeonMadness
             for (int i = 0; i < len; i++) { owner[i] = -1; built[i] = -1; }
         }
 
-        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, float builtChance)
+        /// <summary>needFurnishable: at least one room other than the entrance is a built rectangle that can be
+        /// furnished, whatever the built chance (an influence paid for entad furniture).</summary>
+        public static DungeonLayoutResult Generate(int size, DungeonThemeDef theme, BiomeDef biome, float builtChance, bool needFurnishable = false)
         {
-            return new DungeonLayoutGenerator(size, theme, builtChance).Build();
+            return new DungeonLayoutGenerator(size, theme, biome, builtChance, needFurnishable).Build();
         }
 
         int I(int x, int z) => z * n + x;
@@ -269,6 +281,13 @@ namespace DungeonMadness
                 if (Fits(x, z, r)) ch.Add(new Proto { id = ch.Count, x = x, z = z, r = r, built = b });
                 else fails++;
             }
+            if (needFurnishable && ch.Count > 1)
+            {
+                var pick = ch.Where(c => c.id != 0 && c.built).RandomElementWithFallback() ?? ch.Where(c => c.id != 0).RandomElement();
+                pick.built = true;
+                pick.furnishable = true;
+                pick.r = Mathf.Min(pick.r, Mathf.Max(6f, 10f * s));
+            }
         }
 
         bool Fits(int x, int z, float r)
@@ -284,6 +303,7 @@ namespace DungeonMadness
             c.hw = Mathf.Max(3, Mathf.RoundToInt(c.r * Rand.Range(0.7f, 1f)));
             c.hh = Mathf.Max(3, Mathf.RoundToInt(c.r * Rand.Range(0.7f, 1f)));
             if (c.id == 0) c.shape = RoomShape.Hall;
+            else if (c.furnishable) c.shape = RoomShape.Rect;
             else if (theme.cryptRooms) c.shape = Pick((RoomShape.Hall, 2f), (RoomShape.Rect, 2f), (RoomShape.Cross, 1f));
             else c.shape = Pick((RoomShape.Rect, 2f), (RoomShape.Hall, 1.5f), (RoomShape.Round, 1f), (RoomShape.L, 1.5f), (RoomShape.Cross, 1f));
             int fx = Rand.Bool ? 1 : -1, fz = Rand.Bool ? 1 : -1;
@@ -508,8 +528,8 @@ namespace DungeonMadness
                 for (int q = pinch - 2; q <= pinch + 2; q++) { int k = path[q]; locked[k] = false; open[k] = true; keep[k] = true; }
                 int length = Rand.RangeInclusive(1, 3);
                 int from = pinch - (length == 3 ? 1 : 0);
-                ThingDef def = theme.RandomDivider();
-                var divider = new DungeonDivider { def = def, a = i, b = j };
+                ThingDef def = theme.RandomDivider(biome, out ThingDef filth);
+                var divider = new DungeonDivider { def = def, filth = filth, a = i, b = j };
                 for (int q = from; q < from + length; q++)
                 {
                     feature[path[q]] = CellFeature.Plug;

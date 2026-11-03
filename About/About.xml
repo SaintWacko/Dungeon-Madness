@@ -6,6 +6,7 @@
   <description>Dungeons dot the world map, each with a fixed level. Send a party of up to five into one to fight Bastle creatures through themed chambers and carry out entad rewards. Every party gets a freshly generated dungeon, and each pawn can enter a given dungeon only once.</description>
   <supportedVersions>
     <li>1.6</li>
+    <li>1.7</li>
   </supportedVersions>
   <modDependencies>
     <li>
