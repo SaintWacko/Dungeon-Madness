@@ -14,6 +14,9 @@
     <isBad>true</isBad>
     <everCurableByItem>false</everCurableByItem>
     <scenarioCanAdd>false</scenarioCanAdd>
+    <modExtensions>
+      <li Class="BastleFramework.BastleSplitInherited" />
+    </modExtensions>
   </HediffDef>
 
   <!-- Berserk that never ends, survives being downed and ignores other dungeon-mad creatures. Its think-tree branch is
