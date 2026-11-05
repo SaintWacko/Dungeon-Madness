@@ -30,6 +30,16 @@ namespace DungeonMadness
             comp.WakeAll();
         }
 
+        // Pins as Actions\Lay dungeon floor everywhere. For staging pictures: wall and carve the map by hand, then
+        // run this to give the open cells their floor, sky patches and cave plants. Each run re-rolls them.
+        [DebugAction("Dungeon Madness", "Lay dungeon floor everywhere", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void LayFloorEverywhere()
+        {
+            Map map = Find.CurrentMap;
+            if (!(map.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            GenStep_DungeonLayout.RedressFloor(map);
+        }
+
         // Pins as Actions\Add 100 verity. For trying the Influence screen without dismantling entads first.
         [DebugAction("Dungeon Madness", "Add 100 verity", allowedGameStates = AllowedGameStates.Playing)]
         private static void AddVerity()
