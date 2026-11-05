@@ -117,9 +117,17 @@ namespace DungeonMadness
             TerrainDef rough = rocks[0].building.naturalTerrain ?? TerrainDefOf.Gravel;
             float s = map.Size.x / 100f;
 
-            // A plant plug's fog-holding core is an edifice, so open cells never include a plug
+            // A built room's floor is laid, apart from the sand some themes drift into it, which is also a cavern
+            // floor; so a whole room counts as built when at least half of it is laid. Half rather than any, since a
+            // ruin open to a cavern shares one room with it. Taken before anything changes.
+            // A plant plug's fog-holding core is an edifice, so open cells never include a plug.
             bool Laid(TerrainDef t) => t.layerable || t.designationCategory != null;
-            bool OpenNatural(IntVec3 c) => c.GetEdifice(map) == null && !Laid(c.GetTerrain(map));
+            var laidCount = new Dictionary<Room, int>();
+            foreach (var c in map.AllCells)
+                if (Laid(c.GetTerrain(map)) && c.GetRoom(map) is Room room)
+                    laidCount[room] = laidCount.TryGetValue(room) + 1;
+            var builtCells = new HashSet<IntVec3>(laidCount.Where(e => e.Value * 2 >= e.Key.CellCount).SelectMany(e => e.Key.Cells));
+            bool OpenNatural(IntVec3 c) => c.GetEdifice(map) == null && !builtCells.Contains(c) && !Laid(c.GetTerrain(map));
 
             // What an earlier dressing left, so a re-run starts clean
             foreach (var c in map.AllCells)
@@ -139,7 +147,7 @@ namespace DungeonMadness
             foreach (var c in map.AllCells)
             {
                 map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
-                if (Laid(c.GetTerrain(map)) || c.GetFirstThing(map, DungeonDefOf.DMAD_PlantCore) != null) continue;
+                if (builtCells.Contains(c) || Laid(c.GetTerrain(map)) || c.GetFirstThing(map, DungeonDefOf.DMAD_PlantCore) != null) continue;
                 map.terrainGrid.SetTerrain(c, PatchAt(patches, c.x, c.z, rough));
             }
 
