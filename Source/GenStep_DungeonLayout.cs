@@ -179,6 +179,39 @@ namespace DungeonMadness
             }
         }
 
+        /// <summary>Dev tool for staging pictures: fills the open cells of the rect with dungeon wall in the map's
+        /// stone, roofed over. Plants, filth and chunks there go; cells with a pawn or any other building are skipped.</summary>
+        internal static void WallIn(Map map, CellRect rect)
+        {
+            ThingDef stuff = BlocksOf(DungeonThemeUtility.RocksFor(map.Tile)[0]) ?? ThingDefOf.BlocksGranite;
+            foreach (var c in rect)
+            {
+                if (c.GetEdifice(map) != null || c.GetFirstPawn(map) != null) continue;
+                var things = c.GetThingList(map);
+                for (int i = things.Count - 1; i >= 0; i--)
+                    if (things[i].def.category != ThingCategory.Building) things[i].Destroy();
+                map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
+                GenSpawn.Spawn(ThingMaker.MakeThing(DungeonDefOf.DMAD_DungeonWall, stuff), c, map);
+            }
+        }
+
+        /// <summary>Dev tool for staging pictures: removes the dungeon walls in the rect. They are not destroyable,
+        /// so vanilla's Destroy tool refuses them.</summary>
+        internal static void Carve(Map map, CellRect rect)
+        {
+            Thing.allowDestroyNonDestroyable = true;
+            try
+            {
+                foreach (var c in rect)
+                {
+                    Thing wall = c.GetEdifice(map);
+                    if (wall != null && (wall.def == DungeonDefOf.DMAD_DungeonWall || wall.def == DungeonDefOf.DMAD_DungeonWallPowered))
+                        wall.Destroy();
+                }
+            }
+            finally { Thing.allowDestroyNonDestroyable = false; }
+        }
+
         static bool NoWallWithin(IntVec3 c, Map map, int r)
         {
             for (int dz = -r; dz <= r; dz++)

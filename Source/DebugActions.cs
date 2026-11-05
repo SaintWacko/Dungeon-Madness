@@ -40,6 +40,22 @@ namespace DungeonMadness
             GenStep_DungeonLayout.RedressFloor(map);
         }
 
+        // Pins as Actions\Wall dungeon area. Drag rects; stays active until closed.
+        [DebugAction("Dungeon Madness", "Wall dungeon area", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void WallArea()
+        {
+            if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            DebugToolsGeneral.GenericRectTool("Wall dungeon area", rect => GenStep_DungeonLayout.WallIn(Find.CurrentMap, rect));
+        }
+
+        // Pins as Actions\Carve dungeon area. Drag rects; stays active until closed.
+        [DebugAction("Dungeon Madness", "Carve dungeon area", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void CarveArea()
+        {
+            if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            DebugToolsGeneral.GenericRectTool("Carve dungeon area", rect => GenStep_DungeonLayout.Carve(Find.CurrentMap, rect));
+        }
+
         // Pins as Actions\Add 100 verity. For trying the Influence screen without dismantling entads first.
         [DebugAction("Dungeon Madness", "Add 100 verity", allowedGameStates = AllowedGameStates.Playing)]
         private static void AddVerity()
