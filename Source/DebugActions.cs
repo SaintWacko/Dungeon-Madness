@@ -45,7 +45,8 @@ namespace DungeonMadness
         private static void WallArea()
         {
             if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
-            DebugToolsGeneral.GenericRectTool("Wall dungeon area", rect => GenStep_DungeonLayout.WallIn(Find.CurrentMap, rect));
+            // The tool stays live across a map switch, so the check is repeated per rect
+            DebugToolsGeneral.GenericRectTool("Wall dungeon area", rect => { if (Find.CurrentMap.Parent is DungeonSite) GenStep_DungeonLayout.WallIn(Find.CurrentMap, rect); });
         }
 
         // Pins as Actions\Carve dungeon area. Drag rects; stays active until closed.
@@ -53,7 +54,7 @@ namespace DungeonMadness
         private static void CarveArea()
         {
             if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
-            DebugToolsGeneral.GenericRectTool("Carve dungeon area", rect => GenStep_DungeonLayout.Carve(Find.CurrentMap, rect));
+            DebugToolsGeneral.GenericRectTool("Carve dungeon area", rect => { if (Find.CurrentMap.Parent is DungeonSite) GenStep_DungeonLayout.Carve(Find.CurrentMap, rect); });
         }
 
         // Pins as Actions\Add 100 verity. For trying the Influence screen without dismantling entads first.

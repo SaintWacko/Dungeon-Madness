@@ -180,23 +180,24 @@ namespace DungeonMadness
         }
 
         /// <summary>Dev tool for staging pictures: fills the open cells of the rect with dungeon wall in the map's
-        /// stone, roofed over. Plants, filth and chunks there go; cells with a pawn or any other building are skipped.</summary>
+        /// stone, roofed over. Plants, filth and chunks there go; cells with a pawn or a building are skipped.</summary>
         internal static void WallIn(Map map, CellRect rect)
         {
             ThingDef stuff = BlocksOf(DungeonThemeUtility.RocksFor(map.Tile)[0]) ?? ThingDefOf.BlocksGranite;
             foreach (var c in rect)
             {
-                if (c.GetEdifice(map) != null || c.GetFirstPawn(map) != null) continue;
+                if (c.GetFirstBuilding(map) != null || c.GetFirstPawn(map) != null) continue;
                 var things = c.GetThingList(map);
                 for (int i = things.Count - 1; i >= 0; i--)
-                    if (things[i].def.category != ThingCategory.Building) things[i].Destroy();
+                    if (things[i].def.destroyable) things[i].Destroy();
                 map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
                 GenSpawn.Spawn(ThingMaker.MakeThing(DungeonDefOf.DMAD_DungeonWall, stuff), c, map);
             }
         }
 
         /// <summary>Dev tool for staging pictures: removes the dungeon walls in the rect. They are not destroyable,
-        /// so vanilla's Destroy tool refuses them.</summary>
+        /// so vanilla's Destroy tool refuses them. The roof stays, and is kept from collapsing: a cavern this wide
+        /// is normal for a dungeon, whose roof generation never checks.</summary>
         internal static void Carve(Map map, CellRect rect)
         {
             Thing.allowDestroyNonDestroyable = true;
@@ -210,6 +211,8 @@ namespace DungeonMadness
                 }
             }
             finally { Thing.allowDestroyNonDestroyable = false; }
+            // Losing a roof holder queues the unsupported cells, which drop as collapsed rocks on the next tick
+            map.roofCollapseBuffer.Clear();
         }
 
         static bool NoWallWithin(IntVec3 c, Map map, int r)
