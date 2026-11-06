@@ -122,14 +122,16 @@ namespace DungeonMadness
     // ---- no further than starting the work
 
     /// <summary>Taming and animal chat, and any social interaction, go through here. A prefix, so the pack is awake
-    /// before a tame attempt can roll; an interaction aimed at a pawn whose madness just started is dropped.</summary>
+    /// before a tame attempt can roll. Permanent manhunting does not block interactions, so any aimed at a mad pawn
+    /// (just woken or long awake) are dropped.</summary>
     [HarmonyPatch(typeof(Pawn_InteractionsTracker), nameof(Pawn_InteractionsTracker.TryInteractWith))]
     static class Patch_WakeOnInteraction
     {
         static bool Prefix(Pawn ___pawn, Pawn recipient, ref bool __result)
         {
             if (___pawn.Faction != Faction.OfPlayer || recipient == null || recipient.Faction == Faction.OfPlayer || !recipient.Spawned) return true;
-            if (!LordJob_DungeonGuard.WakePackOf(recipient) || !DungeonMadUtility.IsMad(recipient)) return true;
+            LordJob_DungeonGuard.WakePackOf(recipient);
+            if (!DungeonMadUtility.IsMad(recipient)) return true;
             __result = false;
             return false;
         }

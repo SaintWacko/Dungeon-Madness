@@ -231,9 +231,10 @@ namespace DungeonMadness
         {
             var lord = p.GetLord();
             if (!(lord?.LordJob is LordJob_DungeonGuard guard) || !(lord.CurLordToil is LordToil_DefendPoint)) return false;
-            guard.Awaken();
-            var hunt = lord.Graph.lordToils.Find(t => t is LordToil_AssaultColony);
-            if (hunt != null) lord.GotoToil(hunt);
+            // Through the graph's own transition, so Awaken runs inside vanilla's try/catch for pre-actions
+            var engage = lord.Graph.transitions.Find(t => t.target is LordToil_AssaultColony);
+            if (engage == null) return false;
+            engage.Execute(lord);
             return true;
         }
 
