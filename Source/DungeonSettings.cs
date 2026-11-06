@@ -58,6 +58,12 @@ namespace DungeonMadness
         public float stoneChance = DefaultStoneChance;
         public const int DefaultMaxPackSize = 10;
         public int maxPackSize = DefaultMaxPackSize;
+        // Hostile packs wake when a packmate sees a player pawn within sightRange (scaled by the light on the target:
+        // 75% in darkness, 100% at 25% light, up to 175% in full light). Off: when a player pawn enters their chamber.
+        // Either way a pack also wakes when hurt. Read live, so it reaches packs already waiting.
+        public bool wakeOnSight = true;
+        public const float DefaultSightRange = 20f;
+        public float sightRange = DefaultSightRange;
         // Strongest species allowed, by vanilla combat power: base + perLevel x effective level
         public const float DefaultPowerBase = 60f;
         public float powerBase = DefaultPowerBase;
@@ -144,6 +150,8 @@ namespace DungeonMadness
             madChance = DefaultMadChance;
             stoneChance = DefaultStoneChance;
             maxPackSize = DefaultMaxPackSize;
+            wakeOnSight = true;
+            sightRange = DefaultSightRange;
             powerBase = DefaultPowerBase;
             powerPerLevel = DefaultPowerPerLevel;
             inviteChance = DefaultInviteChance;
@@ -200,6 +208,9 @@ namespace DungeonMadness
             stoneChance = Mathf.Clamp01(stoneChance);
             Scribe_Values.Look(ref maxPackSize, "maxPackSize", DefaultMaxPackSize);
             maxPackSize = Mathf.Clamp(maxPackSize, 1, 12);
+            Scribe_Values.Look(ref wakeOnSight, "wakeOnSight", true);
+            Scribe_Values.Look(ref sightRange, "sightRange", DefaultSightRange);
+            sightRange = Mathf.Clamp(sightRange, 5f, 60f);
             Scribe_Values.Look(ref powerBase, "powerBase", DefaultPowerBase);
             powerBase = Mathf.Clamp(powerBase, 20f, 500f);
             Scribe_Values.Look(ref powerPerLevel, "powerPerLevel", DefaultPowerPerLevel);

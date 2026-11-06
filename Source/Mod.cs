@@ -119,6 +119,16 @@ namespace DungeonMadness
             s.stoneChance = Mathf.Round(list.Slider(s.stoneChance, 0f, 1f) * 20f) / 20f;
             list.Label("DMAD_Settings_StoneChance_Desc".Translate());
             list.Gap();
+            list.CheckboxLabeled("DMAD_Settings_WakeOnSight".Translate(), ref s.wakeOnSight, "DMAD_Settings_WakeOnSight_Tip".Translate());
+            if (s.wakeOnSight)
+            {
+                list.Label("DMAD_Settings_SightRange".Translate(s.sightRange.ToString("0")));
+                s.sightRange = Mathf.Round(list.Slider(s.sightRange, 5f, 60f));
+                list.Label("DMAD_Settings_SightRange_Desc".Translate(
+                    (s.sightRange * 0.75f).ToString("0"), (s.sightRange * 1.25f).ToString("0"), (s.sightRange * 1.75f).ToString("0")));
+            }
+            else list.Label("DMAD_Settings_WakeOnEnter_Desc".Translate());
+            list.Gap();
 
             Section(list, "DMAD_Settings_Dwellers");
             list.Label("DMAD_Settings_InviteChance".Translate(s.inviteChance.ToStringPercent()));

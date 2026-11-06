@@ -189,6 +189,11 @@
   <DMAD_Settings_MadChance>Chance a pack is dungeon-mad: {0}</DMAD_Settings_MadChance>
   <DMAD_Settings_MadChance_Desc>Animals and people only. Dungeon-mad creatures attack anything that is not also mad, never recover, and cannot be captured or tamed. The rest are wild animals that can be tamed and people who keep to their rooms. Insects and mechanoids are always hostile.</DMAD_Settings_MadChance_Desc>
   <DMAD_Settings_StoneChance>Chance a pack is made of stone: {0}</DMAD_Settings_StoneChance>
+  <DMAD_Settings_WakeOnSight>Packs wake on sight</DMAD_Settings_WakeOnSight>
+  <DMAD_Settings_WakeOnSight_Tip>Hostile packs (dungeon-mad animals and people, insects, mechanoids) wait in their chamber until they wake. On: a pack wakes when any member sees one of your pawns or is hurt by you. Off: a pack wakes when one of your pawns steps into its chamber or hurts one of them. Applies to packs already waiting.</DMAD_Settings_WakeOnSight_Tip>
+  <DMAD_Settings_SightRange>Sight range: {0} cells</DMAD_Settings_SightRange>
+  <DMAD_Settings_SightRange_Desc>The distance at 25% light on your pawn. Darkness cuts it to {0}, 50% light stretches it to {1}, full light to {2}. Walls, closed doors, plugs and smoke block sight; invisible and fogged pawns are never seen. Dungeon-mad packs look calm until they wake.</DMAD_Settings_SightRange_Desc>
+  <DMAD_Settings_WakeOnEnter_Desc>Packs wake when one of your pawns enters their chamber or hurts one of them. Dungeon-mad packs look calm until they wake.</DMAD_Settings_WakeOnEnter_Desc>
   <DMAD_Settings_StoneChance_Desc>Usually the dungeon's own rock, otherwise a random metal, stone or wood. Not mechanoids. The material comes on top of the pack's bastle points.</DMAD_Settings_StoneChance_Desc>
   <DMAD_Settings_Dwellers>Dwellers</DMAD_Settings_Dwellers>
   <DMAD_Settings_InviteChance>Chance a dweller agrees to leave: {0}</DMAD_Settings_InviteChance>

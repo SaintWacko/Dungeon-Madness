@@ -18,7 +18,27 @@ namespace DungeonMadness
     /// </summary>
     public class Hediff_DungeonMad : Hediff
     {
+        // A pack's madness waits, hidden, until the pack wakes (LordJob_DungeonGuard), so a sleeping mad pack looks
+        // like any calm one. IsMad still holds while dormant: that is what keeps the pack from being tamed, captured
+        // or invited before it wakes, and keeps woken mad packs from fighting it.
+        public bool dormant;
+
         public override bool ShouldRemove => false;
+
+        public override bool Visible => !dormant && base.Visible;
+
+        public void Awaken()
+        {
+            if (!dormant) return;
+            dormant = false;
+            Ensure();
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+            Scribe_Values.Look(ref dormant, "dormant");
+        }
 
         public override void PostAdd(DamageInfo? dinfo)
         {
@@ -34,7 +54,7 @@ namespace DungeonMadness
 
         void Ensure()
         {
-            if (!pawn.Spawned || pawn.Dead || pawn.Downed) return;
+            if (dormant || !pawn.Spawned || pawn.Dead || pawn.Downed) return;
             MentalStateDef want = pawn.RaceProps.Humanlike ? DungeonDefOf.DMAD_DungeonMadness : MentalStateDefOf.ManhunterPermanent;
             if (pawn.MentalStateDef == want) return;
             pawn.mindState.mentalStateHandler.TryStartMentalState(want, null, forced: true, forceWake: true, causedByMood: false, otherPawn: null, transitionSilently: true);
