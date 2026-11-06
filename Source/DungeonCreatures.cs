@@ -146,7 +146,8 @@ namespace DungeonMadness
             {
                 // Hostile packs wait in their chamber until they see the party or are hurt (LordJob_DungeonGuard).
                 // Mad packs have no faction; the lord still keeps them home, since animals follow lord duties too.
-                float wander = Mathf.Max(3f, pack.radius * 0.7f), defend = pack.radius + 8f;
+                // Defending only inside the chamber, so a guard does not leave it to fight before the pack wakes
+                float wander = Mathf.Max(3f, pack.radius * 0.7f), defend = pack.radius + 1f;
                 LordMaker.MakeNewLord(pawns[0].Faction, new LordJob_DungeonGuard(pack.home, wander, defend, pack.radius, pack.mad), map, pawns);
             }
             else if (pack.type == PackType.Humanlike)
@@ -229,6 +230,15 @@ namespace DungeonMadness
         {
             if (!mad) return;
             foreach (var p in lord.ownedPawns)
+                (p.health.hediffSet.GetFirstHediffOfDef(DungeonDefOf.DMAD_DungeonMad) as Hediff_DungeonMad)?.Awaken();
+        }
+
+        // A downed pawn leaves the lord before the harm trigger runs, so Awaken would miss it and it would get up
+        // calm and lordless. Its madness starts here instead; Ensure waits until it is back on its feet.
+        public override void Notify_PawnLost(Pawn p, PawnLostCondition condition)
+        {
+            base.Notify_PawnLost(p, condition);
+            if (mad && condition == PawnLostCondition.Incapped)
                 (p.health.hediffSet.GetFirstHediffOfDef(DungeonDefOf.DMAD_DungeonMad) as Hediff_DungeonMad)?.Awaken();
         }
 
