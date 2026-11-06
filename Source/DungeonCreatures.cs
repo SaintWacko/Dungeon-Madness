@@ -226,6 +226,17 @@ namespace DungeonMadness
             return graph;
         }
 
+        /// <summary>Wakes the waiting pack the pawn belongs to, at once. True if it was waiting.</summary>
+        public static bool WakePackOf(Pawn p)
+        {
+            var lord = p.GetLord();
+            if (!(lord?.LordJob is LordJob_DungeonGuard guard) || !(lord.CurLordToil is LordToil_DefendPoint)) return false;
+            guard.Awaken();
+            var hunt = lord.Graph.lordToils.Find(t => t is LordToil_AssaultColony);
+            if (hunt != null) lord.GotoToil(hunt);
+            return true;
+        }
+
         void Awaken()
         {
             if (!mad) return;
