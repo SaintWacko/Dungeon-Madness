@@ -166,6 +166,10 @@ namespace DungeonMadness
             int minLevel = comp?.MinLevel ?? DungeonsMod.Settings.minLevel;
             int maxLevel = comp?.MaxLevel ?? DungeonsMod.Settings.maxLevel;
             var before = levelRange;
+            // The remembered filter (1-10 at first) can sit wholly outside a world whose levels start higher; clamping
+            // alone would pin it to one level
+            if (levelRange.max < minLevel || levelRange.min > maxLevel)
+                levelRange = new IntRange(minLevel, Mathf.Min(minLevel + 9, maxLevel));
             levelRange.min = Mathf.Clamp(levelRange.min, minLevel, maxLevel);
             levelRange.max = Mathf.Clamp(levelRange.max, levelRange.min, maxLevel);
             Widgets.IntRange(new Rect(rect.x, y, rect.width, 32f), 0x7D0A1, ref levelRange, minLevel, maxLevel);
