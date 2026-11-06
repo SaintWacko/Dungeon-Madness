@@ -10,11 +10,12 @@ namespace DungeonMadness
     {
         public const int MaxPartyHumanlikes = 5;
 
-        public static Color LevelColor(int level, int maxLevel)
-        {
-            float t = maxLevel <= 1 ? 0f : Mathf.Clamp01((level - 1f) / (maxLevel - 1f));
-            return WorldDrawLayer_Dungeons.ColorAt(t);
-        }
+        // Relative to the world's own range, so a world of levels 50-80 still runs the whole gradient
+        public static float LevelFraction(int level, int minLevel, int maxLevel) =>
+            maxLevel <= minLevel ? 0f : Mathf.Clamp01((level - (float)minLevel) / (maxLevel - minLevel));
+
+        public static Color LevelColor(int level, int minLevel, int maxLevel) =>
+            WorldDrawLayer_Dungeons.ColorAt(LevelFraction(level, minLevel, maxLevel));
 
         /// <summary>"Temperate forest, large hills, river" for a surface tile.</summary>
         public static string DescribeTile(PlanetTile tile)

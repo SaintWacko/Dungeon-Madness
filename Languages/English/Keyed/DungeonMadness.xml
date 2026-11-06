@@ -167,12 +167,13 @@
   <DMAD_Settings_ShowIcons_Tip>Also toggled by the dungeon button with the other world map toggles in the bottom right.</DMAD_Settings_ShowIcons_Tip>
   <DMAD_Settings_IconOpacity>Icon opacity: {0}</DMAD_Settings_IconOpacity>
   <DMAD_Settings_TintByLevel>Tint icons by level</DMAD_Settings_TintByLevel>
-  <DMAD_Settings_TintByLevel_Tip>Colours dungeon icons from green at level 1, through yellow and red, to purple at the maximum level.</DMAD_Settings_TintByLevel_Tip>
+  <DMAD_Settings_TintByLevel_Tip>Colours dungeon icons from green at the world's lowest dungeon level, through yellow and red, to purple at its highest.</DMAD_Settings_TintByLevel_Tip>
   <DMAD_Settings_Generation>Generation</DMAD_Settings_Generation>
   <DMAD_Settings_Generation_Desc>These settings apply when a world's dungeons are generated: new worlds, and existing saves that have never had dungeons. Worlds that already have dungeons keep them.</DMAD_Settings_Generation_Desc>
   <DMAD_Settings_Spacing>Dungeon spacing: {0} tiles</DMAD_Settings_Spacing>
   <DMAD_Settings_Spacing_Desc>Minimum distance between two dungeons. Each step up roughly halves to thirds how many dungeons a world gets.</DMAD_Settings_Spacing_Desc>
-  <DMAD_Settings_MaxLevel>Maximum dungeon level: {0}</DMAD_Settings_MaxLevel>
+  <DMAD_Settings_LevelRange>Dungeon levels: {0}</DMAD_Settings_LevelRange>
+  <DMAD_Settings_LevelRange_Desc>The lowest and highest level a dungeon in a new world can have. The two ends stay at least 4 levels apart.</DMAD_Settings_LevelRange_Desc>
   <DMAD_Settings_Skew>Low level bias: {0}</DMAD_Settings_Skew>
   <DMAD_Settings_Skew_Desc>At 1 every level is equally common; higher values make low levels more common. Now about {1} of dungeons are level {0} or lower, and {3} are level {2}.</DMAD_Settings_Skew_Desc>
   <DMAD_Settings_Roughness>Level landscape roughness: {0}</DMAD_Settings_Roughness>

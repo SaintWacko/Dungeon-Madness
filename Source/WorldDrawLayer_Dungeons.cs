@@ -53,7 +53,7 @@ namespace DungeonMadness
                 {
                     var tile = new PlanetTile(comp.GetTile(i), planetLayer);
                     if (blocked.Contains(tile.tileId)) continue;
-                    Material mat = settings.tintByLevel ? TintMat(comp.GetLevel(i), comp.MaxLevel) : PlainMat;
+                    Material mat = settings.tintByLevel ? TintMat(comp.GetLevel(i), comp.MinLevel, comp.MaxLevel) : PlainMat;
                     LayerSubMesh subMesh = GetSubMesh(mat);
                     WorldRendererUtility.PrintQuadTangentialToPlanet(planetLayer.GetTileCenter(tile), size, 0.008f, subMesh, printUVs: false);
                     // The quad's first tangent points north and its second points west as seen from outside the
@@ -71,9 +71,9 @@ namespace DungeonMadness
         // Below world objects (3550) so a caravan on the tile draws over the icon
         private static Material PlainMat => plainMat ?? (plainMat = MaterialPool.MatFrom(IconPath, ShaderDatabase.WorldOverlayTransparentLit, Color.white, 3530));
 
-        private static Material TintMat(int level, int maxLevel)
+        private static Material TintMat(int level, int minLevel, int maxLevel)
         {
-            float t = maxLevel <= 1 ? 0f : Mathf.Clamp01((level - 1f) / (maxLevel - 1f));
+            float t = DungeonUtility.LevelFraction(level, minLevel, maxLevel);
             int step = Mathf.Min(TintSteps - 1, Mathf.FloorToInt(t * TintSteps));
             return tintMats[step] ?? (tintMats[step] = MaterialPool.MatFrom(IconPath, ShaderDatabase.WorldOverlayTransparentLit, ColorAt((step + 0.5f) / TintSteps), 3530));
         }

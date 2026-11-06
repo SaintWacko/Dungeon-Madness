@@ -215,7 +215,8 @@ namespace DungeonMadness
         public static void Postfix(WorldSearchElement element, Rect iconRect)
         {
             if (!(element is DungeonSearchElement d)) return;
-            GUI.color = DungeonUtility.LevelColor(d.level, DungeonWorldComponent.Instance?.MaxLevel ?? 1);
+            var comp = DungeonWorldComponent.Instance;
+            GUI.color = DungeonUtility.LevelColor(d.level, comp?.MinLevel ?? 1, comp?.MaxLevel ?? 1);
             GUI.DrawTexture(iconRect.ContractedBy(2f), DungeonTextures.WorldIcon);
             GUI.color = Color.white;
         }

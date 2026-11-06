@@ -162,11 +162,13 @@ namespace DungeonMadness
             y += 30f;
 
             Header(rect, ref y, "DMAD_Finder_Level");
-            int maxLevel = DungeonWorldComponent.Instance?.MaxLevel ?? DungeonsMod.Settings.maxLevel;
+            var comp = DungeonWorldComponent.Instance;
+            int minLevel = comp?.MinLevel ?? DungeonsMod.Settings.minLevel;
+            int maxLevel = comp?.MaxLevel ?? DungeonsMod.Settings.maxLevel;
             var before = levelRange;
-            levelRange.min = Mathf.Clamp(levelRange.min, 1, maxLevel);
+            levelRange.min = Mathf.Clamp(levelRange.min, minLevel, maxLevel);
             levelRange.max = Mathf.Clamp(levelRange.max, levelRange.min, maxLevel);
-            Widgets.IntRange(new Rect(rect.x, y, rect.width, 32f), 0x7D0A1, ref levelRange, 1, maxLevel);
+            Widgets.IntRange(new Rect(rect.x, y, rect.width, 32f), 0x7D0A1, ref levelRange, minLevel, maxLevel);
             if (levelRange != before) dirty = true;
             y += 40f;
 
@@ -217,6 +219,7 @@ namespace DungeonMadness
             var inner = outRect.ContractedBy(4f);
             var view = new Rect(0f, 0f, inner.width - 16f, results.Count * RowHeight);
             hovered = PlanetTile.Invalid;
+            int minLevel = DungeonWorldComponent.Instance?.MinLevel ?? 1;
             int maxLevel = DungeonWorldComponent.Instance?.MaxLevel ?? 1;
             Widgets.BeginScrollView(inner, ref resultScroll, view);
             int first = Mathf.Max(0, Mathf.FloorToInt(resultScroll.y / RowHeight));
@@ -226,7 +229,7 @@ namespace DungeonMadness
                 var r = results[i];
                 var row = new Rect(0f, i * RowHeight, view.width, RowHeight);
                 if (i % 2 == 1) Widgets.DrawLightHighlight(row);
-                Widgets.DrawBoxSolid(new Rect(row.x + 4f, row.y + 8f, 10f, 10f), DungeonUtility.LevelColor(r.level, maxLevel));
+                Widgets.DrawBoxSolid(new Rect(row.x + 4f, row.y + 8f, 10f, 10f), DungeonUtility.LevelColor(r.level, minLevel, maxLevel));
                 Text.Anchor = TextAnchor.MiddleLeft;
                 Widgets.Label(new Rect(row.x + 20f, row.y, 70f, row.height), "DMAD_Finder_LevelShort".Translate(r.level));
                 float tag = r.attuned != null ? AttunedWidth : 0f;

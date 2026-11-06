@@ -12,11 +12,16 @@ namespace DungeonMadness
         // Minimum distance in tiles between two dungeons
         public int spacing = DefaultSpacing;
 
+        public const int DefaultMinLevel = 1;
+        public int minLevel = DefaultMinLevel;
         public const int DefaultMaxLevel = 30;
         public int maxLevel = DefaultMaxLevel;
+        public const int LevelLimit = 200;
+        // Smallest gap between the lowest and highest level, the old slider's floor of 5 with min at 1
+        public const int MinLevelSpread = 4;
 
         // Levels are assigned by rank: a dungeon whose noise value is higher than fraction p of all dungeons gets
-        // level 1 + p^skew * maxLevel. 1 = every level equally common; higher = low levels more common.
+        // level minLevel + p^skew * (maxLevel - minLevel + 1). 1 = every level equally common; higher = low levels more common.
         public const float DefaultLevelSkew = 1.5f;
         public float levelSkew = DefaultLevelSkew;
 
@@ -126,6 +131,7 @@ namespace DungeonMadness
         public void ResetToDefaults()
         {
             spacing = DefaultSpacing;
+            minLevel = DefaultMinLevel;
             maxLevel = DefaultMaxLevel;
             levelSkew = DefaultLevelSkew;
             roughness = DefaultRoughness;
@@ -169,7 +175,9 @@ namespace DungeonMadness
             Scribe_Values.Look(ref spacing, "spacing", DefaultSpacing);
             spacing = Mathf.Clamp(spacing, 2, 20);
             Scribe_Values.Look(ref maxLevel, "maxLevel", DefaultMaxLevel);
-            maxLevel = Mathf.Clamp(maxLevel, 5, 200);
+            Scribe_Values.Look(ref minLevel, "minLevel", DefaultMinLevel);
+            minLevel = Mathf.Clamp(minLevel, 1, LevelLimit - MinLevelSpread);
+            maxLevel = Mathf.Clamp(maxLevel, minLevel + MinLevelSpread, LevelLimit);
             Scribe_Values.Look(ref levelSkew, "levelSkew", DefaultLevelSkew);
             levelSkew = Mathf.Clamp(levelSkew, 0.5f, 4f);
             Scribe_Values.Look(ref roughness, "roughness", DefaultRoughness);

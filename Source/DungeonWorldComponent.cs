@@ -19,7 +19,8 @@ namespace DungeonMadness
         private const int CurrentGenVersion = 1;
 
         private int genVersion;
-        // The max level this world was generated with: the settings slider may have moved since
+        // The level range this world was generated with: the settings slider may have moved since
+        private int generatedMinLevel;
         private int generatedMaxLevel;
         // Parallel arrays, sorted by tile id
         private int[] tiles = Array.Empty<int>();
@@ -67,6 +68,7 @@ namespace DungeonMadness
         public int Count => tiles.Length;
         public int GetTile(int index) => tiles[index];
         public int GetLevel(int index) => levels[index];
+        public int MinLevel => generatedMinLevel;
         public int MaxLevel => generatedMaxLevel;
 
         public bool HasEntered(int tileId, Pawn pawn) =>
@@ -117,6 +119,7 @@ namespace DungeonMadness
         {
             base.ExposeData();
             Scribe_Values.Look(ref genVersion, "genVersion");
+            Scribe_Values.Look(ref generatedMinLevel, "generatedMinLevel");
             Scribe_Values.Look(ref generatedMaxLevel, "generatedMaxLevel");
 
             byte[] tileBytes = null, levelBytes = null;
@@ -154,6 +157,8 @@ namespace DungeonMadness
             if (genVersion != CurrentGenVersion) Generate();
             else RebuildIndex();
             if (generatedMaxLevel <= 0) generatedMaxLevel = levels.Length > 0 ? levels.Max(l => (int)l) : DungeonsMod.Settings.maxLevel;
+            // Worlds generated before the range slider always started at level 1
+            if (generatedMinLevel <= 0) generatedMinLevel = 1;
         }
 
         public override void WorldComponentUpdate()
@@ -247,10 +252,11 @@ namespace DungeonMadness
             attuned.Clear();
             levels = AssignLevels(layer, tiles, seed, settings);
             genVersion = CurrentGenVersion;
+            generatedMinLevel = settings.minLevel;
             generatedMaxLevel = settings.maxLevel;
             RebuildIndex();
             SetLayerDirty();
-            Log.Message($"[Dungeon Madness] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, max level {settings.maxLevel}).");
+            Log.Message($"[Dungeon Madness] Placed {tiles.Length} dungeons over {n} tiles (spacing {settings.spacing}, levels {settings.minLevel}-{settings.maxLevel}).");
         }
 
         // Land only: there is no way to explore under water
@@ -275,12 +281,13 @@ namespace DungeonMadness
             int[] byValue = Enumerable.Range(0, count).OrderBy(i => values[i]).ToArray();
 
             var result = new ushort[count];
-            int max = settings.maxLevel;
+            int min = settings.minLevel, max = settings.maxLevel;
+            int span = max - min + 1;
             for (int rank = 0; rank < count; rank++)
             {
                 float p = (rank + 0.5f) / count;
-                int level = 1 + Mathf.FloorToInt(Mathf.Pow(p, settings.levelSkew) * max);
-                result[byValue[rank]] = (ushort)Mathf.Clamp(level, 1, max);
+                int level = min + Mathf.FloorToInt(Mathf.Pow(p, settings.levelSkew) * span);
+                result[byValue[rank]] = (ushort)Mathf.Clamp(level, min, max);
             }
             return result;
         }
