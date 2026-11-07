@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
+using BastleFramework;
 using System.Text;
 using LudeonTK;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI.Group;
 
 namespace DungeonMadness
 {
@@ -28,6 +31,47 @@ namespace DungeonMadness
             var comp = Find.CurrentMap?.GetComponent<MapComponent_DungeonCreatures>();
             if (comp == null || comp.packs.Count == 0) { Messages.Message("No dungeon packs on this map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
             comp.WakeAll();
+        }
+
+        // Pins as Actions\Make pack all-seeing. Click a creature: it and its packmates get the trait, forced, since
+        // AllSeeingTraitDef refuses itself outside a dungeon pack's roll. A pack still waiting wakes on its next check.
+        [DebugAction("Dungeon Madness", "Make pack all-seeing", actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void MakePackAllSeeing()
+        {
+            foreach (var pawn in UI.MouseCell().GetThingList(Find.CurrentMap).OfType<Pawn>().ToList())
+            {
+                var pack = pawn.GetLord()?.ownedPawns.ToList() ?? new List<Pawn> { pawn };
+                foreach (var p in pack) BastleUtility.AddTrait(p, DungeonDefOf.DMAD_AllSeeing, force: true);
+                BastleUtility.LinkDiscovery(pack);
+                Messages.Message($"All-seeing added to {pack.Count} pawn(s).", RimWorld.MessageTypeDefOf.NeutralEvent, false);
+            }
+        }
+
+        // Pins as Actions\Lay dungeon floor everywhere. For staging pictures: wall and carve the map by hand, then
+        // run this to give the open cells their floor, sky patches and cave plants. Each run re-rolls them.
+        [DebugAction("Dungeon Madness", "Lay dungeon floor everywhere", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void LayFloorEverywhere()
+        {
+            Map map = Find.CurrentMap;
+            if (!(map.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            GenStep_DungeonLayout.RedressFloor(map);
+        }
+
+        // Pins as Actions\Wall dungeon area. Drag rects; stays active until closed.
+        [DebugAction("Dungeon Madness", "Wall dungeon area", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void WallArea()
+        {
+            if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            // The tool stays live across a map switch, so the check is repeated per rect
+            DebugToolsGeneral.GenericRectTool("Wall dungeon area", rect => { if (Find.CurrentMap.Parent is DungeonSite) GenStep_DungeonLayout.WallIn(Find.CurrentMap, rect); });
+        }
+
+        // Pins as Actions\Carve dungeon area. Drag rects; stays active until closed.
+        [DebugAction("Dungeon Madness", "Carve dungeon area", allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void CarveArea()
+        {
+            if (!(Find.CurrentMap.Parent is DungeonSite)) { Messages.Message("Not a dungeon map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
+            DebugToolsGeneral.GenericRectTool("Carve dungeon area", rect => { if (Find.CurrentMap.Parent is DungeonSite) GenStep_DungeonLayout.Carve(Find.CurrentMap, rect); });
         }
 
         // Pins as Actions\Add 100 verity. For trying the Influence screen without dismantling entads first.

@@ -367,11 +367,13 @@ namespace DungeonMadness
             }
             FillPiles(piles);
 
+            // Scattered along the walls, one item to a cell, so a room reads as stored or dropped goods rather than
+            // a heap in the middle. A room with fewer free wall cells than items spills the rest onto the floor.
             foreach (var pile in piles)
             {
                 var cells = pile.cells;
-                IntVec3 center = cells.RandomElement();
-                var spots = cells.OrderBy(c => c.DistanceToSquared(center)).ToList();
+                var spots = cells.Where(c => AgainstWall(layout, c)).InRandomOrder()
+                    .Concat(cells.Where(c => !AgainstWall(layout, c)).InRandomOrder()).ToList();
                 int i = 0;
                 foreach (var t in pile.things)
                 {
@@ -381,6 +383,17 @@ namespace DungeonMadness
                     if (!placed && !t.Spawned && !t.Destroyed) Discard(t);
                 }
             }
+        }
+
+        static bool AgainstWall(DungeonLayoutResult layout, IntVec3 c)
+        {
+            int n = layout.size;
+            for (int d = 0; d < 4; d++)
+            {
+                IntVec3 o = c + GenAdj.CardinalDirections[d];
+                if (o.x < 0 || o.z < 0 || o.x >= n || o.z >= n || !layout.open[o.z * n + o.x]) return true;
+            }
+            return false;
         }
 
         /// <summary>Destroys loot that found no place, forgetting it as a pending entad.</summary>

@@ -119,6 +119,16 @@ namespace DungeonMadness
             s.stoneChance = Mathf.Round(list.Slider(s.stoneChance, 0f, 1f) * 20f) / 20f;
             list.Label("DMAD_Settings_StoneChance_Desc".Translate());
             list.Gap();
+            list.CheckboxLabeled("DMAD_Settings_WakeOnSight".Translate(), ref s.wakeOnSight, "DMAD_Settings_WakeOnSight_Tip".Translate());
+            if (s.wakeOnSight)
+            {
+                list.Label("DMAD_Settings_SightRange".Translate(s.sightRange.ToString("0")));
+                s.sightRange = Mathf.Round(list.Slider(s.sightRange, 5f, 60f));
+                list.Label("DMAD_Settings_SightRange_Desc".Translate(
+                    (s.sightRange * 0.75f).ToString("0"), (s.sightRange * 1.25f).ToString("0"), (s.sightRange * 1.75f).ToString("0")));
+            }
+            else list.Label("DMAD_Settings_WakeOnEnter_Desc".Translate());
+            list.Gap();
 
             Section(list, "DMAD_Settings_Dwellers");
             list.Label("DMAD_Settings_InviteChance".Translate(s.inviteChance.ToStringPercent()));
@@ -258,14 +268,20 @@ namespace DungeonMadness
             s.spacing = Mathf.RoundToInt(list.Slider(s.spacing, 2f, 20f));
             list.Label("DMAD_Settings_Spacing_Desc".Translate());
             list.Gap();
-            list.Label("DMAD_Settings_MaxLevel".Translate(s.maxLevel));
-            s.maxLevel = Mathf.RoundToInt(list.Slider(s.maxLevel, 5f, 200f));
+            var levelRange = new IntRange(s.minLevel, s.maxLevel);
+            Widgets.IntRange(list.GetRect(32f), 0x7D0A2, ref levelRange, 1, DungeonSettings.LevelLimit, "DMAD_Settings_LevelRange", DungeonSettings.MinLevelSpread);
+            s.minLevel = levelRange.min;
+            s.maxLevel = levelRange.max;
+            list.Label("DMAD_Settings_LevelRange_Desc".Translate());
             list.Gap();
             list.Label("DMAD_Settings_Skew".Translate(s.levelSkew.ToString("0.##")));
             s.levelSkew = Mathf.Round(list.Slider(s.levelSkew, 0.5f, 4f) * 20f) / 20f;
-            int low = Mathf.Min(10, s.maxLevel);
-            float lowFrac = Mathf.Pow((float)low / s.maxLevel, 1f / s.levelSkew);
-            float topFrac = 1f - Mathf.Pow((s.maxLevel - 1f) / s.maxLevel, 1f / s.levelSkew);
+            // Same formula as AssignLevels: level = min + floor(p^skew * span), so level <= low while p^skew * span
+            // stays under low - min + 1, and the top level takes p^skew * span >= span - 1
+            int span = s.maxLevel - s.minLevel + 1;
+            int low = Mathf.Min(s.minLevel + 9, s.maxLevel);
+            float lowFrac = Mathf.Pow((low - s.minLevel + 1f) / span, 1f / s.levelSkew);
+            float topFrac = 1f - Mathf.Pow((span - 1f) / span, 1f / s.levelSkew);
             list.Label("DMAD_Settings_Skew_Desc".Translate(low, lowFrac.ToStringPercent(), s.maxLevel, topFrac.ToStringPercent("0.#")));
             list.Gap();
             list.Label("DMAD_Settings_Roughness".Translate(s.roughness.ToString("0.#")));

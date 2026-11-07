@@ -72,6 +72,160 @@ namespace DungeonMadness
             finally { Rand.PopState(); }
         }
 
+        // Floor patches: the theme's, then water for a river or coast tile, then the biome's own ground
+        static List<Patch> FloorPatches(Map map, DungeonThemeDef theme, Tile info, TerrainDef rough, float s)
+        {
+            BiomeDef biome = map.Biome;
+            var patches = new List<Patch>();
+            foreach (var f in theme.floors)
+            {
+                TerrainDef t = f.Resolve(biome);
+                if (t != null) patches.Add(new Patch { terrain = t, share = f.share, mode = f.mode, noise = new ValueNoise(Rand.Range(5f, 10f) * s + 2f) });
+            }
+            bool wetTile = ((info as SurfaceTile)?.Rivers?.Count ?? 0) > 0 || Find.World.CoastDirectionAt(map.Tile).IsValid;
+            if (wetTile && !patches.Any(p => p.terrain.IsWater))
+            {
+                TerrainDef water = DungeonThemeUtility.BiomeTerrainFor(biome, BiomeTerrain.ShallowWater);
+                if (water != null) patches.Insert(0, new Patch { terrain = water, share = 0.12f, mode = FloorMode.Low, noise = new ValueNoise(Rand.Range(5f, 10f) * s + 2f) });
+            }
+            if (theme.biomeGroundShare > 0f)
+            {
+                var ground = DungeonThemeUtility.BiomeGroundOf(biome).Where(t => t != rough && !patches.Any(p => p.terrain == t)).InRandomOrder().Take(2).ToList();
+                foreach (var t in ground)
+                    patches.Add(new Patch { terrain = t, share = theme.biomeGroundShare / ground.Count, mode = FloorMode.Mid, noise = new ValueNoise(Rand.Range(6f, 12f) * s + 2f) });
+            }
+            return patches;
+        }
+
+        static TerrainDef PatchAt(List<Patch> patches, int x, int z, TerrainDef rough)
+        {
+            foreach (var p in patches)
+                if (p.Covers(x, z)) return p.terrain;
+            return rough;
+        }
+
+        /// <summary>Dev tool for staging pictures: lays this map's natural dungeon floor on every cell, walls
+        /// included, so any cell opened afterwards matches its neighbours, then re-rolls the open-to-the-sky patches,
+        /// cave plants and rock chunks on the open cells. Laid floors (built rooms, doors) and plant plugs are left
+        /// alone. Unseeded, so each run gives a different floor.</summary>
+        internal static void RedressFloor(Map map)
+        {
+            var site = map.Parent as DungeonSite;
+            DungeonThemeDef theme = site?.theme ?? DungeonThemeUtility.ThemeFor(map.Tile);
+            List<ThingDef> rocks = DungeonThemeUtility.RocksFor(map.Tile);
+            BiomeDef biome = map.Biome;
+            TerrainDef rough = rocks[0].building.naturalTerrain ?? TerrainDefOf.Gravel;
+            float s = map.Size.x / 100f;
+
+            // A built room's floor is laid, apart from the sand some themes drift into it, which is also a cavern
+            // floor; so a whole room counts as built when at least half of it is laid. Half rather than any, since a
+            // ruin open to a cavern shares one room with it. Taken before anything changes.
+            // A plant plug's fog-holding core is an edifice, so open cells never include a plug.
+            bool Laid(TerrainDef t) => t.layerable || t.designationCategory != null;
+            var laidCount = new Dictionary<Room, int>();
+            foreach (var c in map.AllCells)
+                if (Laid(c.GetTerrain(map)) && c.GetRoom(map) is Room room)
+                    laidCount[room] = laidCount.TryGetValue(room) + 1;
+            var builtCells = new HashSet<IntVec3>(laidCount.Where(e => e.Value * 2 >= e.Key.CellCount).SelectMany(e => e.Key.Cells));
+            bool OpenNatural(IntVec3 c) => c.GetEdifice(map) == null && !builtCells.Contains(c) && !Laid(c.GetTerrain(map));
+
+            // What an earlier dressing left, so a re-run starts clean
+            foreach (var c in map.AllCells)
+            {
+                if (!OpenNatural(c)) continue;
+                var things = c.GetThingList(map);
+                for (int i = things.Count - 1; i >= 0; i--)
+                {
+                    Thing t = things[i];
+                    if (t.def.category == ThingCategory.Plant || t.def == ThingDefOf.Filth_RubbleRock
+                        || (t.def.thingCategories?.Contains(ThingCategoryDefOf.StoneChunks) ?? false))
+                        t.Destroy();
+                }
+            }
+
+            var patches = FloorPatches(map, theme, map.TileInfo, rough, s);
+            foreach (var c in map.AllCells)
+            {
+                map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
+                if (builtCells.Contains(c) || Laid(c.GetTerrain(map)) || c.GetFirstThing(map, DungeonDefOf.DMAD_PlantCore) != null) continue;
+                map.terrainGrid.SetTerrain(c, PatchAt(patches, c.x, c.z, rough));
+            }
+
+            // No chambers to pick from here, so a coarse noise stands in for "this cavern's ceiling fell in", and
+            // a two-cell margin from any wall stands in for keeping to the middle of the cavern
+            TerrainDef soil = DungeonThemeUtility.FertileGroundOf(biome);
+            var skyPlants = SkyPlants(biome);
+            var region = new ValueNoise(12f * s + 4f);
+            var sky = new ValueNoise(4f);
+            foreach (var c in map.AllCells)
+            {
+                if (region.At(c.x, c.z) < 0.68f || sky.At(c.x, c.z) < 0.35f || !OpenNatural(c) || !NoWallWithin(c, map, 2)) continue;
+                map.roofGrid.SetRoof(c, null);
+                OpenToSky(map, c, soil, skyPlants, biome);
+            }
+
+            var cavePlants = CavePlants();
+            TerrainDef bed = DungeonThemeUtility.BiomeTerrainFor(biome, BiomeTerrain.Gravel) ?? TerrainDefOf.Gravel;
+            var glow = new ValueNoise(4f);
+            IntVec3 exit = map.listerThings.ThingsOfDef(DungeonDefOf.DMAD_DungeonExit).FirstOrDefault()?.Position ?? IntVec3.Invalid;
+            foreach (var c in map.AllCells)
+            {
+                if (!OpenNatural(c) || c.GetFirstThing<Thing>(map) != null) continue;
+                TerrainDef t = c.GetTerrain(map);
+                if (t.IsWater) continue;
+                if (cavePlants.Count > 0 && c.Roofed(map) && glow.At(c.x, c.z) > 0.62f && Rand.Chance(theme.caveFungus)
+                    && (!exit.IsValid || c.DistanceToSquared(exit) > 14 * 14) && TryCavePlant(map, c, t, cavePlants, bed)) continue;
+                if (Rand.Chance(theme.chunks)) Debris(map, c, rocks);
+            }
+        }
+
+        /// <summary>Dev tool for staging pictures: fills the open cells of the rect with dungeon wall in the map's
+        /// stone, roofed over. Plants, filth and chunks there go; cells with a pawn or a building are skipped.</summary>
+        internal static void WallIn(Map map, CellRect rect)
+        {
+            ThingDef stuff = BlocksOf(DungeonThemeUtility.RocksFor(map.Tile)[0]) ?? ThingDefOf.BlocksGranite;
+            foreach (var c in rect)
+            {
+                if (c.GetFirstBuilding(map) != null || c.GetFirstPawn(map) != null) continue;
+                var things = c.GetThingList(map);
+                for (int i = things.Count - 1; i >= 0; i--)
+                    if (things[i].def.destroyable) things[i].Destroy();
+                map.roofGrid.SetRoof(c, RoofDefOf.RoofRockThick);
+                GenSpawn.Spawn(ThingMaker.MakeThing(DungeonDefOf.DMAD_DungeonWall, stuff), c, map);
+            }
+        }
+
+        /// <summary>Dev tool for staging pictures: removes the dungeon walls in the rect. They are not destroyable,
+        /// so vanilla's Destroy tool refuses them. The roof stays, and is kept from collapsing: a cavern this wide
+        /// is normal for a dungeon, whose roof generation never checks.</summary>
+        internal static void Carve(Map map, CellRect rect)
+        {
+            Thing.allowDestroyNonDestroyable = true;
+            try
+            {
+                foreach (var c in rect)
+                {
+                    Thing wall = c.GetEdifice(map);
+                    if (wall != null && (wall.def == DungeonDefOf.DMAD_DungeonWall || wall.def == DungeonDefOf.DMAD_DungeonWallPowered))
+                        wall.Destroy();
+                }
+            }
+            finally { Thing.allowDestroyNonDestroyable = false; }
+            // Losing a roof holder queues the unsupported cells, which drop as collapsed rocks on the next tick
+            map.roofCollapseBuffer.Clear();
+        }
+
+        static bool NoWallWithin(IntVec3 c, Map map, int r)
+        {
+            for (int dz = -r; dz <= r; dz++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    var a = new IntVec3(c.x + dx, 0, c.z + dz);
+                    if (!a.InBounds(map) || a.GetEdifice(map) != null) return false;
+                }
+            return true;
+        }
+
         const int CollapsedRocksHitPoints = 200;
 
         // Thickest at the plug's mouths and thinning out over a few cells, so it reads as spill from the squeeze
@@ -99,25 +253,7 @@ namespace DungeonMadness
             var data = layout.data;
             bool[] open = layout.open;
 
-            // ---- Floor patches: the theme's, then water for a river or coast tile, then the biome's own ground
-            var patches = new List<Patch>();
-            foreach (var f in theme.floors)
-            {
-                TerrainDef t = f.Resolve(biome);
-                if (t != null) patches.Add(new Patch { terrain = t, share = f.share, mode = f.mode, noise = new ValueNoise(Rand.Range(5f, 10f) * s + 2f) });
-            }
-            bool wetTile = ((info as SurfaceTile)?.Rivers?.Count ?? 0) > 0 || Find.World.CoastDirectionAt(map.Tile).IsValid;
-            if (wetTile && !patches.Any(p => p.terrain.IsWater))
-            {
-                TerrainDef water = DungeonThemeUtility.BiomeTerrainFor(biome, BiomeTerrain.ShallowWater);
-                if (water != null) patches.Insert(0, new Patch { terrain = water, share = 0.12f, mode = FloorMode.Low, noise = new ValueNoise(Rand.Range(5f, 10f) * s + 2f) });
-            }
-            if (theme.biomeGroundShare > 0f)
-            {
-                var ground = DungeonThemeUtility.BiomeGroundOf(biome).Where(t => t != rough && !patches.Any(p => p.terrain == t)).InRandomOrder().Take(2).ToList();
-                foreach (var t in ground)
-                    patches.Add(new Patch { terrain = t, share = theme.biomeGroundShare / ground.Count, mode = FloorMode.Mid, noise = new ValueNoise(Rand.Range(6f, 12f) * s + 2f) });
-            }
+            var patches = FloorPatches(map, theme, info, rough, s);
             var drift = new ValueNoise(5f);
 
             for (int z = 0; z < n; z++)
@@ -131,8 +267,7 @@ namespace DungeonMadness
                         if (layout.built[k] >= 0 || layout.feature[k] == CellFeature.Door)
                             t = theme.builtFloorDrift != null && layout.built[k] >= 0 && drift.At(x, z) > 0.6f ? theme.builtFloorDrift : builtFloor;
                         else if (layout.feature[k] == CellFeature.None)
-                            foreach (var p in patches)
-                                if (p.Covers(x, z)) { t = p.terrain; break; }
+                            t = PatchAt(patches, x, z, rough);
                     }
                     map.terrainGrid.SetTerrain(c, t);
                 }
@@ -585,7 +720,7 @@ namespace DungeonMadness
         {
             int n = layout.size;
             TerrainDef soil = DungeonThemeUtility.FertileGroundOf(biome);
-            var plants = biome.AllWildPlants.Where(p => p.plant != null && !p.plant.cavePlant && biome.CommonalityOfPlant(p) > 0f).ToList();
+            var plants = SkyPlants(biome);
             var sky = new ValueNoise(4f);
             foreach (var ch in layout.data.chambers)
             {
@@ -603,17 +738,26 @@ namespace DungeonMadness
                 foreach (var c in cells)
                 {
                     map.roofGrid.SetRoof(c, null);
-                    TerrainDef here = c.GetTerrain(map);
-                    if (soil != null && !here.IsWater) { map.terrainGrid.SetTerrain(c, soil); here = soil; }
-                    if (plants.Count == 0 || here.IsWater || c.GetFirstThing<Thing>(map) != null) continue;
-                    if (!Rand.Chance(Mathf.Clamp(biome.plantDensity * 0.45f, 0.05f, 0.6f))) continue;
-                    var def = plants.Where(p => p.plant.fertilityMin <= here.fertility && (!p.plant.IsTree || NoWallAround(c, map)))
-                        .RandomElementByWeightWithFallback(p => biome.CommonalityOfPlant(p));
-                    if (def == null) continue;
-                    var plant = (Plant)GenSpawn.Spawn(def, c, map);
-                    plant.Growth = Rand.Range(0.2f, 1f);
+                    OpenToSky(map, c, soil, plants, biome);
                 }
             }
+        }
+
+        static List<ThingDef> SkyPlants(BiomeDef biome) =>
+            biome.AllWildPlants.Where(p => p.plant != null && !p.plant.cavePlant && biome.CommonalityOfPlant(p) > 0f).ToList();
+
+        // The ground of an unroofed cell, and maybe one of the biome's wild plants on it
+        static void OpenToSky(Map map, IntVec3 c, TerrainDef soil, List<ThingDef> plants, BiomeDef biome)
+        {
+            TerrainDef here = c.GetTerrain(map);
+            if (soil != null && !here.IsWater) { map.terrainGrid.SetTerrain(c, soil); here = soil; }
+            if (plants.Count == 0 || here.IsWater || c.GetFirstThing<Thing>(map) != null) return;
+            if (!Rand.Chance(Mathf.Clamp(biome.plantDensity * 0.45f, 0.05f, 0.6f))) return;
+            var def = plants.Where(p => p.plant.fertilityMin <= here.fertility && (!p.plant.IsTree || NoWallAround(c, map)))
+                .RandomElementByWeightWithFallback(p => biome.CommonalityOfPlant(p));
+            if (def == null) return;
+            var plant = (Plant)GenSpawn.Spawn(def, c, map);
+            plant.Growth = Rand.Range(0.2f, 1f);
         }
 
         static bool NoWallAround(IntVec3 c, Map map)
@@ -673,7 +817,7 @@ namespace DungeonMadness
         /// <summary>Glowing cave plants in patches, away from the exit's light; rock chunks and rubble.</summary>
         static void CaveLife(Map map, DungeonLayoutResult layout, DungeonThemeDef theme, BiomeDef biome, List<ThingDef> rocks)
         {
-            var cavePlants = DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.plant != null && d.plant.cavePlant).ToList();
+            var cavePlants = CavePlants();
             TerrainDef bed = DungeonThemeUtility.BiomeTerrainFor(biome, BiomeTerrain.Gravel) ?? TerrainDefOf.Gravel;
             var glow = new ValueNoise(4f);
             IntVec3 exit = layout.data.exitCell;
@@ -683,20 +827,23 @@ namespace DungeonMadness
                 if (!Natural(layout, k) || c.GetFirstThing<Thing>(map) != null) continue;
                 TerrainDef t = c.GetTerrain(map);
                 if (t.IsWater) continue;
-                if (cavePlants.Count > 0 && c.Roofed(map) && glow.At(c.x, c.z) > 0.62f && Rand.Chance(theme.caveFungus) && c.DistanceToSquared(exit) > 14 * 14)
-                {
-                    var def = cavePlants.RandomElementByWeight(p => p.plant.cavePlantWeight);
-                    // Bare rock is too poor for anything to grow; a fungus bed of gravel goes under it
-                    if (t.fertility < def.plant.fertilityMin && bed.fertility >= def.plant.fertilityMin) map.terrainGrid.SetTerrain(c, bed);
-                    if (c.GetTerrain(map).fertility >= def.plant.fertilityMin)
-                    {
-                        var plant = (Plant)GenSpawn.Spawn(def, c, map);
-                        plant.Growth = Rand.Range(0.3f, 1f);
-                        continue;
-                    }
-                }
+                if (cavePlants.Count > 0 && c.Roofed(map) && glow.At(c.x, c.z) > 0.62f && Rand.Chance(theme.caveFungus) && c.DistanceToSquared(exit) > 14 * 14
+                    && TryCavePlant(map, c, t, cavePlants, bed)) continue;
                 if (Rand.Chance(theme.chunks)) Debris(map, c, rocks);
             }
+        }
+
+        static List<ThingDef> CavePlants() => DefDatabase<ThingDef>.AllDefsListForReading.Where(d => d.plant != null && d.plant.cavePlant).ToList();
+
+        static bool TryCavePlant(Map map, IntVec3 c, TerrainDef t, List<ThingDef> cavePlants, TerrainDef bed)
+        {
+            var def = cavePlants.RandomElementByWeight(p => p.plant.cavePlantWeight);
+            // Bare rock is too poor for anything to grow; a fungus bed of gravel goes under it
+            if (t.fertility < def.plant.fertilityMin && bed.fertility >= def.plant.fertilityMin) map.terrainGrid.SetTerrain(c, bed);
+            if (c.GetTerrain(map).fertility < def.plant.fertilityMin) return false;
+            var plant = (Plant)GenSpawn.Spawn(def, c, map);
+            plant.Growth = Rand.Range(0.3f, 1f);
+            return true;
         }
 
     }

@@ -135,19 +135,27 @@ namespace DungeonMadness
 
             if (pack.mad)
             {
-                foreach (var p in pawns) p.health.AddHediff(DungeonDefOf.DMAD_DungeonMad);
+                foreach (var p in pawns)
+                {
+                    var hediff = (Hediff_DungeonMad)HediffMaker.MakeHediff(DungeonDefOf.DMAD_DungeonMad, p);
+                    hediff.dormant = true;
+                    p.health.AddHediff(hediff);
+                }
             }
-            else if (pack.type != PackType.Animal)
+            if (pack.mad || pack.type == PackType.Mech || pack.type == PackType.Insect)
             {
-                // Mechs and insects guard their chamber for their faction until they engage the party, then hunt it
-                // through the dungeon. Sane dwellers have no faction, but a lord keeps them home: without one, a
-                // factionless person's think tree keeps trying to walk off the map, and a dungeon's edge is solid wall.
-                Faction faction = pawns[0].Faction;
+                // Hostile packs wait in their chamber until they see the party or are hurt (LordJob_DungeonGuard).
+                // Mad packs have no faction; the lord still keeps them home, since animals follow lord duties too.
+                // Defending only inside the chamber, so a guard does not leave it to fight before the pack wakes
+                float wander = Mathf.Max(3f, pack.radius * 0.7f), defend = pack.radius + 1f;
+                LordMaker.MakeNewLord(pawns[0].Faction, new LordJob_DungeonGuard(pack.home, wander, defend, pack.radius, pack.mad), map, pawns);
+            }
+            else if (pack.type == PackType.Humanlike)
+            {
+                // Sane dwellers have no faction, but a lord keeps them home: without one, a factionless person's
+                // think tree keeps trying to walk off the map, and a dungeon's edge is solid wall.
                 float wander = Mathf.Max(3f, pack.radius * 0.7f), defend = pack.radius + 8f;
-                LordJob job = pack.type == PackType.Humanlike
-                    ? new LordJob_DefendPoint(pack.home, wanderRadius: wander, defendRadius: defend, isCaravanSendable: false, addFleeToil: false)
-                    : new LordJob_DungeonGuard(pack.home, wander, defend);
-                LordMaker.MakeNewLord(faction, job, map, pawns);
+                LordMaker.MakeNewLord(null, new LordJob_DefendPoint(pack.home, wanderRadius: wander, defendRadius: defend, isCaravanSendable: false, addFleeToil: false), map, pawns);
             }
             if (Prefs.DevMode) Log.Message($"[Dungeon Madness] Woke {pack}");
         }
@@ -180,22 +188,30 @@ namespace DungeonMadness
         }
     }
 
-    /// <summary>A pack that stays in its chamber until one of them is hurt or picks a target from the party, then
-    /// the whole pack hunts the party through the dungeon (vanilla's assault duty walks to the nearest hostile).</summary>
+    /// <summary>A hostile pack that stays in its chamber until a packmate is hurt by the player or notices a player
+    /// pawn, then the whole pack wakes: a mad pack's madness starts, and mechs and insects hunt the party through the
+    /// dungeon (vanilla's assault duty walks to the nearest hostile). Noticing is line of sight scaled by the light on
+    /// the target with the setting on, or a player pawn standing in the chamber with it off. A pack with an all-seeing
+    /// member needs neither: any player pawn on the map is noticed.</summary>
     public class LordJob_DungeonGuard : LordJob
     {
         IntVec3 point;
-        float wanderRadius, defendRadius;
+        float wanderRadius, defendRadius, roomRadius;
+        bool mad;
+        // The all-seeing packmate whose trait alone woke the pack, between Noticed and Awaken in the same tick
+        Pawn wokenBySeer;
 
         public LordJob_DungeonGuard()
         {
         }
 
-        public LordJob_DungeonGuard(IntVec3 point, float wanderRadius, float defendRadius)
+        public LordJob_DungeonGuard(IntVec3 point, float wanderRadius, float defendRadius, float roomRadius, bool mad)
         {
             this.point = point;
             this.wanderRadius = wanderRadius;
             this.defendRadius = defendRadius;
+            this.roomRadius = roomRadius;
+            this.mad = mad;
         }
 
         public override StateGraph CreateGraph()
@@ -207,10 +223,105 @@ namespace DungeonMadness
             graph.AddToil(hunt);
             var engage = new Transition(guard, hunt);
             engage.AddTrigger(new Trigger_PawnHarmed(requireInstigatorWithSpecificFaction: Faction.OfPlayer));
-            engage.AddTrigger(new Trigger_TickCondition(() => lord.ownedPawns.Any(p =>
-                p.mindState.enemyTarget is Pawn t && t.Faction == Faction.OfPlayer), 30));
+            engage.AddTrigger(new Trigger_TickCondition(Noticed, 30));
+            engage.AddPreAction(new TransitionAction_Custom(Awaken));
             graph.AddTransition(engage);
             return graph;
+        }
+
+        /// <summary>Wakes the waiting pack the pawn belongs to, at once. True if it was waiting.</summary>
+        public static bool WakePackOf(Pawn p)
+        {
+            var lord = p.GetLord();
+            if (!(lord?.LordJob is LordJob_DungeonGuard guard) || !(lord.CurLordToil is LordToil_DefendPoint)) return false;
+            // Through the graph's own transition, so Awaken runs inside vanilla's try/catch for pre-actions
+            var engage = lord.Graph.transitions.Find(t => t.target is LordToil_AssaultColony);
+            if (engage == null) return false;
+            engage.Execute(lord);
+            return true;
+        }
+
+        void Awaken()
+        {
+            if (wokenBySeer != null)
+            {
+                if (BastleUtility.PlayerCanObserve(wokenBySeer))
+                    BastleUtility.GetBastle(wokenBySeer)?.GetTrait(DungeonDefOf.DMAD_AllSeeing)?.Discover();
+                wokenBySeer = null;
+            }
+            if (!mad) return;
+            foreach (var p in lord.ownedPawns)
+                (p.health.hediffSet.GetFirstHediffOfDef(DungeonDefOf.DMAD_DungeonMad) as Hediff_DungeonMad)?.Awaken();
+        }
+
+        // A downed pawn leaves the lord before the harm trigger runs, so Awaken would miss it and it would get up
+        // calm and lordless. Its madness starts here instead; Ensure waits until it is back on its feet.
+        public override void Notify_PawnLost(Pawn p, PawnLostCondition condition)
+        {
+            base.Notify_PawnLost(p, condition);
+            if (mad && condition == PawnLostCondition.Incapped)
+                (p.health.hediffSet.GetFirstHediffOfDef(DungeonDefOf.DMAD_DungeonMad) as Hediff_DungeonMad)?.Awaken();
+        }
+
+        bool Noticed()
+        {
+            var map = lord.Map;
+            var targets = map.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer);
+            if (targets.Count == 0) return false;
+            // Checked first because it is cheap; the sight check then runs once, on waking, only to decide whether the
+            // trait gave itself away by noticing a pawn the pack could not otherwise have seen
+            var seer = AllSeer();
+            if (seer != null)
+            {
+                if (!Sees(map, targets)) wokenBySeer = seer;
+                return true;
+            }
+            return Sees(map, targets);
+        }
+
+        Pawn AllSeer()
+        {
+            foreach (var p in lord.ownedPawns)
+                if (p.Spawned && !p.Dead && BastleUtility.GetBastle(p)?.HasTrait(DungeonDefOf.DMAD_AllSeeing) == true)
+                    return p;
+            return null;
+        }
+
+        bool Sees(Map map, List<Pawn> targets)
+        {
+            var s = DungeonsMod.Settings;
+            if (!s.wakeOnSight)
+            {
+                float r2 = (roomRadius + 1f) * (roomRadius + 1f);
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var t = targets[i];
+                    if (t.Position.DistanceToSquared(point) <= r2 && GenSight.LineOfSight(point, t.Position, map, skipFirstCell: true))
+                        return true;
+                }
+                return false;
+            }
+            // Full light stretches the range to 175%, so anything past that is out of sight whatever the light
+            float maxRange = s.sightRange * 1.75f, max2 = maxRange * maxRange;
+            foreach (var p in lord.ownedPawns)
+            {
+                if (!p.Spawned || p.Dead || p.Downed) continue;
+                IntVec3 from = p.Position;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var t = targets[i];
+                    IntVec3 to = t.Position;
+                    float d2 = from.DistanceToSquared(to);
+                    if (d2 > max2) continue;
+                    float range = s.sightRange * (0.75f + Mathf.Min(1f, map.glowGrid.GroundGlowAt(to)));
+                    if (d2 > range * range) continue;
+                    if (map.fogGrid.IsFogged(to) || t.IsPsychologicallyInvisible()) continue;
+                    // Vanilla sight ignores smoke, which only spoils aim; here blind smoke on the line hides the target
+                    if (GenSight.LineOfSight(from, to, map, skipFirstCell: true, validator: c => !c.AnyGas(map, GasType.BlindSmoke)))
+                        return true;
+                }
+            }
+            return false;
         }
 
         public override void ExposeData()
@@ -218,6 +329,8 @@ namespace DungeonMadness
             Scribe_Values.Look(ref point, "point");
             Scribe_Values.Look(ref wanderRadius, "wanderRadius");
             Scribe_Values.Look(ref defendRadius, "defendRadius");
+            Scribe_Values.Look(ref roomRadius, "roomRadius");
+            Scribe_Values.Look(ref mad, "mad");
         }
     }
 
@@ -396,7 +509,10 @@ namespace DungeonMadness
                         // Material first: rolling then skips traits a construct cannot have
                         if (pack.stone && !(pack.rock != null && Rand.Chance(0.75f) && BastleUtility.SetMaterial(p, pack.rock)))
                             BastleUtility.RollMaterial(p);
-                        BastleUtility.RollTraits(p, pack.points);
+                        // Only packs that wait to notice the party can use all-seeing (AllSeeingTraitDef)
+                        AllSeeingTraitDef.rollingGuardPack = pack.mad || pack.type == PackType.Mech || pack.type == PackType.Insect;
+                        try { BastleUtility.RollTraits(p, pack.points); }
+                        finally { AllSeeingTraitDef.rollingGuardPack = false; }
                     }
                     // Linked, so a trait found on one packmate is known on all of them
                     else BastleUtility.CopyBastle(leader, p, linkDiscovery: true);
