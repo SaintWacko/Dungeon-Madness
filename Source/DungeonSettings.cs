@@ -62,7 +62,7 @@ namespace DungeonMadness
         // 75% in darkness, 100% at 25% light, up to 175% in full light). Off: when a player pawn enters their chamber.
         // Either way a pack also wakes when hurt. Read live, so it reaches packs already waiting.
         public bool wakeOnSight = true;
-        public const float DefaultSightRange = 20f;
+        public const float DefaultSightRange = 25f;
         public float sightRange = DefaultSightRange;
         // Strongest species allowed, by vanilla combat power: base + perLevel x effective level
         public const float DefaultPowerBase = 60f;

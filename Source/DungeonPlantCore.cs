@@ -21,7 +21,15 @@ namespace DungeonMadness
         {
             base.TickLong();
             Plant plant = Position.GetPlant(Map);
-            if (plant != null) unlitTicks(plant) = 0;
+            if (plant != null)
+            {
+                unlitTicks(plant) = 0;
+                return;
+            }
+            // A plug whose plant went some way Patch_Plant_DeSpawn did not see (one turned up in testing with no plant
+            // over it): an invisible wall nobody can remove, so it clears itself and opens the squeeze
+            if (Prefs.DevMode) Log.Warning($"[Dungeon Madness] Plant plug core at {Position} had no plant; removing it.");
+            Destroy();
         }
     }
 
