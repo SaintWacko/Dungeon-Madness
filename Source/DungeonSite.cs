@@ -401,6 +401,7 @@ namespace DungeonMadness
         public static ThingDef DMAD_DungeonWallPowered;
         public static HediffDef DMAD_DungeonMad;
         public static MentalStateDef DMAD_DungeonMadness;
+        public static BastleFramework.BastleTraitDef DMAD_AllSeeing;
         static DungeonDefOf() => DefOfHelper.EnsureInitializedInCtor(typeof(DungeonDefOf));
     }
 }

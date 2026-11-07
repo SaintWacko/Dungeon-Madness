@@ -191,12 +191,15 @@ namespace DungeonMadness
     /// <summary>A hostile pack that stays in its chamber until a packmate is hurt by the player or notices a player
     /// pawn, then the whole pack wakes: a mad pack's madness starts, and mechs and insects hunt the party through the
     /// dungeon (vanilla's assault duty walks to the nearest hostile). Noticing is line of sight scaled by the light on
-    /// the target with the setting on, or a player pawn standing in the chamber with it off.</summary>
+    /// the target with the setting on, or a player pawn standing in the chamber with it off. A pack with an all-seeing
+    /// member needs neither: any player pawn on the map is noticed.</summary>
     public class LordJob_DungeonGuard : LordJob
     {
         IntVec3 point;
         float wanderRadius, defendRadius, roomRadius;
         bool mad;
+        // The all-seeing packmate whose trait alone woke the pack, between Noticed and Awaken in the same tick
+        Pawn wokenBySeer;
 
         public LordJob_DungeonGuard()
         {
@@ -240,6 +243,12 @@ namespace DungeonMadness
 
         void Awaken()
         {
+            if (wokenBySeer != null)
+            {
+                if (BastleUtility.PlayerCanObserve(wokenBySeer))
+                    BastleUtility.GetBastle(wokenBySeer)?.GetTrait(DungeonDefOf.DMAD_AllSeeing)?.Discover();
+                wokenBySeer = null;
+            }
             if (!mad) return;
             foreach (var p in lord.ownedPawns)
                 (p.health.hediffSet.GetFirstHediffOfDef(DungeonDefOf.DMAD_DungeonMad) as Hediff_DungeonMad)?.Awaken();
@@ -256,10 +265,31 @@ namespace DungeonMadness
 
         bool Noticed()
         {
-            var s = DungeonsMod.Settings;
             var map = lord.Map;
             var targets = map.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer);
             if (targets.Count == 0) return false;
+            // Checked first because it is cheap; the sight check then runs once, on waking, only to decide whether the
+            // trait gave itself away by noticing a pawn the pack could not otherwise have seen
+            var seer = AllSeer();
+            if (seer != null)
+            {
+                if (!Sees(map, targets)) wokenBySeer = seer;
+                return true;
+            }
+            return Sees(map, targets);
+        }
+
+        Pawn AllSeer()
+        {
+            foreach (var p in lord.ownedPawns)
+                if (p.Spawned && !p.Dead && BastleUtility.GetBastle(p)?.HasTrait(DungeonDefOf.DMAD_AllSeeing) == true)
+                    return p;
+            return null;
+        }
+
+        bool Sees(Map map, List<Pawn> targets)
+        {
+            var s = DungeonsMod.Settings;
             if (!s.wakeOnSight)
             {
                 float r2 = (roomRadius + 1f) * (roomRadius + 1f);
@@ -479,7 +509,10 @@ namespace DungeonMadness
                         // Material first: rolling then skips traits a construct cannot have
                         if (pack.stone && !(pack.rock != null && Rand.Chance(0.75f) && BastleUtility.SetMaterial(p, pack.rock)))
                             BastleUtility.RollMaterial(p);
-                        BastleUtility.RollTraits(p, pack.points);
+                        // Only packs that wait to notice the party can use all-seeing (AllSeeingTraitDef)
+                        AllSeeingTraitDef.rollingGuardPack = pack.mad || pack.type == PackType.Mech || pack.type == PackType.Insect;
+                        try { BastleUtility.RollTraits(p, pack.points); }
+                        finally { AllSeeingTraitDef.rollingGuardPack = false; }
                     }
                     // Linked, so a trait found on one packmate is known on all of them
                     else BastleUtility.CopyBastle(leader, p, linkDiscovery: true);

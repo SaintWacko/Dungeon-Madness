@@ -135,4 +135,23 @@
     </weaponTags>
   </PawnKindDef>
 
+  <!-- ===== Bastle traits ===== -->
+
+  <!-- A waiting pack with an all-seeing member wakes as soon as any player pawn is on the map: no range, light,
+       walls, smoke or invisibility (LordJob_DungeonGuard.Noticed). In Bastle's ordinary pool, but AllSeeingTraitDef
+       only lets it roll on the leaders of waiting dungeon packs. Revealed when it wakes the pack on a pawn the pack
+       could not otherwise have seen, while the player can see the creature. -->
+  <BastleFramework.BastleTraitDef Class="DungeonMadness.AllSeeingTraitDef">
+    <defName>DMAD_AllSeeing</defName>
+    <label>all-seeing</label>
+    <description>Nothing hides from it. Darkness, smoke, walls and even invisibility do not stop it from knowing where intruders are, and its pack wakes the moment anyone sets foot in the dungeon.</description>
+    <rumor>knows where you are before you ever see it</rumor>
+    <nameSuffix>the all-seeing</nameSuffix>
+    <rarity>Uncommon</rarity>
+    <heritable>false</heritable>
+    <discoverWhen>
+      <li>Manual</li>
+    </discoverWhen>
+  </BastleFramework.BastleTraitDef>
+
 </Defs>
