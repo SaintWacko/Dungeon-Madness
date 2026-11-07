@@ -26,10 +26,24 @@ namespace DungeonMadness
                 unlitTicks(plant) = 0;
                 return;
             }
-            // A plug whose plant went some way Patch_Plant_DeSpawn did not see (one turned up in testing with no plant
-            // over it): an invisible wall nobody can remove, so it clears itself and opens the squeeze
+            // A plug whose plant went some way Patch_Plant_DeSpawn did not see (saves made before
+            // Patch_CoreKeepsPlant lost their plug plants on load): an invisible wall nobody can remove, so it clears
+            // itself and opens the squeeze
             if (Prefs.DevMode) Log.Warning($"[Dungeon Madness] Plant plug core at {Position} had no plant; removing it.");
             Destroy();
+        }
+    }
+
+    /// <summary>Loading a save spawns buildings after everything else, with a wipe, and an edifice wipes the plant
+    /// under it, so every plug plant was refunded away on load while its core was not yet there for
+    /// Patch_Plant_DeSpawn to find. The core is meant to share its cell with the plant.</summary>
+    [HarmonyPatch(typeof(GenSpawn), nameof(GenSpawn.SpawningWipes))]
+    public static class Patch_CoreKeepsPlant
+    {
+        public static void Postfix(BuildableDef newEntDef, BuildableDef oldEntDef, ref bool __result)
+        {
+            if (__result && newEntDef == DungeonDefOf.DMAD_PlantCore && oldEntDef is ThingDef old && old.category == ThingCategory.Plant)
+                __result = false;
         }
     }
 
