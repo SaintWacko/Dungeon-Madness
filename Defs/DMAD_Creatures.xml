@@ -144,7 +144,7 @@
   <BastleFramework.BastleTraitDef Class="DungeonMadness.AllSeeingTraitDef">
     <defName>DMAD_AllSeeing</defName>
     <label>all-seeing</label>
-    <description>Nothing hides from it. Darkness, smoke, walls and even invisibility do not stop it from knowing where intruders are, and its pack wakes the moment anyone sets foot in the dungeon.</description>
+    <description>Nothing hides from it. Darkness, smoke, walls and even invisibility do not stop it from knowing where intruders are.</description>
     <rumor>knows where you are before you ever see it</rumor>
     <nameSuffix>the all-seeing</nameSuffix>
     <rarity>Uncommon</rarity>

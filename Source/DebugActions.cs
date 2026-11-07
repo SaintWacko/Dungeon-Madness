@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
+using BastleFramework;
 using System.Text;
 using LudeonTK;
 using RimWorld.Planet;
 using Verse;
+using Verse.AI.Group;
 
 namespace DungeonMadness
 {
@@ -28,6 +31,20 @@ namespace DungeonMadness
             var comp = Find.CurrentMap?.GetComponent<MapComponent_DungeonCreatures>();
             if (comp == null || comp.packs.Count == 0) { Messages.Message("No dungeon packs on this map.", RimWorld.MessageTypeDefOf.RejectInput, false); return; }
             comp.WakeAll();
+        }
+
+        // Pins as Actions\Make pack all-seeing. Click a creature: it and its packmates get the trait, forced, since
+        // AllSeeingTraitDef refuses itself outside a dungeon pack's roll. A pack still waiting wakes on its next check.
+        [DebugAction("Dungeon Madness", "Make pack all-seeing", actionType = DebugActionType.ToolMap, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void MakePackAllSeeing()
+        {
+            foreach (var pawn in UI.MouseCell().GetThingList(Find.CurrentMap).OfType<Pawn>().ToList())
+            {
+                var pack = pawn.GetLord()?.ownedPawns.ToList() ?? new List<Pawn> { pawn };
+                foreach (var p in pack) BastleUtility.AddTrait(p, DungeonDefOf.DMAD_AllSeeing, force: true);
+                BastleUtility.LinkDiscovery(pack);
+                Messages.Message($"All-seeing added to {pack.Count} pawn(s).", RimWorld.MessageTypeDefOf.NeutralEvent, false);
+            }
         }
 
         // Pins as Actions\Lay dungeon floor everywhere. For staging pictures: wall and carve the map by hand, then
